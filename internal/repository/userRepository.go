@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"encoding/base64"
 	"errors"
 	"log"
 	"skillForce/internal/models"
+	"strings"
 
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/argon2"
 )
 
 // UserRepository - структура хранилища пользователей
@@ -20,20 +22,17 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-// hashPassword - хеширование пароля
-func hashPassword(user *models.User) error {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+// Проверка пароля
+func checkPassword(password, storedHash string) (bool, error) {
+	parts := strings.Split(storedHash, "$___$")
+	cleanStoredHash := parts[1]
+	salt, err := base64.StdEncoding.DecodeString(parts[0])
 	if err != nil {
-		return err
+		return true, errors.New("cannot decode salt")
 	}
-	user.Password = string(bytes)
-	return nil
-}
-
-// checkPasswordHash - проверка соответствия хешированного пароля и пароля
-func checkPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) //TODO: обработать и добавить в сваггер
-	return err == nil
+	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	expectedHash := base64.StdEncoding.EncodeToString(hash)
+	return expectedHash == cleanStoredHash, nil
 }
 
 // Save - сохранение пользователя
@@ -44,21 +43,20 @@ func (r *UserRepository) Save(user *models.User) error {
 		}
 	}
 	user.Id = len(r.users)
-	err := hashPassword(user)
-	if err != nil {
-		return err //TODO: обработать и добавить в сваггер
-	}
 	r.users[user.Id] = user
-	log.Printf("user saved: id: %d %+v", user.Id, user)
+	log.Printf("user saved: %+v", user)
 	return nil
 }
 
 // Authenticate - аутентификация пользователя
 func (r *UserRepository) Authenticate(email string, password string) (int, error) {
-	// TODO: password to hash
-	// Добавить обработку случая, когда пользователя может и не быть в базе
 	for _, existingUser := range r.users {
-		if existingUser.Email == email && checkPasswordHash(password, existingUser.Password) {
+		isPasswordMatch, err := checkPassword(password, existingUser.Password)
+		if err != nil {
+			return 0, err
+		}
+		if existingUser.Email == email && isPasswordMatch {
+			log.Printf("user authenticated: %+v", existingUser)
 			return existingUser.Id, nil
 		}
 	}
