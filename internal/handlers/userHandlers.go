@@ -37,20 +37,32 @@ func setCookie(w http.ResponseWriter, userId int) {
 	http.SetCookie(w, &cookie)
 }
 
+// deleteCookie - удаление куки у пользователь
+func deleteCookie(w http.ResponseWriter, userId int) {
+	stingUserId := strconv.Itoa(userId)
+	expiration := time.Now().AddDate(0, 0, -1)
+	cookie := http.Cookie{
+		Name:     "session_id",
+		Value:    stingUserId,
+		Expires:  expiration,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+}
+
 // checkCookie - проверка наличия куки
-func (h *UserHandler) checkCookie(w http.ResponseWriter, r *http.Request) bool {
+func (h *UserHandler) checkCookie(w http.ResponseWriter, r *http.Request) *models.User {
 	session, err := r.Cookie("session_id")
 	loggedIn := (err != http.ErrNoCookie)
 	if loggedIn {
 		user, err := h.useCase.GetUserByCookie(session.Value)
 		if err != nil {
 			log.Print(err)
-			return false
+			return nil
 		}
-		setCookie(w, user.Id)
-		return true
+		return user
 	}
-	return false
+	return nil
 }
 
 // isValidRegistrationFields - валидация полей регистрации
@@ -91,8 +103,10 @@ func isValidLoginFields(user *models.User) error {
 
 // RegisterUser - обработчик регистрации пользователя
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	if h.checkCookie(w, r) {
+	userFromCoockies := h.checkCookie(w, r)
+	if userFromCoockies != nil {
 		log.Print("user already registered in")
+		setCookie(w, userFromCoockies.Id)
 		response.SendOKResponse(w)
 		return
 	}
@@ -131,8 +145,10 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 // LoginUser - обработчик авторизации пользователя
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	if h.checkCookie(w, r) {
+	userFromCoockies := h.checkCookie(w, r)
+	if userFromCoockies != nil {
 		log.Print("user already logged in")
+		setCookie(w, userFromCoockies.Id)
 		response.SendOKResponse(w)
 		return
 	}
@@ -167,5 +183,16 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setCookie(w, userId)
+	response.SendOKResponse(w)
+}
+
+// LogoutUser - обработчик для выхода из сессии у пользователя
+func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
+	userFromCoockies := h.checkCookie(w, r)
+	if userFromCoockies != nil {
+		log.Printf("logout user %+v", userFromCoockies)
+		deleteCookie(w, userFromCoockies.Id)
+
+	}
 	response.SendOKResponse(w)
 }

@@ -20,6 +20,8 @@ func main() {
 
 	http.HandleFunc("/api/register", userHandler.RegisterUser)
 	http.HandleFunc("/api/login", userHandler.LoginUser)
+	http.HandleFunc("/api/logout", userHandler.LogoutUser)
+
 	http.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 
 	log.Println("Server started on :8080")
