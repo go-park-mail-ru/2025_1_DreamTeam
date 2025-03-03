@@ -55,6 +55,7 @@ func (uc *UserUsecase) AuthenticateUser(user *models.User) (int, error) {
 	return uc.repo.Authenticate(user.Email, user.Password)
 }
 
+// GetUserByCookie - получение пользователя по cookie
 func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.User, error) {
 	return uc.repo.GetUserByCookie(cookieValue)
 }

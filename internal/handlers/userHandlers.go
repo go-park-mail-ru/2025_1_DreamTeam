@@ -53,6 +53,7 @@ func (h *UserHandler) checkCookie(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
+// isValidRegistrationFields - валидация полей регистрации
 func isValidRegistrationFields(user *models.User) error {
 	if user.Name == "" || user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")
@@ -70,6 +71,7 @@ func isValidRegistrationFields(user *models.User) error {
 	return nil
 }
 
+// isValidLoginFields - валидация полей авторизации
 func isValidLoginFields(user *models.User) error {
 	if user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")

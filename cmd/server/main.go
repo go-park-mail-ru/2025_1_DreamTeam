@@ -14,8 +14,13 @@ func main() {
 	userUseCase := usecase.NewUserUsecase(userRepo)
 	userHandler := handlers.NewUserHandler(userUseCase)
 
+	courseRepo := repository.NewCourseRepository()
+	courseUseCase := usecase.NewCourseUsecase(courseRepo)
+	courseHandler := handlers.NewCourseHandler(courseUseCase)
+
 	http.HandleFunc("/api/register", userHandler.RegisterUser)
 	http.HandleFunc("/api/login", userHandler.LoginUser)
+	http.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 
 	log.Println("Server started on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
