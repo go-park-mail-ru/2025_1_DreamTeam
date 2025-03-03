@@ -10,12 +10,22 @@ import (
 
 // точка входа приложения
 func main() {
-	userRepo := repository.NewUserRepository()
-	userUseCase := usecase.NewUserUsecase(userRepo)
-	userHandler := handlers.NewUserHandler(userUseCase)
+	// userRepo := repository.NewUserRepository()
+	// userUseCase := usecase.NewUserUsecase(userRepo)
+	// userHandler := handlers.NewUserHandler(userUseCase)
 
-	courseRepo := repository.NewCourseRepository()
-	courseUseCase := usecase.NewCourseUsecase(courseRepo)
+	database, err := repository.NewDatabase("host=localhost port=5432 user=dmitrii password=password dbname=skillforce_test")
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	database.GetUserByCookie("")
+
+	userUseCase := usecase.NewUserUsecase(database)
+	userHandler := handlers.NewUserHandler(userUseCase)
+	// courseRepo := repository.NewCourseRepository()
+	courseUseCase := usecase.NewCourseUsecase(database)
 	courseHandler := handlers.NewCourseHandler(courseUseCase)
 
 	http.HandleFunc("/api/register", userHandler.RegisterUser)

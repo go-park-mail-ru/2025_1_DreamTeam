@@ -14,16 +14,22 @@ import (
 
 // UserUsecase - структура бизнес-логики
 type UserUsecase struct {
-	repo *repository.UserRepository
+	repo *repository.Database
 }
 
 // NewUserUsecase - конструктор
-func NewUserUsecase(repo *repository.UserRepository) *UserUsecase {
+func NewUserUsecase(repo *repository.Database) *UserUsecase {
 	return &UserUsecase{repo: repo}
 }
 
+func hashPassword(password string, salt []byte) string {
+	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	hashedPassword := fmt.Sprintf("%s$___$%s", base64.StdEncoding.EncodeToString(salt), base64.StdEncoding.EncodeToString(hash))
+	return hashedPassword
+}
+
 // Хэширование пароля с солью
-func hashPassword(user *models.User) error {
+func hashPasswordAndCreateSalt(user *models.User) error {
 	salt := make([]byte, 8)
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -31,8 +37,7 @@ func hashPassword(user *models.User) error {
 		return errors.New("cannot generate salt")
 	}
 
-	hash := argon2.IDKey([]byte(user.Password), salt, 1, 64*1024, 4, 32)
-	hashedPassword := fmt.Sprintf("%s$___$%s", base64.StdEncoding.EncodeToString(salt), base64.StdEncoding.EncodeToString(hash))
+	hashedPassword := hashPassword(user.Password, salt)
 
 	user.Salt = salt
 	user.Password = hashedPassword
@@ -42,12 +47,12 @@ func hashPassword(user *models.User) error {
 
 // RegisterUser - регистрация пользователя
 func (uc *UserUsecase) RegisterUser(user *models.User) error {
-	err := hashPassword(user)
+	err := hashPasswordAndCreateSalt(user)
 	if err != nil {
 		return err
 	}
 
-	return uc.repo.Save(user)
+	return uc.repo.RegisterUser(user)
 }
 
 // AuthenticateUser - авторизация пользователя
