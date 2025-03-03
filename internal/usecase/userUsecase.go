@@ -42,10 +42,6 @@ func hashPassword(user *models.User) error {
 
 // RegisterUser - регистрация пользователя
 func (uc *UserUsecase) RegisterUser(user *models.User) error {
-	if user.Name == "" || user.Email == "" || user.Password == "" {
-		return errors.New("missing required fields")
-	}
-
 	err := hashPassword(user)
 	if err != nil {
 		return err
@@ -56,9 +52,9 @@ func (uc *UserUsecase) RegisterUser(user *models.User) error {
 
 // AuthenticateUser - авторизация пользователя
 func (uc *UserUsecase) AuthenticateUser(user *models.User) (int, error) {
-	if user.Email == "" || user.Password == "" {
-		return 0, errors.New("missing required fields")
-	}
-
 	return uc.repo.Authenticate(user.Email, user.Password)
+}
+
+func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.User, error) {
+	return uc.repo.GetUserByCookie(cookieValue)
 }

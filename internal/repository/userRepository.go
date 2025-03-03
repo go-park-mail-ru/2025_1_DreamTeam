@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"skillForce/internal/models"
+	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
@@ -33,6 +34,20 @@ func checkPassword(password, storedHash string) (bool, error) {
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
 	expectedHash := base64.StdEncoding.EncodeToString(hash)
 	return expectedHash == cleanStoredHash, nil
+}
+
+// GetUserByCookie - получение пользователя по cookie
+func (r *UserRepository) GetUserByCookie(cookieValue string) (*models.User, error) {
+	cookieValueInt, err := strconv.Atoi(cookieValue)
+	if err != nil {
+		return nil, err
+	}
+
+	user, ok := r.users[cookieValueInt]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return user, nil
 }
 
 // Save - сохранение пользователя
