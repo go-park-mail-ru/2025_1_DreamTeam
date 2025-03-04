@@ -51,7 +51,7 @@ func deleteCookie(w http.ResponseWriter, userId int) {
 }
 
 // checkCookie - проверка наличия куки
-func (h *UserHandler) checkCookie(w http.ResponseWriter, r *http.Request) *models.User {
+func (h *UserHandler) checkCookie(r *http.Request) *models.User {
 	session, err := r.Cookie("session_id")
 	loggedIn := (err != http.ErrNoCookie)
 	if loggedIn {
@@ -103,7 +103,7 @@ func isValidLoginFields(user *models.User) error {
 
 // RegisterUser - обработчик регистрации пользователя
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(w, r)
+	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already registered in")
 		setCookie(w, userFromCoockies.Id)
@@ -145,7 +145,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 // LoginUser - обработчик авторизации пользователя
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(w, r)
+	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already logged in")
 		setCookie(w, userFromCoockies.Id)
@@ -188,7 +188,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 // LogoutUser - обработчик для выхода из сессии у пользователя
 func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(w, r)
+	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Printf("logout user %+v", userFromCoockies)
 		deleteCookie(w, userFromCoockies.Id)

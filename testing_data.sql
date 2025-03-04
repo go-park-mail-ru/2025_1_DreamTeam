@@ -1,18 +1,9 @@
-INSERT INTO usertable (email, password, salt, profile_id) VALUES
-    ('user1@example.com', 'password123', 'somesalt1', NULL),
-    ('user2@example.com', 'securepass456', 'somesalt2', NULL),
-    ('user3@example.com', 'mypassword789', 'somesalt3', NULL),
-    ('user4@example.com', 'testpass321', 'somesalt4', NULL),
-    ('user5@example.com', 'randompass654', 'somesalt5', NULL);
-
-INSERT INTO profile (user_id, name, bio, avatar_src, hide_email) VALUES
-    (1, 'John Doe', 'Software Engineer and tech enthusiast.', '*path_to_default*', FALSE),
-    (2, 'Jane Smith', 'Loves data science and AI.', '*path_to_default*', TRUE),
-    (3, 'Alice Johnson', 'Passionate about education.', '*path_to_default*', FALSE),
-    (4, 'Bob Brown', 'Enjoys programming and gaming.', '*path_to_default*', TRUE),
-    (5, 'Charlie White', 'Aspiring entrepreneur.', '*path_to_default*', FALSE);
-
-UPDATE usertable SET profile_id = id;
+INSERT INTO usertable (email, password, salt, name, bio, avatar_src, hide_email) VALUES
+    ('user1@example.com', 'password123', 'somesalt1', 'John Doe', 'Software Engineer and tech enthusiast.', '*path_to_default*', FALSE),
+    ('user2@example.com', 'securepass456', 'somesalt2', 'Jane Smith', 'Loves data science and AI.', '*path_to_default*', TRUE),
+    ('user3@example.com', 'mypassword789', 'somesalt3', 'Alice Johnson', 'Passionate about education.', '*path_to_default*', FALSE),
+    ('user4@example.com', 'testpass321', 'somesalt4', 'Bob Brown', 'Enjoys programming and gaming.', '*path_to_default*', TRUE),
+    ('user5@example.com', 'randompass654', 'somesalt5', 'Charlie White', 'Aspiring entrepreneur.', '*path_to_default*', FALSE);
 
 INSERT INTO course (creator_user_id, title, description, price, time_to_pass) VALUES
     (1, 'Intro to Programming', 'Learn the basics of programming.', 100, 30),

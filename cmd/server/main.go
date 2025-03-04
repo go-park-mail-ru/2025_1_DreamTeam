@@ -10,11 +10,7 @@ import (
 
 // точка входа приложения
 func main() {
-	// userRepo := repository.NewUserRepository()
-	// userUseCase := usecase.NewUserUsecase(userRepo)
-	// userHandler := handlers.NewUserHandler(userUseCase)
-
-	database, err := repository.NewDatabase("host=localhost port=5432 user=dmitrii password=password dbname=skillforce_test")
+	database, err := repository.NewDatabase("host=localhost port=5432 user=postgres password=password dbname=skillforce_test") //TODO: вынести в конфиг файл
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -22,7 +18,7 @@ func main() {
 
 	userUseCase := usecase.NewUserUsecase(database)
 	userHandler := handlers.NewUserHandler(userUseCase)
-	// courseRepo := repository.NewCourseRepository()
+
 	courseUseCase := usecase.NewCourseUsecase(database)
 	courseHandler := handlers.NewCourseHandler(courseUseCase)
 

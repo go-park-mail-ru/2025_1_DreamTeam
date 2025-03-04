@@ -34,6 +34,7 @@ func (d *Database) Close() {
 }
 
 func (d *Database) GetBucketCourses() ([]*models.Course, error) {
+	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
 	var bucketCourses []*models.Course
 	rows, err := d.conn.Query("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course LIMIT 16")
 	if err != nil {
@@ -69,7 +70,10 @@ func (d *Database) RegisterUser(user *models.User) error {
 	}
 	saltBase64 := base64.StdEncoding.EncodeToString(user.Salt)
 	_, err2 := d.conn.Exec("INSERT INTO usertable (email, password, salt) VALUES ($1, $2, $3)", user.Email, user.Password, saltBase64)
-	return err2
+	if err2 != nil {
+		return err2
+	}
+	return nil
 }
 
 func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
