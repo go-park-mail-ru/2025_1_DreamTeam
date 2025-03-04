@@ -57,10 +57,14 @@ func (uc *UserUsecase) RegisterUser(user *models.User) error {
 
 // AuthenticateUser - авторизация пользователя
 func (uc *UserUsecase) AuthenticateUser(user *models.User) (int, error) {
-	return uc.repo.Authenticate(user.Email, user.Password)
+	return uc.repo.AuthenticateUser(user.Email, user.Password)
 }
 
 // GetUserByCookie - получение пользователя по cookie
 func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.User, error) {
 	return uc.repo.GetUserByCookie(cookieValue)
+}
+
+func (uc *UserUsecase) LogoutUser(userId int) error {
+	return uc.repo.LogoutUser(userId)
 }

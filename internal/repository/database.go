@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"skillForce/internal/models"
+	"time"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/argon2"
@@ -69,17 +70,34 @@ func (d *Database) RegisterUser(user *models.User) error {
 		return errors.New("email exists")
 	}
 	saltBase64 := base64.StdEncoding.EncodeToString(user.Salt)
-	_, err2 := d.conn.Exec("INSERT INTO usertable (email, password, salt) VALUES ($1, $2, $3)", user.Email, user.Password, saltBase64)
-	if err2 != nil {
-		return err2
+	_, err = d.conn.Exec("INSERT INTO usertable (email, password, salt) VALUES ($1, $2, $3)", user.Email, user.Password, saltBase64)
+	if err != nil {
+		return err
 	}
+
+	rows, err := d.conn.Query("SELECT id FROM usertable WHERE email = $1", user.Email)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		err = rows.Scan(&user.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = d.conn.Exec("INSERT INTO sessions (user_id, token, expires) VALUES ($1, $2, $3)", user.Id, user.Id, time.Now().Add(10*time.Hour))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
 	var user models.User
-	err := d.conn.QueryRow("SELECT u.email, u.password, u.salt FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
-		cookieValue).Scan(&user.Email, &user.Password, &user.Salt)
+	err := d.conn.QueryRow("SELECT u.id, u.email, u.password, u.salt FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
+		cookieValue).Scan(&user.Id, &user.Email, &user.Password, &user.Salt)
 	return &user, err
 }
 
@@ -89,7 +107,7 @@ func hashPassword(password string, salt []byte) string {
 	return hashedPassword
 }
 
-func (d *Database) Authenticate(email string, password string) (int, error) {
+func (d *Database) AuthenticateUser(email string, password string) (int, error) {
 	var id int
 	emailExists, err := d.userExists(email)
 	if err != nil {
@@ -112,5 +130,15 @@ func (d *Database) Authenticate(email string, password string) (int, error) {
 	if hashedInputPassword != passwordFromDB {
 		return -1, errors.New("email or password incorrect")
 	}
+
+	_, err = d.conn.Exec("INSERT INTO sessions (user_id, token, expires) VALUES ($1, $2, $3)", id, id, time.Now().Add(10*time.Hour))
+	if err != nil {
+		return -1, err
+	}
 	return id, nil
+}
+
+func (d *Database) LogoutUser(userId int) error {
+	_, err := d.conn.Exec("DELETE FROM sessions WHERE user_id = $1", userId)
+	return err
 }

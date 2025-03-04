@@ -106,7 +106,6 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already registered in")
-		setCookie(w, userFromCoockies.Id)
 		response.SendOKResponse(w)
 		return
 	}
@@ -148,7 +147,6 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already logged in")
-		setCookie(w, userFromCoockies.Id)
 		response.SendOKResponse(w)
 		return
 	}
@@ -191,6 +189,10 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Printf("logout user %+v", userFromCoockies)
+		err := h.useCase.LogoutUser(userFromCoockies.Id)
+		if err != nil {
+			log.Print(err) //TODO: тут дырка, надо подумать, че делать...
+		}
 		deleteCookie(w, userFromCoockies.Id)
 
 	}
