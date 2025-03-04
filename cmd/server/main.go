@@ -20,8 +20,6 @@ func main() {
 	}
 	defer database.Close()
 
-	database.GetUserByCookie("")
-
 	userUseCase := usecase.NewUserUsecase(database)
 	userHandler := handlers.NewUserHandler(userUseCase)
 	// courseRepo := repository.NewCourseRepository()
