@@ -32,5 +32,6 @@ func (h *CourseHandler) GetCourses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Print("send bucket courses")
 	response.SendBucketCoursesResponse(bucketCourses, w)
 }

@@ -138,6 +138,8 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("user %v registered, send him cookie", user)
+
 	setCookie(w, user.Id)
 	response.SendOKResponse(w)
 }
@@ -179,6 +181,8 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse(err.Error(), http.StatusNotFound, w)
 		return
 	}
+
+	log.Printf("user %v login, send him cookie", user)
 
 	setCookie(w, userId)
 	response.SendOKResponse(w)
