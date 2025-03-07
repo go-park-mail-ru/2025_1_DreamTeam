@@ -1,7 +1,7 @@
 package models
 
 type Course struct {
-	Id              int    `json:"-"`
+	Id              int    `json:"id"`
 	Price           int    `json:"price"`
 	PurchasesAmount int    `json:"purchases_amount"`
 	CreatorId       int    `json:"creator_id"`

@@ -4,29 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"skillForce/internal/env"
 	"skillForce/internal/handlers"
 	"skillForce/internal/repository"
 	"skillForce/internal/usecase"
-
-	"github.com/joho/godotenv"
 )
 
 // точка входа приложения
 func main() {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Print(err)
-		log.Fatal("Ошибка загрузки .env файла")
-	}
+	env := env.NewEnvironment()
 
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", env.DB_HOST, env.DB_PORT, env.DB_USER, env.DB_PASSWORD, env.DB_NAME)
 	database, err := repository.NewDatabase(dsn)
 
 	if err != nil {

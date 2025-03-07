@@ -20,15 +20,15 @@ func NewCourseHandler(uc *usecase.CourseUsecase) *CourseHandler {
 // GetCourses - обработчик получения списка курсов
 func (h *CourseHandler) GetCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		log.Print("method not allowed")
+		log.Printf("from getCourses: method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w)
 		return
 	}
 
 	bucketCourses, err := h.useCase.GetBucketCourses()
 	if err != nil {
-		log.Print(err)
-		response.SendErrorResponse(err.Error(), http.StatusNotFound, w)
+		log.Printf("from getCourses: %v", err)
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w)
 		return
 	}
 
