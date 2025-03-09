@@ -27,7 +27,7 @@ func (d *Database) RegisterUser(user *models.User) error {
 		return errors.New("email exists")
 	}
 	saltBase64 := base64.StdEncoding.EncodeToString(user.Salt)
-	_, err = d.conn.Exec("INSERT INTO usertable (email, password, salt) VALUES ($1, $2, $3)", user.Email, user.Password, saltBase64)
+	_, err = d.conn.Exec("INSERT INTO usertable (email, name, password, salt) VALUES ($1, $2, $3, $4)", user.Email, user.Name, user.Password, saltBase64)
 	if err != nil {
 		return err
 	}

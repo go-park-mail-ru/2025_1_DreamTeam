@@ -155,7 +155,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("from registerUser: %v", err)
 
 		if err.Error() == "email exists" { //TODO: хорошо бы все константы вывести в отдельный файл
-			response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
+			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
 			return
 		}
 
