@@ -33,6 +33,8 @@ func setCookie(w http.ResponseWriter, userId int) {
 		Value:    stingUserId,
 		Expires:  expiration,
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   false,
 	}
 	http.SetCookie(w, &cookie)
 }
@@ -63,6 +65,23 @@ func (h *UserHandler) checkCookie(r *http.Request) *models.User {
 		return user
 	}
 	return nil
+}
+
+func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
+	session, err := r.Cookie("session_id")
+	loggedIn := (err != http.ErrNoCookie)
+	if loggedIn {
+		user, err := h.useCase.GetUserByCookie(session.Value)
+		if err != nil {
+			log.Print(err)
+			response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		}
+		if user != nil {
+			response.SendUser(user, w, r)
+		}
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+	}
+	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
 
 // isValidRegistrationFields - валидация полей регистрации
@@ -106,13 +125,13 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already registered in")
-		response.SendOKResponse(w)
+		response.SendOKResponse(w, r)
 		return
 	}
 
 	if r.Method != http.MethodPost {
 		log.Print("from registerUser: method not allowed")
-		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w)
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
@@ -120,14 +139,14 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
-		response.SendErrorResponse("invalid request", http.StatusBadRequest, w)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
 	err = isValidRegistrationFields(&user)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
-		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w)
+		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -136,18 +155,18 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("from registerUser: %v", err)
 
 		if err.Error() == "email exists" { //TODO: хорошо бы все константы вывести в отдельный файл
-			response.SendErrorResponse(err.Error(), http.StatusBadRequest, w)
+			response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 			return
 		}
 
-		response.SendErrorResponse("server error", http.StatusInternalServerError, w)
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
 
 	log.Printf("user %v registered, send him cookie", user)
 
 	setCookie(w, user.Id)
-	response.SendOKResponse(w)
+	response.SendOKResponse(w, r)
 }
 
 // LoginUser - обработчик авторизации пользователя
@@ -155,13 +174,18 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	userFromCoockies := h.checkCookie(r)
 	if userFromCoockies != nil {
 		log.Print("user already logged in")
-		response.SendOKResponse(w)
+		response.SendOKResponse(w, r)
+		return
+	}
+
+	if r.Method == http.MethodOptions {
+		response.SendCors(w, r)
 		return
 	}
 
 	if r.Method != http.MethodPost {
 		log.Print("from loginUser: method not allowed")
-		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w)
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
@@ -170,14 +194,14 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
-		response.SendErrorResponse("invalid request", http.StatusBadRequest, w)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
 	err = isValidLoginFields(&user)
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
-		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w)
+		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -186,18 +210,18 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("from loginUser: %v", err)
 
 		if err.Error() == "email or password incorrect" { //TODO: хорошо бы все константы вывести в отдельный файл
-			response.SendErrorResponse(err.Error(), http.StatusNotFound, w)
+			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
 			return
 		}
 
-		response.SendErrorResponse("server error", http.StatusNotFound, w)
+		response.SendErrorResponse("server error", http.StatusNotFound, w, r)
 		return
 	}
 
 	log.Printf("user %v login, send him cookie", user)
 
 	setCookie(w, userId)
-	response.SendOKResponse(w)
+	response.SendOKResponse(w, r)
 }
 
 // LogoutUser - обработчик для выхода из сессии у пользователя
@@ -212,5 +236,5 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 		deleteCookie(w, userFromCoockies.Id)
 
 	}
-	response.SendOKResponse(w)
+	response.SendOKResponse(w, r)
 }
