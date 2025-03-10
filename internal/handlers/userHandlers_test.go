@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"skillForce/internal/models"
 	"skillForce/internal/repository"
 	"skillForce/internal/response"
@@ -71,174 +70,81 @@ func TestOKRegisterUser(t *testing.T) {
 
 }
 
-func TestInvalidEmailRegisterUser(t *testing.T) {
+func TestInvalidRegisterUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
-
-	bodyString := `{
-		"email": "user@",
-		"name": "John Doe",
-		"password": "password"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
-
-	r := httptest.NewRequest("POST", "/api/register", body)
-	w := httptest.NewRecorder()
-
-	h.RegisterUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("ожидали %d, получили %d", http.StatusBadRequest, resp.StatusCode)
+	tests := []struct {
+		name           string
+		method         string
+		body           string
+		expectedStatus int
+		expectedError  string
+	}{
+		{
+			name:           "Invalid Email",
+			method:         "POST",
+			body:           `{"email": "user@", "name": "John Doe", "password": "password"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "invalid email",
+		},
+		{
+			name:           "Invalid Name",
+			method:         "POST",
+			body:           `{"email": "user@mail.ru", "name": "", "password": "password"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "missing required fields",
+		},
+		{
+			name:           "Invalid Password",
+			method:         "POST",
+			body:           `{"email": "user@mail.ru", "name": "Joe", "password": "pass"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "password too short",
+		},
+		{
+			name:           "Invalid Method",
+			method:         "GET",
+			body:           `{"email": "user@mail.ru", "name": "Joe", "password": "password"}`,
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedError:  "method not allowed",
+		},
 	}
 
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB := repository.NewmockDB(false)
+			uc := usecase.NewUserUsecase(mockDB)
+			h := &UserHandler{useCase: uc}
 
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
+			body := bytes.NewReader([]byte(tt.body))
+			r := httptest.NewRequest(tt.method, "/api/register", body)
+			w := httptest.NewRecorder()
 
-	expectedError := "invalid email"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
-	}
-}
+			h.RegisterUser(w, r)
 
-func TestInvalidNameRegisterUser(t *testing.T) {
-	t.Parallel()
+			resp := w.Result()
+			defer resp.Body.Close()
 
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
+			if resp.StatusCode != tt.expectedStatus {
+				t.Errorf("ожидали %d, получили %d", tt.expectedStatus, resp.StatusCode)
+			}
 
-	bodyString := `{
-		"email": "user@mail.ru",
-		"name": "",
-		"password": "password"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
+			if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
+				t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
+			}
 
-	r := httptest.NewRequest("POST", "/api/register", body)
-	w := httptest.NewRecorder()
+			var errorResp response.ErrorResponse
+			err := json.NewDecoder(resp.Body).Decode(&errorResp)
+			if err != nil {
+				t.Fatalf("не удалось распарсить JSON: %v", err)
+			}
 
-	h.RegisterUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("ожидали %d, получили %d", http.StatusBadRequest, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-
-	expectedError := "missing required fields"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
+			if strings.TrimSpace(errorResp.ErrorStr) != tt.expectedError {
+				t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", tt.expectedError, errorResp.ErrorStr)
+			}
+		})
 	}
 }
-
-func TestInvalidPasswordRegisterUser(t *testing.T) {
-	t.Parallel()
-
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
-
-	bodyString := `{
-		"email": "user@mail.ru",
-		"name": "Joe",
-		"password": "pass"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
-
-	r := httptest.NewRequest("POST", "/api/register", body)
-	w := httptest.NewRecorder()
-
-	h.RegisterUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("ожидали %d, получили %d", http.StatusBadRequest, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-
-	expectedError := "password too short"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
-	}
-}
-
-func TestInvalidMethodRegisterUser(t *testing.T) {
-	t.Parallel()
-
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
-
-	bodyString := `{
-		"email": "user@mail.ru",
-		"name": "Joe",
-		"password": "password"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
-
-	r := httptest.NewRequest("GET", "/api/register", body)
-	w := httptest.NewRecorder()
-
-	h.RegisterUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusMethodNotAllowed {
-		t.Errorf("ожидали %d, получили %d", http.StatusMethodNotAllowed, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-
-	expectedError := "method not allowed"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
-	}
-}
-
 func TestOKLoginUser(t *testing.T) {
 	t.Parallel()
 
@@ -293,126 +199,72 @@ func TestOKLoginUser(t *testing.T) {
 	}
 }
 
-func TestInvalidEmailLoginUser(t *testing.T) {
+func TestInvalidLoginUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
-
-	bodyString := `{
-		"email": "user@",
-		"password": "password"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
-
-	r := httptest.NewRequest("POST", "/api/login", body)
-	w := httptest.NewRecorder()
-
-	h.LoginUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("ожидали %d, получили %d", http.StatusBadRequest, resp.StatusCode)
+	tests := []struct {
+		name           string
+		method         string
+		body           string
+		expectedStatus int
+		expectedError  string
+	}{
+		{
+			name:           "Invalid Email",
+			method:         "POST",
+			body:           `{"email": "user@", "password": "password"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "invalid email",
+		},
+		{
+			name:           "Invalid Password",
+			method:         "POST",
+			body:           `{"email": "user@mail", "password": "pass"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "password too short",
+		},
+		{
+			name:           "Invalid Method",
+			method:         "GET",
+			body:           `{"email": "user@mail.ru", "password": "password"}`,
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedError:  "method not allowed",
+		},
 	}
 
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDB := repository.NewmockDB(false)
+			uc := usecase.NewUserUsecase(mockDB)
+			h := &UserHandler{useCase: uc}
 
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
+			body := bytes.NewReader([]byte(tt.body))
+			r := httptest.NewRequest(tt.method, "/api/login", body)
+			w := httptest.NewRecorder()
 
-	expectedError := "invalid email"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
-	}
-}
+			h.LoginUser(w, r)
 
-func TestInvalidPasswordLoginUser(t *testing.T) {
-	t.Parallel()
+			resp := w.Result()
+			defer resp.Body.Close()
 
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
+			if resp.StatusCode != tt.expectedStatus {
+				t.Errorf("ожидали %d, получили %d", tt.expectedStatus, resp.StatusCode)
+			}
 
-	bodyString := `{
-		"email": "user@mail",
-		"password": "pass"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
+			if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
+				t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
+			}
 
-	r := httptest.NewRequest("POST", "/api/login", body)
-	w := httptest.NewRecorder()
+			var errorResp response.ErrorResponse
+			err := json.NewDecoder(resp.Body).Decode(&errorResp)
+			if err != nil {
+				t.Fatalf("не удалось распарсить JSON: %v", err)
+			}
 
-	h.LoginUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("ожидали %d, получили %d", http.StatusBadRequest, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-
-	expectedError := "password too short"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
-	}
-}
-
-func TestInvalidMethodLoginUser(t *testing.T) {
-	t.Parallel()
-
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewUserUsecase(mockDB)
-	h := &UserHandler{useCase: uc}
-
-	bodyString := `{
-		"email": "user@mail.ru",
-		"password": "password"
-	}`
-	body := bytes.NewReader([]byte(bodyString))
-
-	r := httptest.NewRequest("GET", "/api/login", body)
-	w := httptest.NewRecorder()
-
-	h.LoginUser(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusMethodNotAllowed {
-		t.Errorf("ожидали %d, получили %d", http.StatusMethodNotAllowed, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	var errorResp response.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errorResp)
-	if err != nil {
-		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-
-	expectedError := "method not allowed"
-	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
-		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
+			if strings.TrimSpace(errorResp.ErrorStr) != tt.expectedError {
+				t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", tt.expectedError, errorResp.ErrorStr)
+			}
+		})
 	}
 }
 
@@ -558,44 +410,5 @@ func TestTrueIsAuthorized(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&returnedUser)
 	if err != nil {
 		t.Fatalf("не удалось распарсить JSON: %v", err)
-	}
-}
-
-func TestOKGetCourses(t *testing.T) {
-	t.Parallel()
-
-	mockDB := repository.NewmockDB(false)
-	uc := usecase.NewCourseUsecase(mockDB)
-	h := &CourseHandler{useCase: uc}
-
-	r := httptest.NewRequest("GET", "/api/getCourses", nil)
-	w := httptest.NewRecorder()
-
-	h.GetCourses(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("ожидали %d, получили %d", http.StatusOK, resp.StatusCode)
-	}
-
-	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
-		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
-	}
-
-	expectedCourses := []*models.Course{
-		{Id: 1, Price: 1, PurchasesAmount: 1, CreatorId: 1, TimeToPass: 1, Title: "Курс #1", Description: "Описание курса #1", ScrImage: "image_1.jpg"},
-		{Id: 2, Price: 2, PurchasesAmount: 2, CreatorId: 2, TimeToPass: 2, Title: "Курс #2", Description: "Описание курса #2", ScrImage: "image_2.jpg"},
-	}
-
-	var actualResponse response.BucketCoursesResponse
-	err := json.NewDecoder(resp.Body).Decode(&actualResponse)
-	if err != nil {
-		t.Fatalf("Ошибка декодирования JSON: %v", err)
-	}
-
-	if !reflect.DeepEqual(actualResponse.BucketCourses, expectedCourses) {
-		t.Errorf("ожидали %v, получили %v", expectedCourses, actualResponse.BucketCourses)
 	}
 }
