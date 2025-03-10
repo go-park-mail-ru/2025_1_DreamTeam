@@ -69,30 +69,6 @@ func (h *UserHandler) checkCookie(r *http.Request) *models.User {
 	return nil
 }
 
-func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
-	session, err := r.Cookie("session_id")
-	if session == nil {
-		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
-		return
-	}
-	loggedIn := (err != http.ErrNoCookie)
-	if loggedIn {
-		user, err := h.useCase.GetUserByCookie(session.Value)
-		if err != nil {
-			log.Print(err)
-			response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
-			return
-		}
-		if user != nil {
-			response.SendUser(user, w, r)
-			return
-		}
-		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
-		return
-	}
-	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
-}
-
 // isValidRegistrationFields - валидация полей регистрации
 func isValidRegistrationFields(user *models.User) error {
 	if user.Name == "" {
@@ -127,13 +103,6 @@ func isValidLoginFields(user *models.User) error {
 
 // RegisterUser - обработчик регистрации пользователя
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(r)
-	if userFromCoockies != nil {
-		log.Print("user already registered in")
-		response.SendOKResponse(w, r)
-		return
-	}
-
 	if r.Method != http.MethodPost {
 		log.Print("from registerUser: method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
@@ -176,13 +145,6 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 // LoginUser - обработчик авторизации пользователя
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(r)
-	if userFromCoockies != nil {
-		log.Print("user already logged in")
-		response.SendOKResponse(w, r)
-		return
-	}
-
 	if r.Method == http.MethodOptions {
 		response.SendCors(w, r)
 		return
@@ -242,4 +204,15 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 	}
 	response.SendOKResponse(w, r)
+}
+
+// IsAuthorized - обработчик проверки авторизации
+func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
+	userFromCoockies := h.checkCookie(r)
+	if userFromCoockies != nil {
+		log.Print("user already logged in")
+		response.SendUser(userFromCoockies, w, r)
+		return
+	}
+	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }

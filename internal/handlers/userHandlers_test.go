@@ -488,6 +488,79 @@ func TestOKLogoutAuthorizedUser(t *testing.T) {
 	}
 }
 
+func TestFalseIsAuthorized(t *testing.T) {
+	t.Parallel()
+
+	mockDB := repository.NewmockDB(false)
+	uc := usecase.NewUserUsecase(mockDB)
+	h := &UserHandler{useCase: uc}
+
+	r := httptest.NewRequest("GET", "/api/isAuthorized", nil)
+	w := httptest.NewRecorder()
+
+	h.IsAuthorized(w, r)
+
+	h.LoginUser(w, r)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("ожидали %d, получили %d", http.StatusUnauthorized, resp.StatusCode)
+	}
+
+	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
+		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
+	}
+
+	var errorResp response.ErrorResponse
+	err := json.NewDecoder(resp.Body).Decode(&errorResp)
+	if err != nil {
+		t.Fatalf("не удалось распарсить JSON: %v", err)
+	}
+
+	expectedError := "not authorized"
+	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
+		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
+	}
+}
+
+func TestTrueIsAuthorized(t *testing.T) {
+	t.Parallel()
+
+	mockDB := repository.NewmockDB(true)
+	uc := usecase.NewUserUsecase(mockDB)
+	h := &UserHandler{useCase: uc}
+
+	r := httptest.NewRequest("GET", "/api/isAuthorized", nil)
+	w := httptest.NewRecorder()
+
+	r.AddCookie(&http.Cookie{
+		Name:     "session_id",
+		Value:    strconv.Itoa(1),
+		HttpOnly: true,
+	})
+
+	h.IsAuthorized(w, r)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("ожидали %d, получили %d", http.StatusOK, resp.StatusCode)
+	}
+
+	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
+		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
+	}
+
+	var returnedUser models.User
+	err := json.NewDecoder(resp.Body).Decode(&returnedUser)
+	if err != nil {
+		t.Fatalf("не удалось распарсить JSON: %v", err)
+	}
+}
+
 func TestOKGetCourses(t *testing.T) {
 	t.Parallel()
 
