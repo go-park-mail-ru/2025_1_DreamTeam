@@ -95,8 +95,8 @@ func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 
 // isValidRegistrationFields - валидация полей регистрации
 func isValidRegistrationFields(user *models.User) error {
-	if user.Name == "" || user.Email == "" || user.Password == "" {
-		return errors.New("missing required fields")
+	if user.Name == "" {
+		return errors.New("missing required fields") //TODO: сделать другую ошибку, но пока так, чтобы не поломать фронт
 	}
 
 	if len(user.Password) < 5 {
@@ -113,10 +113,6 @@ func isValidRegistrationFields(user *models.User) error {
 
 // isValidLoginFields - валидация полей авторизации
 func isValidLoginFields(user *models.User) error {
-	if user.Email == "" || user.Password == "" {
-		return errors.New("missing required fields")
-	}
-
 	if len(user.Password) < 5 {
 		return errors.New("password too short")
 	}

@@ -63,7 +63,7 @@ func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
 	return &user, err
 }
 
-// AuthenticateUser - проверяетЮ есть ли пользователь с указанным email и паролем в базе данных, елси есть - возвращает его id и сохраняет сессию в базе
+// AuthenticateUser - проверяет есть ли пользователь с указанным email и паролем в базе данных, елси есть - возвращает его id и сохраняет сессию в базе
 func (d *Database) AuthenticateUser(email string, password string) (int, error) {
 	var id int
 	emailExists, err := d.userExists(email)

@@ -6,13 +6,13 @@ import (
 	"skillForce/internal/repository"
 )
 
-// UserUsecase - структура бизнес-логики
+// UserUsecase - структура бизнес-логики, которая ожидает интерфейс репозитория
 type UserUsecase struct {
-	repo *repository.Database
+	repo repository.Repository
 }
 
 // NewUserUsecase - конструктор
-func NewUserUsecase(repo *repository.Database) *UserUsecase {
+func NewUserUsecase(repo repository.Repository) *UserUsecase {
 	return &UserUsecase{repo: repo}
 }
 

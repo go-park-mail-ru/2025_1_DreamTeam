@@ -7,11 +7,11 @@ import (
 
 // CourseUsecase - структура бизнес-логики
 type CourseUsecase struct {
-	repo *repository.Database
+	repo repository.Repository
 }
 
 // NewCourseUsecase - конструктор
-func NewCourseUsecase(repo *repository.Database) *CourseUsecase {
+func NewCourseUsecase(repo repository.Repository) *CourseUsecase {
 	return &CourseUsecase{repo: repo}
 }
 
