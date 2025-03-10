@@ -58,8 +58,8 @@ func (d *Database) RegisterUser(user *models.User) error {
 // GetUserByCookie - получение пользователя по cookie
 func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
 	var user models.User
-	err := d.conn.QueryRow("SELECT u.id, u.email, u.password, u.salt FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
-		cookieValue).Scan(&user.Id, &user.Email, &user.Password, &user.Salt)
+	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, u.password, u.salt FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
+		cookieValue).Scan(&user.Id, &user.Email, &user.Name, &user.Password, &user.Salt)
 	return &user, err
 }
 

@@ -33,8 +33,9 @@ func setCookie(w http.ResponseWriter, userId int) {
 		Value:    stingUserId,
 		Expires:  expiration,
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		// SameSite: http.SameSiteNoneMode,
+		// Secure:   false,
 	}
 	http.SetCookie(w, &cookie)
 }
@@ -48,6 +49,7 @@ func deleteCookie(w http.ResponseWriter, userId int) {
 		Value:    stingUserId,
 		Expires:  expiration,
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, &cookie)
 }
@@ -69,17 +71,24 @@ func (h *UserHandler) checkCookie(r *http.Request) *models.User {
 
 func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	session, err := r.Cookie("session_id")
+	if session == nil {
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
 	loggedIn := (err != http.ErrNoCookie)
 	if loggedIn {
 		user, err := h.useCase.GetUserByCookie(session.Value)
 		if err != nil {
 			log.Print(err)
 			response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+			return
 		}
 		if user != nil {
 			response.SendUser(user, w, r)
+			return
 		}
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
 	}
 	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
