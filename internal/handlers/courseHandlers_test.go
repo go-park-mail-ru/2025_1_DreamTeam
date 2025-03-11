@@ -9,6 +9,7 @@ import (
 	"skillForce/internal/repository"
 	"skillForce/internal/response"
 	"skillForce/internal/usecase"
+	"strings"
 	"testing"
 )
 
@@ -48,5 +49,40 @@ func TestOKGetCourses(t *testing.T) {
 
 	if !reflect.DeepEqual(actualResponse.BucketCourses, expectedCourses) {
 		t.Errorf("ожидали %v, получили %v", expectedCourses, actualResponse.BucketCourses)
+	}
+}
+
+func TestInvalidMethodGetCourses(t *testing.T) {
+	t.Parallel()
+
+	mockDB := repository.NewmockDB(false)
+	uc := usecase.NewCourseUsecase(mockDB)
+	h := &CourseHandler{useCase: uc}
+
+	r := httptest.NewRequest("POST", "/api/getCourses", nil)
+	w := httptest.NewRecorder()
+
+	h.GetCourses(w, r)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("ожидали %d, получили %d", http.StatusMethodNotAllowed, resp.StatusCode)
+	}
+
+	if contentType := resp.Header.Get("Content-Type"); contentType != "application/json" {
+		t.Errorf("ожидали Content-Type application/json, получили %s", contentType)
+	}
+
+	var errorResp response.ErrorResponse
+	err := json.NewDecoder(resp.Body).Decode(&errorResp)
+	if err != nil {
+		t.Fatalf("не удалось распарсить JSON: %v", err)
+	}
+
+	expectedError := "method not allowed"
+	if strings.TrimSpace(errorResp.ErrorStr) != expectedError {
+		t.Errorf("ожидали ошибку \"%s\", но получили \"%s\"", expectedError, errorResp.ErrorStr)
 	}
 }

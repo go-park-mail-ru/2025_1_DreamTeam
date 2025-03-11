@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+// Хэширование пароля
 func hashPassword(password string, salt []byte) string {
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
 	hashedPassword := fmt.Sprintf("%s$___$%s", base64.StdEncoding.EncodeToString(salt), base64.StdEncoding.EncodeToString(hash))
@@ -34,6 +35,7 @@ func HashPasswordAndCreateSalt(user *models.User) error {
 	return nil
 }
 
+// Проверка пароля
 func CheckPassword(password string, passwordFromDB string, saltBytes []byte) bool {
 	hashedInputPassword := hashPassword(password, saltBytes)
 	return hashedInputPassword == passwordFromDB

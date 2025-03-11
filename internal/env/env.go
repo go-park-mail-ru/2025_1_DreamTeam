@@ -15,6 +15,7 @@ type Environment struct {
 	DB_NAME     string
 }
 
+// NewEnvironment - конструктор для заполнения из файла .env параметров системы
 func NewEnvironment() *Environment {
 	err := godotenv.Load("../../internal/env/.env")
 	if err != nil {

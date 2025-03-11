@@ -18,6 +18,7 @@ type UserResponse struct {
 	User *models.User `json:"user"`
 }
 
+// AddCorsHeaders - добавление заголовков CORS
 func AddCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://217.16.21.64")
 	// w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8001")
@@ -57,6 +58,7 @@ func SendOKResponse(w http.ResponseWriter, r *http.Request) {
 // SendBucketCoursesResponse - отправка списка курсов в JSON-формате
 func SendBucketCoursesResponse(bucketCourses []*models.Course, w http.ResponseWriter, r *http.Request) {
 	response := BucketCoursesResponse{BucketCourses: bucketCourses}
+	w.Header().Set("Content-Type", "application/json")
 	AddCorsHeaders(w, r)
 
 	if r.Method == http.MethodOptions {
@@ -68,8 +70,10 @@ func SendBucketCoursesResponse(bucketCourses []*models.Course, w http.ResponseWr
 	json.NewEncoder(w).Encode(response)
 }
 
+// SendUser - отправка пользователя в JSON-формате
 func SendUser(user *models.User, w http.ResponseWriter, r *http.Request) {
 	response := UserResponse{User: user}
+	w.Header().Set("Content-Type", "application/json")
 	AddCorsHeaders(w, r)
 
 	if r.Method == http.MethodOptions {
@@ -81,6 +85,7 @@ func SendUser(user *models.User, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// SendCors - отправка заголовков CORS
 func SendCors(w http.ResponseWriter, r *http.Request) {
 	AddCorsHeaders(w, r)
 
