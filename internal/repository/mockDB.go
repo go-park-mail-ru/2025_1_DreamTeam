@@ -52,12 +52,12 @@ func (r *mockDB) GetUserByCookie(cookieValue string) (*models.User, error) {
 	return nil, nil
 }
 
-func (r *mockDB) RegisterUser(user *models.User) error {
-	return nil
+func (r *mockDB) RegisterUser(user *models.User) (string, error) {
+	return "", nil
 }
 
-func (r *mockDB) AuthenticateUser(email string, password string) (int, error) {
-	return 0, nil
+func (r *mockDB) AuthenticateUser(email string, password string) (string, error) {
+	return "", nil
 }
 
 func (r *mockDB) LogoutUser(userId int) error {

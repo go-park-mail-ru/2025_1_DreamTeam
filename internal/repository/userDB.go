@@ -7,7 +7,29 @@ import (
 	"skillForce/internal/hash"
 	"skillForce/internal/models"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
+
+var SECRET = []byte("dream_team_secret_jehpfqjbhjfkjlGUGeqJIBxcfimor")
+
+func (d *Database) saveSession(userId int) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": userId,
+	})
+
+	secretToken, err := token.SignedString(SECRET)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = d.conn.Exec("INSERT INTO sessions (user_id, token, expires) VALUES ($1, $2, $3)", userId, secretToken, time.Now().Add(10*time.Hour))
+	if err != nil {
+		return "", err
+	}
+
+	return secretToken, nil
+}
 
 // userExists - проверяет, существует ли пользователь с указанным email
 func (d *Database) userExists(email string) (bool, error) {
@@ -18,41 +40,41 @@ func (d *Database) userExists(email string) (bool, error) {
 }
 
 // RegisterUser - сохраняет нового пользователя в базе данных и создает сессию, тоже сохраняя её в базе
-func (d *Database) RegisterUser(user *models.User) error {
+func (d *Database) RegisterUser(user *models.User) (string, error) {
 	emailExists, err := d.userExists(user.Email)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if emailExists {
-		return errors.New("email exists")
+		return "", errors.New("email exists")
 	}
 	saltBase64 := base64.StdEncoding.EncodeToString(user.Salt)
 	_, err = d.conn.Exec("INSERT INTO usertable (email, name, password, salt) VALUES ($1, $2, $3, $4)", user.Email, user.Name, user.Password, saltBase64)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Printf("Save user %+v in db", user)
 
 	rows, err := d.conn.Query("SELECT id FROM usertable WHERE email = $1", user.Email)
 	if err != nil {
-		return err
+		return "", err
 	}
 	for rows.Next() {
 		err = rows.Scan(&user.Id)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	_, err = d.conn.Exec("INSERT INTO sessions (user_id, token, expires) VALUES ($1, $2, $3)", user.Id, user.Id, time.Now().Add(10*time.Hour))
+	cookieValue, err := d.saveSession(user.Id)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Printf("Save sessions of user %+v in db", user)
 
-	return nil
+	return cookieValue, nil
 }
 
 // GetUserByCookie - получение пользователя по cookie
@@ -64,39 +86,39 @@ func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
 }
 
 // AuthenticateUser - проверяет есть ли пользователь с указанным email и паролем в базе данных, елси есть - возвращает его id и сохраняет сессию в базе
-func (d *Database) AuthenticateUser(email string, password string) (int, error) {
+func (d *Database) AuthenticateUser(email string, password string) (string, error) {
 	var id int
 	emailExists, err := d.userExists(email)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 	if !emailExists {
-		return -1, errors.New("email or password incorrect")
+		return "", errors.New("email or password incorrect")
 	}
 	var passwordFromDB string
 	var salt string
 	err2 := d.conn.QueryRow("SELECT id, password, salt FROM usertable WHERE email = $1", email).Scan(&id, &passwordFromDB, &salt)
 	if err2 != nil {
-		return -1, err2
+		return "", err2
 	}
 	saltBytes, err := base64.StdEncoding.DecodeString(salt)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	if !hash.CheckPassword(password, passwordFromDB, saltBytes) {
-		return -1, errors.New("email or password incorrect")
+		return "", errors.New("email or password incorrect")
 	}
 
 	log.Printf("Login user with email %+v in db", email)
 
-	_, err = d.conn.Exec("INSERT INTO sessions (user_id, token, expires) VALUES ($1, $2, $3)", id, id, time.Now().Add(10*time.Hour))
+	cookieValue, err := d.saveSession(id)
 	if err != nil {
-		return -1, err
+		return "", err
 	}
 
 	log.Printf("Save sessions of user with email %+v in db", email)
-	return id, nil
+	return cookieValue, nil
 }
 
 // LogoutUser - удаляет сессию пользователя из базы данных

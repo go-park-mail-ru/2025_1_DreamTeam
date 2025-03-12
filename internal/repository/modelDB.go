@@ -8,8 +8,8 @@ import (
 )
 
 type Repository interface {
-	RegisterUser(user *models.User) error
-	AuthenticateUser(email string, password string) (int, error)
+	RegisterUser(user *models.User) (string, error)
+	AuthenticateUser(email string, password string) (string, error)
 	GetUserByCookie(cookieValue string) (*models.User, error)
 	LogoutUser(userId int) error
 	GetBucketCourses() ([]*models.Course, error)

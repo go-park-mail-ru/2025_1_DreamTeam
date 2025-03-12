@@ -8,7 +8,6 @@ import (
 	"skillForce/internal/models"
 	"skillForce/internal/response"
 	"skillForce/internal/usecase"
-	"strconv"
 	"time"
 
 	"github.com/badoux/checkmail"
@@ -25,12 +24,11 @@ func NewUserHandler(uc *usecase.UserUsecase) *UserHandler {
 }
 
 // setCookie - установка куки для контроля, авторизован ли пользователь
-func setCookie(w http.ResponseWriter, userId int) {
-	stingUserId := strconv.Itoa(userId)
+func setCookie(w http.ResponseWriter, cookieValue string) {
 	expiration := time.Now().Add(10 * time.Hour)
 	cookie := http.Cookie{
 		Name:     "session_id",
-		Value:    stingUserId,
+		Value:    cookieValue,
 		Expires:  expiration,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -41,12 +39,12 @@ func setCookie(w http.ResponseWriter, userId int) {
 }
 
 // deleteCookie - удаление куки у пользователь
-func deleteCookie(w http.ResponseWriter, userId int) {
-	stingUserId := strconv.Itoa(userId)
+func deleteCookie(w http.ResponseWriter) {
+	cookieValue := "hello from server"
 	expiration := time.Now().AddDate(0, 0, -1)
 	cookie := http.Cookie{
 		Name:     "session_id",
-		Value:    stingUserId,
+		Value:    cookieValue,
 		Expires:  expiration,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -124,7 +122,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.useCase.RegisterUser(&user)
+	cookie, err := h.useCase.RegisterUser(&user)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
 
@@ -139,7 +137,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("user %v registered, send him cookie", user)
 
-	setCookie(w, user.Id)
+	setCookie(w, cookie)
 	response.SendOKResponse(w, r)
 }
 
@@ -172,7 +170,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, err := h.useCase.AuthenticateUser(&user)
+	cookieValue, err := h.useCase.AuthenticateUser(&user)
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
 
@@ -187,7 +185,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("user %v login, send him cookie", user)
 
-	setCookie(w, userId)
+	setCookie(w, cookieValue)
 	response.SendOKResponse(w, r)
 }
 
@@ -200,7 +198,7 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("from logoutUser: %v", err) //TODO: тут дырка, надо подумать, че делать...
 		}
-		deleteCookie(w, userFromCoockies.Id)
+		deleteCookie(w)
 
 	}
 	response.SendOKResponse(w, r)
