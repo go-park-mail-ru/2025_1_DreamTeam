@@ -32,7 +32,7 @@ func (uc *UserUsecase) AuthenticateUser(user *models.User) (string, error) {
 }
 
 // GetUserByCookie - получение пользователя по cookie
-func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.User, error) {
+func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.UserProfile, error) {
 	return uc.repo.GetUserByCookie(cookieValue)
 }
 

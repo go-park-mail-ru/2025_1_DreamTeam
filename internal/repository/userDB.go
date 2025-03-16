@@ -78,11 +78,14 @@ func (d *Database) RegisterUser(user *models.User) (string, error) {
 }
 
 // GetUserByCookie - получение пользователя по cookie
-func (d *Database) GetUserByCookie(cookieValue string) (*models.User, error) {
-	var user models.User
-	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, u.password, u.salt FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
-		cookieValue).Scan(&user.Id, &user.Email, &user.Name, &user.Password, &user.Salt)
-	return &user, err
+func (d *Database) GetUserByCookie(cookieValue string) (*models.UserProfile, error) {
+	var userProfile models.UserProfile
+	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, COALESCE(u.bio, ''), u.avatar_src, u.hide_email FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expires > NOW();",
+		cookieValue).Scan(&userProfile.Id, &userProfile.Email, &userProfile.Name, &userProfile.Bio, &userProfile.AvatarSrc, &userProfile.HideEmail)
+	if err != nil {
+		return nil, err
+	}
+	return &userProfile, err
 }
 
 // AuthenticateUser - проверяет есть ли пользователь с указанным email и паролем в базе данных, елси есть - возвращает его id и сохраняет сессию в базе

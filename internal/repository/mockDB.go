@@ -44,10 +44,14 @@ func NewmockDB(is_auth bool) *mockDB {
 	return mockDB
 }
 
-func (r *mockDB) GetUserByCookie(cookieValue string) (*models.User, error) {
+func (r *mockDB) GetUserByCookie(cookieValue string) (*models.UserProfile, error) {
 	if r.is_auth {
 		user := r.users[1]
-		return user, nil
+		var userProfile models.UserProfile
+		userProfile.Id = user.Id
+		userProfile.Email = user.Email
+		userProfile.Name = user.Name
+		return &userProfile, nil
 	}
 	return nil, nil
 }

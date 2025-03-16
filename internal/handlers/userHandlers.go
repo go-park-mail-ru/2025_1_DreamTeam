@@ -53,16 +53,16 @@ func deleteCookie(w http.ResponseWriter) {
 }
 
 // checkCookie - проверка наличия куки
-func (h *UserHandler) checkCookie(r *http.Request) *models.User {
+func (h *UserHandler) checkCookie(r *http.Request) *models.UserProfile {
 	session, err := r.Cookie("session_id")
 	loggedIn := (err != http.ErrNoCookie)
 	if loggedIn {
-		user, err := h.useCase.GetUserByCookie(session.Value)
+		userProfile, err := h.useCase.GetUserByCookie(session.Value)
 		if err != nil {
 			log.Print(err)
 			return nil
 		}
-		return user
+		return userProfile
 	}
 	return nil
 }
@@ -143,11 +143,6 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 // LoginUser - обработчик авторизации пользователя
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		response.SendCors(w, r)
-		return
-	}
-
 	if r.Method != http.MethodPost {
 		log.Print("from loginUser: method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
@@ -191,10 +186,10 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 // LogoutUser - обработчик для выхода из сессии у пользователя
 func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(r)
-	if userFromCoockies != nil {
-		log.Printf("logout user %+v", userFromCoockies)
-		err := h.useCase.LogoutUser(userFromCoockies.Id)
+	userProfile := h.checkCookie(r)
+	if userProfile != nil {
+		log.Printf("logout user %+v", userProfile)
+		err := h.useCase.LogoutUser(userProfile.Id)
 		if err != nil {
 			log.Printf("from logoutUser: %v", err) //TODO: тут дырка, надо подумать, че делать...
 		}
@@ -204,13 +199,25 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
-// IsAuthorized - обработчик проверки авторизации
+// IsAuthorized - обработчик проверки авторизации, если пользователь авторизован, то возвращает его данные
 func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
-	userFromCoockies := h.checkCookie(r)
-	if userFromCoockies != nil {
+	userProfile := h.checkCookie(r)
+	if userProfile != nil {
 		log.Print("user already logged in")
-		response.SendUser(userFromCoockies, w, r)
+		response.SendUserProfile(userProfile, w, r)
 		return
 	}
 	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
+
+/*
+func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userProfile := h.checkCookie(r)
+	if userProfile == nil {
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+*/
