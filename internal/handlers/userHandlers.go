@@ -151,7 +151,6 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
-
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
@@ -203,21 +202,38 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
-		log.Print("user already logged in")
 		response.SendUserProfile(userProfile, w, r)
 		return
 	}
+	log.Print("from isAuthorized: user not logged in")
 	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
 
-/*
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
+		log.Print("from updateProfile: user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
 
+	var newUserProfile models.UserProfile
+	err := json.NewDecoder(r.Body).Decode(&newUserProfile)
+	if err != nil {
+		log.Printf("from updateProfile: %v", err)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	//TODO: добавить тут валидацию
+	err = h.useCase.UpdateProfile(userProfile.Id, &newUserProfile)
+	if err != nil {
+		log.Printf("from updateProfile: %v", err)
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		return
+	}
+
+	log.Printf("user %v updated profile with values %+v", userProfile, newUserProfile)
+
 	response.SendOKResponse(w, r)
 }
-*/

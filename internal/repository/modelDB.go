@@ -13,6 +13,7 @@ type Repository interface {
 	GetUserByCookie(cookieValue string) (*models.UserProfile, error)
 	LogoutUser(userId int) error
 	GetBucketCourses() ([]*models.Course, error)
+	UpdateProfile(userId int, userProfile *models.UserProfile) error
 }
 
 type Database struct {

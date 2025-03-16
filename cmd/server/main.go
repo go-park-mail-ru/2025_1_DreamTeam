@@ -35,6 +35,7 @@ func main() {
 	corsMux.HandleFunc("/api/login", userHandler.LoginUser)
 	corsMux.HandleFunc("/api/logout", userHandler.LogoutUser)
 	corsMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
+	corsMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
 
 	corsMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 

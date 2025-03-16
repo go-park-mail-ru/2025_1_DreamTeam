@@ -76,3 +76,7 @@ func (r *mockDB) GetBucketCourses() ([]*models.Course, error) {
 	}
 	return bucketCourses, nil
 }
+
+func (r *mockDB) UpdateProfile(userId int, userProfile *models.UserProfile) error {
+	return nil
+}

@@ -39,3 +39,7 @@ func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.UserProfile,
 func (uc *UserUsecase) LogoutUser(userId int) error {
 	return uc.repo.LogoutUser(userId)
 }
+
+func (uc *UserUsecase) UpdateProfile(userId int, userProfile *models.UserProfile) error {
+	return uc.repo.UpdateProfile(userId, userProfile)
+}

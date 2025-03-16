@@ -127,5 +127,19 @@ func (d *Database) AuthenticateUser(email string, password string) (string, erro
 // LogoutUser - удаляет сессию пользователя из базы данных
 func (d *Database) LogoutUser(userId int) error {
 	_, err := d.conn.Exec("DELETE FROM sessions WHERE user_id = $1", userId)
+	if err != nil {
+		return err
+	}
+	log.Printf("Logout user with id %+v in db", userId)
+	return err
+}
+
+func (d *Database) UpdateProfile(userId int, userProfile *models.UserProfile) error {
+	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3, avatar_src = $4 WHERE id = $5",
+		userProfile.Email, userProfile.Name, userProfile.Bio, userProfile.AvatarSrc, userId)
+	if err != nil {
+		return err
+	}
+	log.Printf("Update profile %+v of user with id %+v in db", userProfile, userId)
 	return err
 }
