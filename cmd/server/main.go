@@ -26,7 +26,7 @@ func main() {
 	}
 	defer database.Close()
 
-	corsMux := http.NewServeMux()
+	siteMux := http.NewServeMux()
 
 	userUseCase := usecase.NewUserUsecase(database)
 	userHandler := handlers.NewUserHandler(userUseCase)
@@ -34,18 +34,23 @@ func main() {
 	courseUseCase := usecase.NewCourseUsecase(database)
 	courseHandler := handlers.NewCourseHandler(courseUseCase)
 
-	corsMux.HandleFunc("/api/register", userHandler.RegisterUser)
-	corsMux.HandleFunc("/api/login", userHandler.LoginUser)
-	corsMux.HandleFunc("/api/logout", userHandler.LogoutUser)
-	corsMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
-	corsMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
+	siteMux.HandleFunc("/api/register", userHandler.RegisterUser)
+	siteMux.HandleFunc("/api/login", userHandler.LoginUser)
+	siteMux.HandleFunc("/api/logout", userHandler.LogoutUser)
+	siteMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
+	siteMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
 
-	corsMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 
-	corsMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
+	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
-	corsHandler := middleware.CorsOptionsMiddleware(corsMux)
+	//siteMux.HandleFunc("/api/panic", func(w http.ResponseWriter, r *http.Request) {
+	//panic("this must me recovered")
+	//})
+
+	siteHandler := middleware.PanicMiddleware(siteMux)
+	siteHandler = middleware.CorsOptionsMiddleware(siteHandler)
 
 	log.Println("Server started on :8080")
-	log.Fatal(http.ListenAndServe(":8080", corsHandler))
+	log.Fatal(http.ListenAndServe(":8080", siteHandler))
 }
