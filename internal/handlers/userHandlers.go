@@ -99,7 +99,19 @@ func isValidLoginFields(user *models.User) error {
 	return nil
 }
 
-// RegisterUser - обработчик регистрации пользователя
+// RegisterUser godoc
+// @Summary Register a new user
+// @Description Register a new user with the given name, email, and password and send cookie
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User information"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid request | missing required fields | password too short | invalid email"
+// @Failure 404 {object} response.ErrorResponse "email exists"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/register [post]
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		log.Print("from registerUser: method not allowed")
@@ -141,7 +153,19 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
-// LoginUser - обработчик авторизации пользователя
+// LoginUser godoc
+// @Summary Login user
+// @Description Login user with the given email, password and send cookie
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User information"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid request | password too short | invalid email"
+// @Failure 404 {object} response.ErrorResponse "email or password incorrect"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/login [post]
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		log.Print("from loginUser: method not allowed")
@@ -173,7 +197,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		response.SendErrorResponse("server error", http.StatusNotFound, w, r)
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
 
@@ -183,14 +207,24 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
-// LogoutUser - обработчик для выхода из сессии у пользователя
+// LogoutUser godoc
+// @Summary Logout user
+// @Description Logout user by deleting session cookie
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "200 OK"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/logout [post]
 func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
 		log.Printf("logout user %+v", userProfile)
 		err := h.useCase.LogoutUser(userProfile.Id)
 		if err != nil {
-			log.Printf("from logoutUser: %v", err) //TODO: тут дырка, надо подумать, че делать...
+			log.Printf("from logoutUser: %v", err)
+			response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+			return
 		}
 		deleteCookie(w)
 
@@ -198,7 +232,15 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
-// IsAuthorized - обработчик проверки авторизации, если пользователь авторизован, то возвращает его данные
+// IsAuthorized godoc
+// @Summary Check if user is authorized
+// @Description Returns user profile if authorized
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.UserProfileResponse "User profile"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Router /api/isAuthorized [get]
 func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
@@ -209,6 +251,18 @@ func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
 
+// UpdateProfile godoc
+// @Summary Update user profile
+// @Description Updates the profile information of the authorized user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param profile body models.UserProfile true "Updated user profile"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid request"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/updateProfile [post]
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {

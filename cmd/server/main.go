@@ -9,9 +9,12 @@ import (
 	"skillForce/internal/middleware"
 	"skillForce/internal/repository"
 	"skillForce/internal/usecase"
+
+	_ "skillForce/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// точка входа приложения
 func main() {
 	env := env.NewEnvironment()
 
@@ -38,6 +41,8 @@ func main() {
 	corsMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
 
 	corsMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+
+	corsMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
 	corsHandler := middleware.CorsOptionsMiddleware(corsMux)
 

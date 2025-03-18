@@ -1,3 +1,5 @@
 go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
 cat cover.out.tmp | grep -v "env.go" > cover.out
 go tool cover -func=cover.out
+
+swag init -g ./cmd/server/main.go

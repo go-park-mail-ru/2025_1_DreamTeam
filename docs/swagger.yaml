@@ -1,0 +1,236 @@
+definitions:
+  models.Course:
+    properties:
+      creator_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      price:
+        type: integer
+      purchases_amount:
+        type: integer
+      src_image:
+        type: string
+      time_to_pass:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  models.UserProfile:
+    properties:
+      avatar_src:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      hide_email:
+        type: boolean
+      name:
+        type: string
+    type: object
+  response.BucketCoursesResponse:
+    properties:
+      bucket_courses:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  response.UserProfileResponse:
+    properties:
+      user:
+        $ref: '#/definitions/models.UserProfile'
+    type: object
+info:
+  contact: {}
+paths:
+  /api/getCourses:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of available courses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of courses
+          schema:
+            $ref: '#/definitions/response.BucketCoursesResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get list of courses
+      tags:
+      - courses
+  /api/isAuthorized:
+    get:
+      consumes:
+      - application/json
+      description: Returns user profile if authorized
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/response.UserProfileResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Check if user is authorized
+      tags:
+      - users
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with the given email, password and send cookie
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid request | password too short | invalid email
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: email or password incorrect
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Login user
+      tags:
+      - users
+  /api/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user by deleting session cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Logout user
+      tags:
+      - users
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the given name, email, and password and
+        send cookie
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid request | missing required fields | password too short
+            | invalid email
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: email exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - users
+  /api/updateProfile:
+    post:
+      consumes:
+      - application/json
+      description: Updates the profile information of the authorized user
+      parameters:
+      - description: Updated user profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserProfile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update user profile
+      tags:
+      - users
+swagger: "2.0"
