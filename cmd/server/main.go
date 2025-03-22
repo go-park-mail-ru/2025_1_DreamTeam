@@ -8,6 +8,7 @@ import (
 	"skillForce/internal/handlers"
 	"skillForce/internal/middleware"
 	"skillForce/internal/repository"
+	"skillForce/internal/tools"
 	"skillForce/internal/usecase"
 
 	_ "skillForce/docs"
@@ -17,6 +18,11 @@ import (
 
 func main() {
 	env := env.NewEnvironment()
+
+	err := tools.InitMinio(env.MINIO_ENDPOINT, env.MINIO_ACCESS_KEY, env.MINIO_SECRET_ACCESS_KEY, env.MINIO_USESSL, env.MINIO_BUCKET_NAME)
+	if err != nil {
+		log.Fatalf("Failed to connect to MinIO: %v", err)
+	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", env.DB_HOST, env.DB_PORT, env.DB_USER, env.DB_PASSWORD, env.DB_NAME)
 	database, err := repository.NewDatabase(dsn)
@@ -39,6 +45,7 @@ func main() {
 	siteMux.HandleFunc("/api/logout", userHandler.LogoutUser)
 	siteMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
 	siteMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
+	siteMux.HandleFunc("/api/updateProfilePhoto", userHandler.UpdateProfilePhoto)
 
 	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 

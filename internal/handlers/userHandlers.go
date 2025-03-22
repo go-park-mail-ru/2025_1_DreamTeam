@@ -3,10 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"skillForce/internal/models"
 	"skillForce/internal/response"
+	"skillForce/internal/tools"
 	"skillForce/internal/usecase"
 	"time"
 
@@ -290,4 +292,41 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	log.Printf("user %v updated profile with values %+v", userProfile, newUserProfile)
 
 	response.SendOKResponse(w, r)
+}
+
+// UpdateProfilePhoto godoc
+// @Summary Update user profile photo
+// @Description Updates the profile photo of the authorized user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param profile body models.UserProfile true "Updated user profile"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid request"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/updateProfile [post]
+func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		log.Printf("from updateProfilePhoto: %v", err)
+		response.SendErrorResponse("photo is too big", http.StatusBadRequest, w, r)
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("avatar")
+	if err != nil {
+		log.Printf("from updateProfilePhoto: %v", err)
+		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
+		return
+	}
+	defer file.Close()
+
+	url, err := tools.UploadToMinIO(file, fileHeader)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки в MinIO", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Файл загружен: %s", url)
 }

@@ -13,6 +13,12 @@ type Environment struct {
 	DB_USER     string
 	DB_PASSWORD string
 	DB_NAME     string
+
+	MINIO_ENDPOINT          string
+	MINIO_ACCESS_KEY        string
+	MINIO_SECRET_ACCESS_KEY string
+	MINIO_BUCKET_NAME       string
+	MINIO_USESSL            bool
 }
 
 // NewEnvironment - конструктор для заполнения из файла .env параметров системы
@@ -28,7 +34,14 @@ func NewEnvironment() *Environment {
 	DB_PASSWORD := os.Getenv("DB_PASSWORD")
 	DB_NAME := os.Getenv("DB_NAME")
 
-	if DB_HOST == "" || DB_PORT == "" || DB_USER == "" || DB_PASSWORD == "" || DB_NAME == "" {
+	MINIO_ENDPOINT := os.Getenv("MINIO_ENDPOINT")
+	MINIO_ACCESS_KEY := os.Getenv("MINIO_ACCESS_KEY")
+	MINIO_SECRET_ACCESS_KEY := os.Getenv("MINIO_SECRET_ACCESS_KEY")
+	MINIO_BUCKET_NAME := os.Getenv("MINIO_BUCKET_NAME")
+	MINIO_USESSL := os.Getenv("MINIO_USESSL")
+
+	if DB_HOST == "" || DB_PORT == "" || DB_USER == "" || DB_PASSWORD == "" || DB_NAME == "" || MINIO_ENDPOINT == "" ||
+		MINIO_ACCESS_KEY == "" || MINIO_SECRET_ACCESS_KEY == "" || MINIO_BUCKET_NAME == "" {
 		log.Fatal("Missing required environment variables")
 	}
 
@@ -38,6 +51,12 @@ func NewEnvironment() *Environment {
 		DB_USER:     DB_USER,
 		DB_PASSWORD: DB_PASSWORD,
 		DB_NAME:     DB_NAME,
+
+		MINIO_ENDPOINT:          MINIO_ENDPOINT,
+		MINIO_ACCESS_KEY:        MINIO_ACCESS_KEY,
+		MINIO_SECRET_ACCESS_KEY: MINIO_SECRET_ACCESS_KEY,
+		MINIO_BUCKET_NAME:       MINIO_BUCKET_NAME,
+		MINIO_USESSL:            MINIO_USESSL == "true",
 	}
 
 }
