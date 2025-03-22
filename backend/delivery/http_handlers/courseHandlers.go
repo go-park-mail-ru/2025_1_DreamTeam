@@ -3,8 +3,8 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"skillForce/internal/response"
-	"skillForce/internal/usecase"
+	"skillForce/backend/delivery/http_handlers/response"
+	"skillForce/backend/usecase"
 )
 
 // CourseHandler - структура обработчика HTTP-запросов

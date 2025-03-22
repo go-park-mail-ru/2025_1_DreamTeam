@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"skillForce/internal/env"
-	"skillForce/internal/handlers"
+	"skillForce/backend/repository"
+	"skillForce/env"
 	"skillForce/internal/middleware"
-	"skillForce/internal/repository"
 	"skillForce/internal/tools"
 	"skillForce/internal/usecase"
 
 	_ "skillForce/docs"
+
+	handlers "skillForce/backend/delivery/http_handlers"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -50,10 +51,6 @@ func main() {
 	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
-
-	//siteMux.HandleFunc("/api/panic", func(w http.ResponseWriter, r *http.Request) {
-	//panic("this must me recovered")
-	//})
 
 	siteHandler := middleware.PanicMiddleware(siteMux)
 	siteHandler = middleware.CorsOptionsMiddleware(siteHandler)
