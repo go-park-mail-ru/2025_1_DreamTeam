@@ -3,13 +3,13 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"skillForce/backend/delivery/http_handlers/response"
+	"skillForce/backend/delivery/http/response"
 	"skillForce/backend/usecase"
 )
 
 // CourseHandler - структура обработчика HTTP-запросов
 type CourseHandler struct {
-	useCase *usecase.CourseUsecase
+	useCase usecase.CourseUsecaseInterface
 }
 
 // NewCourseHandler - конструктор

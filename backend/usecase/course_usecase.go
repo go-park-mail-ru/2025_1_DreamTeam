@@ -1,9 +1,13 @@
 package usecase
 
 import (
-	"skillForce/internal/models"
-	"skillForce/internal/repository"
+	"skillForce/backend/models"
+	"skillForce/backend/repository"
 )
+
+type CourseUsecaseInterface interface {
+	GetBucketCourses() ([]*models.Course, error)
+}
 
 // CourseUsecase - структура бизнес-логики
 type CourseUsecase struct {

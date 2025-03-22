@@ -1,8 +1,9 @@
-package repository
+package mock
 
 import (
 	"fmt"
-	"skillForce/internal/models"
+	"mime/multipart"
+	"skillForce/backend/models"
 )
 
 type mockDB struct {
@@ -79,4 +80,8 @@ func (r *mockDB) GetBucketCourses() ([]*models.Course, error) {
 
 func (r *mockDB) UpdateProfile(userId int, userProfile *models.UserProfile) error {
 	return nil
+}
+
+func (r *mockDB) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return "", nil
 }

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"skillForce/internal/models"
+	"skillForce/backend/models"
 
 	"golang.org/x/crypto/argon2"
 )
