@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"skillForce/internal/models"
-	"skillForce/internal/repository"
-	"skillForce/internal/response"
-	"skillForce/internal/usecase"
+	"skillForce/backend/delivery/http/response"
+	"skillForce/backend/models"
+	"skillForce/backend/repository/mock"
+	"skillForce/backend/usecase"
 	"strings"
 	"testing"
 )
@@ -16,7 +16,7 @@ import (
 func TestOKGetCourses(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewCourseUsecase(mockDB)
 	h := &CourseHandler{useCase: uc}
 
@@ -55,7 +55,7 @@ func TestOKGetCourses(t *testing.T) {
 func TestInvalidMethodGetCourses(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewCourseUsecase(mockDB)
 	h := &CourseHandler{useCase: uc}
 

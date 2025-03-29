@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"skillForce/internal/models"
-	"skillForce/internal/repository"
-	"skillForce/internal/response"
-	"skillForce/internal/usecase"
+	"skillForce/backend/delivery/http/response"
+	"skillForce/backend/models"
+	"skillForce/backend/repository/mock"
+	"skillForce/backend/usecase"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,7 +18,7 @@ import (
 func TestOKRegisterUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 
@@ -112,7 +112,7 @@ func TestInvalidRegisterUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDB := repository.NewmockDB(false)
+			mockDB := mock.NewmockDB(false)
 			uc := usecase.NewUserUsecase(mockDB)
 			h := &UserHandler{useCase: uc}
 
@@ -148,7 +148,7 @@ func TestInvalidRegisterUser(t *testing.T) {
 func TestOKLoginUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 
@@ -234,7 +234,7 @@ func TestInvalidLoginUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDB := repository.NewmockDB(false)
+			mockDB := mock.NewmockDB(false)
 			uc := usecase.NewUserUsecase(mockDB)
 			h := &UserHandler{useCase: uc}
 
@@ -271,7 +271,7 @@ func TestInvalidLoginUser(t *testing.T) {
 func TestOKLogoutUnauthorizedUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 
@@ -291,7 +291,7 @@ func TestOKLogoutUnauthorizedUser(t *testing.T) {
 func TestOKLogoutAuthorizedUser(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(true)
+	mockDB := mock.NewmockDB(true)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 
@@ -343,7 +343,7 @@ func TestOKLogoutAuthorizedUser(t *testing.T) {
 func TestFalseIsAuthorized(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(false)
+	mockDB := mock.NewmockDB(false)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 
@@ -380,7 +380,7 @@ func TestFalseIsAuthorized(t *testing.T) {
 func TestTrueIsAuthorized(t *testing.T) {
 	t.Parallel()
 
-	mockDB := repository.NewmockDB(true)
+	mockDB := mock.NewmockDB(true)
 	uc := usecase.NewUserUsecase(mockDB)
 	h := &UserHandler{useCase: uc}
 

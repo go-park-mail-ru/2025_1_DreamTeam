@@ -1,10 +1,21 @@
 package usecase
 
 import (
+	"mime/multipart"
+	"skillForce/backend/models"
+	"skillForce/backend/repository"
 	"skillForce/internal/hash"
-	"skillForce/internal/models"
-	"skillForce/internal/repository"
 )
+
+type UserUsecaseInterface interface {
+	RegisterUser(user *models.User) (string, error)
+	AuthenticateUser(user *models.User) (string, error)
+	GetUserByCookie(cookieValue string) (*models.UserProfile, error)
+	LogoutUser(userId int) error
+	UpdateProfile(userId int, userProfile *models.UserProfile) error
+	UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	SaveProfilePhoto(url string, userId int) error
+}
 
 // UserUsecase - структура бизнес-логики, которая ожидает интерфейс репозитория
 type UserUsecase struct {
@@ -42,6 +53,10 @@ func (uc *UserUsecase) LogoutUser(userId int) error {
 
 func (uc *UserUsecase) UpdateProfile(userId int, userProfile *models.UserProfile) error {
 	return uc.repo.UpdateProfile(userId, userProfile)
+}
+
+func (uc *UserUsecase) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return uc.repo.UploadFile(file, fileHeader)
 }
 
 func (uc *UserUsecase) SaveProfilePhoto(url string, userId int) error {

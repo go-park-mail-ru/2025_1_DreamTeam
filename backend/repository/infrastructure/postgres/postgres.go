@@ -1,8 +1,8 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
-	"skillForce/internal/models"
+	"skillForce/backend/models"
 
 	_ "github.com/lib/pq"
 )

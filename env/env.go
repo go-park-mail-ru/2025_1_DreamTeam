@@ -23,7 +23,7 @@ type Environment struct {
 
 // NewEnvironment - конструктор для заполнения из файла .env параметров системы
 func NewEnvironment() *Environment {
-	err := godotenv.Load("../../internal/env/.env")
+	err := godotenv.Load("../env/.env")
 	if err != nil {
 		log.Fatalf("Download error .env file: %s", err)
 	}

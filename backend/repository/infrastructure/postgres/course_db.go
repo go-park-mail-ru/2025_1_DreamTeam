@@ -1,6 +1,6 @@
-package repository
+package postgres
 
-import "skillForce/internal/models"
+import "skillForce/backend/models"
 
 // GetBucketCourses - извлекает список курсов из базы данных
 func (d *Database) GetBucketCourses() ([]*models.Course, error) {

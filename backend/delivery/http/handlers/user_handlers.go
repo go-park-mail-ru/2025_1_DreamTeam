@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"skillForce/internal/models"
-	"skillForce/internal/response"
-	"skillForce/internal/tools"
-	"skillForce/internal/usecase"
+	"skillForce/backend/delivery/http/response"
+	"skillForce/backend/models"
+	"skillForce/backend/usecase"
 	"time"
 
 	"github.com/badoux/checkmail"
@@ -17,7 +16,7 @@ import (
 
 // UserHandler - структура обработчика HTTP-запросов
 type UserHandler struct {
-	useCase *usecase.UserUsecase
+	useCase usecase.UserUsecaseInterface
 }
 
 // NewUserHandler - конструктор
@@ -329,7 +328,7 @@ func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request)
 	}
 	defer file.Close()
 
-	url, err := tools.UploadToMinIO(file, fileHeader)
+	url, err := h.useCase.UploadFile(file, fileHeader)
 	if err != nil {
 		http.Error(w, "Ошибка загрузки в MinIO", http.StatusInternalServerError)
 		return

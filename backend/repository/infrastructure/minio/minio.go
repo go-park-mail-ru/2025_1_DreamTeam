@@ -1,4 +1,4 @@
-package tools
+package minio
 
 import (
 	"fmt"
@@ -9,17 +9,17 @@ import (
 	"github.com/minio/minio-go"
 )
 
-var MinioClient *minio.Client
-var AvatarsBucket string
-
-func InitMinio(endpoint string, accessKeyID string, secretAccessKey string, useSSL bool, bucketName string) error {
-	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
-	MinioClient = minioClient
-	AvatarsBucket = bucketName
-	return err
+type Minio struct {
+	MinioClient   *minio.Client
+	AvatarsBucket string
 }
 
-func UploadToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func NewMinio(endpoint string, accessKeyID string, secretAccessKey string, useSSL bool, bucketName string) (*Minio, error) {
+	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
+	return &Minio{MinioClient: minioClient, AvatarsBucket: bucketName}, err
+}
+
+func (mn *Minio) UploadFileToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 
 	uniqueID := uuid.New().String()
 	ext := ""
@@ -29,8 +29,8 @@ func UploadToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (strin
 	objectName := fmt.Sprintf("%s%s", uniqueID, ext)
 	contentType := fileHeader.Header.Get("Content-Type")
 
-	_, err := MinioClient.PutObject(
-		AvatarsBucket,
+	_, err := mn.MinioClient.PutObject(
+		mn.AvatarsBucket,
 		objectName,
 		file,
 		fileHeader.Size,
@@ -40,6 +40,6 @@ func UploadToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (strin
 		return "", err
 	}
 
-	fileURL := fmt.Sprintf("http://217.16.21.64:8006/%s/%s", AvatarsBucket, objectName)
+	fileURL := fmt.Sprintf("http://217.16.21.64:8006/%s/%s", mn.AvatarsBucket, objectName)
 	return fileURL, nil
 }

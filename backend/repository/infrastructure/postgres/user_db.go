@@ -1,11 +1,11 @@
-package repository
+package postgres
 
 import (
 	"encoding/base64"
 	"errors"
 	"log"
+	"skillForce/backend/models"
 	"skillForce/internal/hash"
-	"skillForce/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -135,8 +135,8 @@ func (d *Database) LogoutUser(userId int) error {
 }
 
 func (d *Database) UpdateProfile(userId int, userProfile *models.UserProfile) error {
-	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3 WHERE id = $4",
-		userProfile.Email, userProfile.Name, userProfile.Bio, userId)
+	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3, avatar_src = $4 WHERE id = $5",
+		userProfile.Email, userProfile.Name, userProfile.Bio, userProfile.AvatarSrc, userId)
 	if err != nil {
 		return err
 	}
