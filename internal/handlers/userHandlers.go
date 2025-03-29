@@ -307,6 +307,13 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
 func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	userProfile := h.checkCookie(r)
+	if userProfile == nil {
+		log.Print("from updateProfile: user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
 		log.Printf("from updateProfilePhoto: %v", err)
@@ -325,6 +332,13 @@ func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request)
 	url, err := tools.UploadToMinIO(file, fileHeader)
 	if err != nil {
 		http.Error(w, "Ошибка загрузки в MinIO", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.useCase.SaveProfilePhoto(url, userProfile.Id)
+	if err != nil {
+		log.Printf("from updateProfilePhoto: %v", err)
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
 

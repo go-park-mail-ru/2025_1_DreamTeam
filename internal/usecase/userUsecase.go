@@ -44,7 +44,7 @@ func (uc *UserUsecase) UpdateProfile(userId int, userProfile *models.UserProfile
 	return uc.repo.UpdateProfile(userId, userProfile)
 }
 
-func (uc *UserUsecase) SaveProfilePhoto() error {
+func (uc *UserUsecase) SaveProfilePhoto(url string, userId int) error {
 	// minioClient, err :=
 	// if err != nil {
 	// 	return "", err
@@ -68,5 +68,5 @@ func (uc *UserUsecase) SaveProfilePhoto() error {
 
 	// fileURL := fmt.Sprintf("https://%s/%s/%s", endpoint, bucketName, info.Key)
 	// return fileURL, nil
-	return nil
+	return uc.repo.UpdateProfilePhoto(url, userId)
 }

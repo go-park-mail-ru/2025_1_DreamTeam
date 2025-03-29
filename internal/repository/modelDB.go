@@ -14,6 +14,7 @@ type Repository interface {
 	LogoutUser(userId int) error
 	GetBucketCourses() ([]*models.Course, error)
 	UpdateProfile(userId int, userProfile *models.UserProfile) error
+	UpdateProfilePhoto(photo_url string, userId int) error
 }
 
 type Database struct {

@@ -143,3 +143,12 @@ func (d *Database) UpdateProfile(userId int, userProfile *models.UserProfile) er
 	log.Printf("Update profile %+v of user with id %+v in db", userProfile, userId)
 	return err
 }
+
+func (d *Database) UpdateProfilePhoto(photo_url string, userId int) error {
+	_, err := d.conn.Exec("UPDATE usertable SET avatar_src = $1 WHERE id = $2", photo_url, userId)
+	if err != nil {
+		return err
+	}
+	log.Printf("Update profile photo to %+v of user with id %+v in db", photo_url, userId)
+	return err
+}
