@@ -134,7 +134,7 @@ func (d *Database) LogoutUser(userId int) error {
 	return err
 }
 
-func (d *Database) UpdateProfile(userId int, userProfile *models.UserProfile) error {
+func (d *Database) UpdateProfile(userId int, userProfile *models.UserProfile) error { // TODO: полчистить avatar_src
 	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3, avatar_src = $4 WHERE id = $5",
 		userProfile.Email, userProfile.Name, userProfile.Bio, userProfile.AvatarSrc, userId)
 	if err != nil {

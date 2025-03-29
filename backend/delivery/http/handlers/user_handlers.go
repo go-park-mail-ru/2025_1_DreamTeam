@@ -304,7 +304,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Failure 500 {object} response.ErrorResponse "server error"
-// @Router /api/updateProfile [post]
+// @Router /api/updateProfilePhoto [post]
 func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
