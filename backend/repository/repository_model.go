@@ -13,4 +13,5 @@ type Repository interface {
 	GetBucketCourses() ([]*models.Course, error)
 	UpdateProfile(userId int, userProfile *models.UserProfile) error
 	UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	UpdateProfilePhoto(url string, userId int) error
 }

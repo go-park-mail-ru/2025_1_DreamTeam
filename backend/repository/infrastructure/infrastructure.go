@@ -64,3 +64,7 @@ func (i *Infrastructure) UpdateProfile(userId int, userProfile *models.UserProfi
 func (i *Infrastructure) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return i.Minio.UploadFileToMinIO(file, fileHeader)
 }
+
+func (i *Infrastructure) UpdateProfilePhoto(photo_url string, userId int) error {
+	return i.Database.UpdateProfilePhoto(photo_url, userId)
+}
