@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
-	"skillForce/backend/models"
-	"skillForce/backend/repository/infrastructure/minio"
-	"skillForce/backend/repository/infrastructure/postgres"
 	"skillForce/env"
+	"skillForce/internal/models"
+	"skillForce/internal/repository/infrastructure/minio"
+	"skillForce/internal/repository/infrastructure/postgres"
 )
 
 type Infrastructure struct {

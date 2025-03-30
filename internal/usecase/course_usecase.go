@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"skillForce/backend/models"
-	"skillForce/backend/repository"
+	"skillForce/internal/models"
+	"skillForce/internal/repository"
 )
 
 type CourseUsecaseInterface interface {

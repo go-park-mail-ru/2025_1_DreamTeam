@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 	"net/http"
-	"skillForce/backend/delivery/http/middleware"
-	"skillForce/backend/repository/infrastructure"
-	"skillForce/backend/usecase"
 	"skillForce/env"
+	"skillForce/internal/delivery/http/middleware"
+	"skillForce/internal/repository/infrastructure"
+	"skillForce/internal/usecase"
 
 	_ "skillForce/docs"
 
-	"skillForce/backend/delivery/http/handlers"
+	"skillForce/internal/delivery/http/handlers"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )

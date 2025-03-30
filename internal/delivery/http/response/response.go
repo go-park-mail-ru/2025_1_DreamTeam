@@ -3,7 +3,7 @@ package response
 import (
 	"encoding/json"
 	"net/http"
-	"skillForce/backend/models"
+	"skillForce/internal/models"
 )
 
 type ErrorResponse struct {

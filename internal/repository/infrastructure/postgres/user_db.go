@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
-	"skillForce/backend/models"
-	"skillForce/internal/hash"
+	"skillForce/internal/models"
+	"skillForce/pkg/hash"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"

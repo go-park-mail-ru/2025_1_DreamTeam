@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"skillForce/backend/delivery/http/response"
-	"skillForce/backend/models"
-	"skillForce/backend/usecase"
+	"skillForce/internal/delivery/http/response"
+	"skillForce/internal/models"
+	"skillForce/internal/usecase"
 	"time"
 
 	"github.com/badoux/checkmail"

@@ -2,9 +2,9 @@ package usecase
 
 import (
 	"mime/multipart"
-	"skillForce/backend/models"
-	"skillForce/backend/repository"
-	"skillForce/internal/hash"
+	"skillForce/internal/models"
+	"skillForce/internal/repository"
+	"skillForce/pkg/hash"
 )
 
 type UserUsecaseInterface interface {

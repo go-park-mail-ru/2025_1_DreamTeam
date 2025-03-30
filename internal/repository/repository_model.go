@@ -2,7 +2,7 @@ package repository
 
 import (
 	"mime/multipart"
-	"skillForce/backend/models"
+	"skillForce/internal/models"
 )
 
 type Repository interface {
