@@ -2,9 +2,20 @@ package postgres
 
 import (
 	"database/sql"
+	"skillForce/backend/models"
 
 	_ "github.com/lib/pq"
 )
+
+type Repository interface {
+	RegisterUser(user *models.User) (string, error)
+	AuthenticateUser(email string, password string) (string, error)
+	GetUserByCookie(cookieValue string) (*models.UserProfile, error)
+	LogoutUser(userId int) error
+	GetBucketCourses() ([]*models.Course, error)
+	UpdateProfile(userId int, userProfile *models.UserProfile) error
+	UpdateProfilePhoto(photo_url string, userId int) error
+}
 
 type Database struct {
 	conn *sql.DB

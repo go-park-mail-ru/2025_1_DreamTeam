@@ -82,6 +82,9 @@ func (r *mockDB) UpdateProfile(userId int, userProfile *models.UserProfile) erro
 	return nil
 }
 
+func (r *mockDB) UpdateProfilePhoto(url string, userId int) error {
+	return nil
+}
 func (r *mockDB) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return "", nil
 }
