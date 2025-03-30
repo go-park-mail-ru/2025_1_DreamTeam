@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"mime/multipart"
-	"skillForce/env"
+	"skillForce/config"
 	"skillForce/internal/models"
 	"skillForce/internal/repository/infrastructure/minio"
 	"skillForce/internal/repository/infrastructure/postgres"
@@ -15,13 +15,13 @@ type Infrastructure struct {
 	Minio    *minio.Minio
 }
 
-func NewInfrastructure(env *env.Environment) *Infrastructure {
-	mn, err := minio.NewMinio(env.MINIO_ENDPOINT, env.MINIO_ACCESS_KEY, env.MINIO_SECRET_ACCESS_KEY, env.MINIO_USESSL, env.MINIO_BUCKET_NAME)
+func NewInfrastructure(conf *config.Config) *Infrastructure {
+	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName)
 	if err != nil {
 		log.Fatalf("Failed to connect to MinIO: %v", err)
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", env.DB_HOST, env.DB_PORT, env.DB_USER, env.DB_PASSWORD, env.DB_NAME)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", conf.Database.Host, conf.Database.Port, conf.Database.User, conf.Database.Password, conf.Database.Name)
 	database, err := postgres.NewDatabase(dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

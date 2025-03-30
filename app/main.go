@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"skillForce/env"
+	"skillForce/config"
 	"skillForce/internal/delivery/http/middleware"
 	"skillForce/internal/repository/infrastructure"
 	"skillForce/internal/usecase"
@@ -16,9 +16,9 @@ import (
 )
 
 func main() {
-	env := env.NewEnvironment()
+	config := config.LoadConfig()
 
-	infrastructure := infrastructure.NewInfrastructure(env)
+	infrastructure := infrastructure.NewInfrastructure(config)
 	defer infrastructure.Close()
 
 	siteMux := http.NewServeMux()
