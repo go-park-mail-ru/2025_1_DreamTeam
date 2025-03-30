@@ -135,7 +135,7 @@ erDiagram
         TIMESTAMP Updated_at
     }
 
-    LESSON_CHEKCPOINT {
+    LESSON_CHECKPOINT {
         INT ID PK
         INT User_ID 
         INT Lesson_ID
