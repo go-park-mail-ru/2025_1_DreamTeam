@@ -233,4 +233,38 @@ paths:
       summary: Update user profile
       tags:
       - users
+  /api/updateProfilePhoto:
+    post:
+      consumes:
+      - application/json
+      description: Updates the profile photo of the authorized user
+      parameters:
+      - description: Updated user profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserProfile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update user profile photo
+      tags:
+      - users
 swagger: "2.0"
