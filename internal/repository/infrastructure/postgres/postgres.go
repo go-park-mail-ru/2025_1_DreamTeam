@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"database/sql"
-	"skillForce/backend/models"
+	"skillForce/internal/models"
 
 	_ "github.com/lib/pq"
 )

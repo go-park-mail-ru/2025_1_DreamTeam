@@ -1,18 +1,38 @@
 package models
 
+import "skillForce/internal/models/dto"
+
 type User struct {
-	Id       int    `json:"-"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Salt     []byte `json:"-"`
+	Id       int
+	Name     string
+	Email    string
+	Password string
+	Salt     []byte
 }
 
 type UserProfile struct {
-	Id        int    `json:"-"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	Bio       string `json:"bio"`
-	AvatarSrc string `json:"avatar_src"`
-	HideEmail bool   `json:"hide_email"`
+	Id        int
+	Name      string
+	Email     string
+	Bio       string
+	AvatarSrc string
+	HideEmail bool
+}
+
+func NewUser(dto dto.UserDTO) *User {
+	return &User{
+		Name:     dto.Name,
+		Email:    dto.Email,
+		Password: dto.Password,
+	}
+}
+
+func NewUserProfile(dto dto.UserProfileDTO) *UserProfile {
+	return &UserProfile{
+		Name:      dto.Name,
+		Email:     dto.Email,
+		Bio:       dto.Bio,
+		AvatarSrc: dto.AvatarSrc,
+		HideEmail: dto.HideEmail,
+	}
 }

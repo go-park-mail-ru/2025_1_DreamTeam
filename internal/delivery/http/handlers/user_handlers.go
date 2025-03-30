@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"skillForce/internal/delivery/http/response"
 	"skillForce/internal/models"
+	"skillForce/internal/models/dto"
 	"skillForce/internal/usecase"
 	"time"
 
@@ -69,7 +70,7 @@ func (h *UserHandler) checkCookie(r *http.Request) *models.UserProfile {
 }
 
 // isValidRegistrationFields - валидация полей регистрации
-func isValidRegistrationFields(user *models.User) error {
+func isValidRegistrationFields(user *dto.UserDTO) error {
 	if user.Name == "" {
 		return errors.New("missing required fields") //TODO: сделать другую ошибку, но пока так, чтобы не поломать фронт
 	}
@@ -87,7 +88,7 @@ func isValidRegistrationFields(user *models.User) error {
 }
 
 // isValidLoginFields - валидация полей авторизации
-func isValidLoginFields(user *models.User) error {
+func isValidLoginFields(user *dto.UserDTO) error {
 	if len(user.Password) < 5 {
 		return errors.New("password too short")
 	}
@@ -120,22 +121,23 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var userInput dto.UserDTO
+	err := json.NewDecoder(r.Body).Decode(&userInput)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidRegistrationFields(&user)
+	err = isValidRegistrationFields(&userInput)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
 
-	cookie, err := h.useCase.RegisterUser(&user)
+	user := models.NewUser(userInput)
+	cookie, err := h.useCase.RegisterUser(user)
 	if err != nil {
 		log.Printf("from registerUser: %v", err)
 
@@ -174,22 +176,23 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var userInput dto.UserDTO
+	err := json.NewDecoder(r.Body).Decode(&userInput)
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidLoginFields(&user)
+	err = isValidLoginFields(&userInput)
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
 
-	cookieValue, err := h.useCase.AuthenticateUser(&user)
+	user := models.NewUser(userInput)
+	cookieValue, err := h.useCase.AuthenticateUser(user)
 	if err != nil {
 		log.Printf("from loginUser: %v", err)
 
@@ -245,7 +248,15 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
-		response.SendUserProfile(userProfile, w, r)
+		userProfileOut := dto.UserProfileDTO{
+			Name:      userProfile.Name,
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+		}
+
+		response.SendUserProfile(&userProfileOut, w, r)
 		return
 	}
 	log.Print("from isAuthorized: user not logged in")

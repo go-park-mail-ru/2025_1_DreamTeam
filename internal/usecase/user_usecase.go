@@ -60,28 +60,5 @@ func (uc *UserUsecase) UploadFile(file multipart.File, fileHeader *multipart.Fil
 }
 
 func (uc *UserUsecase) SaveProfilePhoto(url string, userId int) error {
-	// minioClient, err :=
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// objectName := fileHeader.Filename // Можно добавить уникальность
-	// contentType := fileHeader.Header.Get("Content-Type")
-
-	// // Загрузка файла в MinIO
-	// info, err := minioClient.PutObject(
-	// 	context.Background(),
-	// 	bucketName,
-	// 	objectName,
-	// 	file,
-	// 	fileHeader.Size,
-	// 	minio.PutObjectOptions{ContentType: contentType},
-	// )
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// fileURL := fmt.Sprintf("https://%s/%s/%s", endpoint, bucketName, info.Key)
-	// return fileURL, nil
 	return uc.repo.UpdateProfilePhoto(url, userId)
 }

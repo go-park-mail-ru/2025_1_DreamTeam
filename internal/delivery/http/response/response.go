@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"skillForce/internal/models"
+	"skillForce/internal/models/dto"
 )
 
 type ErrorResponse struct {
@@ -15,7 +16,7 @@ type BucketCoursesResponse struct {
 }
 
 type UserProfileResponse struct {
-	UserProfile *models.UserProfile `json:"user"`
+	UserProfile *dto.UserProfileDTO `json:"user"`
 }
 
 // SendErrorResponse - отправка ошибки в JSON-формате
@@ -41,7 +42,7 @@ func SendBucketCoursesResponse(bucketCourses []*models.Course, w http.ResponseWr
 }
 
 // SendUserProfile - отправка профиля пользователя в JSON-формате
-func SendUserProfile(UserProfile *models.UserProfile, w http.ResponseWriter, r *http.Request) {
+func SendUserProfile(UserProfile *dto.UserProfileDTO, w http.ResponseWriter, r *http.Request) {
 	response := UserProfileResponse{UserProfile: UserProfile}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

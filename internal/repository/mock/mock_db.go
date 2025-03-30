@@ -3,7 +3,7 @@ package mock
 import (
 	"fmt"
 	"mime/multipart"
-	"skillForce/backend/models"
+	"skillForce/internal/models"
 )
 
 type mockDB struct {
