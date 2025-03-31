@@ -22,12 +22,10 @@ func main() {
 	infrastructure := infrastructure.NewInfrastructure(config)
 	defer infrastructure.Close()
 
-	logger := logs.NewLogger()
-
 	siteMux := http.NewServeMux()
 
 	userUseCase := usecase.NewUserUsecase(infrastructure)
-	userHandler := handlers.NewUserHandler(userUseCase, logger)
+	userHandler := handlers.NewUserHandler(userUseCase)
 
 	courseUseCase := usecase.NewCourseUsecase(infrastructure)
 	courseHandler := handlers.NewCourseHandler(courseUseCase)

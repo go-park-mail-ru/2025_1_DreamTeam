@@ -27,8 +27,9 @@ func logContext(ctx context.Context, path string) {
 		return
 	}
 	buf := bytes.NewBufferString(path)
+	buf.WriteString("\n")
 	for _, value := range logs.Data {
-		buf.WriteString(fmt.Sprintf("\n\t%s", value.Message))
+		buf.WriteString(fmt.Sprintf("\t%s", value.Message))
 	}
 	fmt.Println(buf.String())
 }
