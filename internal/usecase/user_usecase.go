@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"mime/multipart"
 	"skillForce/internal/models"
 	"skillForce/internal/repository"
@@ -8,13 +9,13 @@ import (
 )
 
 type UserUsecaseInterface interface {
-	RegisterUser(user *models.User) (string, error)
-	AuthenticateUser(user *models.User) (string, error)
-	GetUserByCookie(cookieValue string) (*models.UserProfile, error)
-	LogoutUser(userId int) error
-	UpdateProfile(userId int, userProfile *models.UserProfile) error
-	UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error)
-	SaveProfilePhoto(url string, userId int) error
+	RegisterUser(ctx context.Context, user *models.User) (string, error)
+	AuthenticateUser(ctx context.Context, user *models.User) (string, error)
+	GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error)
+	LogoutUser(ctx context.Context, userId int) error
+	UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error
+	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	SaveProfilePhoto(ctx context.Context, url string, userId int) error
 }
 
 // UserUsecase - структура бизнес-логики, которая ожидает интерфейс репозитория
@@ -28,7 +29,7 @@ func NewUserUsecase(repo repository.Repository) *UserUsecase {
 }
 
 // RegisterUser - регистрация пользователя
-func (uc *UserUsecase) RegisterUser(user *models.User) (string, error) {
+func (uc *UserUsecase) RegisterUser(ctx context.Context, user *models.User) (string, error) {
 	err := hash.HashPasswordAndCreateSalt(user)
 	if err != nil {
 		return "", err
@@ -38,27 +39,27 @@ func (uc *UserUsecase) RegisterUser(user *models.User) (string, error) {
 }
 
 // AuthenticateUser - авторизация пользователя
-func (uc *UserUsecase) AuthenticateUser(user *models.User) (string, error) {
+func (uc *UserUsecase) AuthenticateUser(ctx context.Context, user *models.User) (string, error) {
 	return uc.repo.AuthenticateUser(user.Email, user.Password)
 }
 
 // GetUserByCookie - получение пользователя по cookie
-func (uc *UserUsecase) GetUserByCookie(cookieValue string) (*models.UserProfile, error) {
+func (uc *UserUsecase) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
 	return uc.repo.GetUserByCookie(cookieValue)
 }
 
-func (uc *UserUsecase) LogoutUser(userId int) error {
+func (uc *UserUsecase) LogoutUser(ctx context.Context, userId int) error {
 	return uc.repo.LogoutUser(userId)
 }
 
-func (uc *UserUsecase) UpdateProfile(userId int, userProfile *models.UserProfile) error {
+func (uc *UserUsecase) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
 	return uc.repo.UpdateProfile(userId, userProfile)
 }
 
-func (uc *UserUsecase) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (uc *UserUsecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return uc.repo.UploadFile(file, fileHeader)
 }
 
-func (uc *UserUsecase) SaveProfilePhoto(url string, userId int) error {
+func (uc *UserUsecase) SaveProfilePhoto(ctx context.Context, url string, userId int) error {
 	return uc.repo.UpdateProfilePhoto(url, userId)
 }

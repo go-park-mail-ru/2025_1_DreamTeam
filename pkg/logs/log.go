@@ -3,7 +3,6 @@ package logs
 import (
 	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
@@ -25,20 +24,14 @@ func NewLogger() *Logger {
 }
 
 func (l *Logger) PrintLog(ctx context.Context, funcName string, message string) {
-	l.logrusLogger.WithField("function", funcName).Info(message)
-	ctxLog, _ := ctx.Value(logsKey).(*ctxLog)
+	var buf bytes.Buffer
+	logger := logrus.New()
+	logger.SetOutput(&buf)
 
-	ctxLog.Lock()
-	defer ctxLog.Unlock()
-	defer l.buf.Reset()
+	logger.WithField("function", funcName).Info(message)
+	ctxLog, _ := ctx.Value(LogsKey).(*CtxLog)
 
-	if _, exist := ctxLog.data[funcName]; exist {
-		ctxLog.data[funcName].message += fmt.Sprintf("\n\t%s", l.buf.String())
-		return
+	ctxLog.Data[funcName] = &LogString{
+		Message: l.buf.String(),
 	}
-
-	ctxLog.data[funcName] = &logString{
-		message: l.buf.String(),
-	}
-
 }
