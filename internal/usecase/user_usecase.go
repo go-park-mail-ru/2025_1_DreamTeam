@@ -35,31 +35,31 @@ func (uc *UserUsecase) RegisterUser(ctx context.Context, user *models.User) (str
 		return "", err
 	}
 
-	return uc.repo.RegisterUser(user)
+	return uc.repo.RegisterUser(ctx, user)
 }
 
 // AuthenticateUser - авторизация пользователя
 func (uc *UserUsecase) AuthenticateUser(ctx context.Context, user *models.User) (string, error) {
-	return uc.repo.AuthenticateUser(user.Email, user.Password)
+	return uc.repo.AuthenticateUser(ctx, user.Email, user.Password)
 }
 
 // GetUserByCookie - получение пользователя по cookie
 func (uc *UserUsecase) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
-	return uc.repo.GetUserByCookie(cookieValue)
+	return uc.repo.GetUserByCookie(ctx, cookieValue)
 }
 
 func (uc *UserUsecase) LogoutUser(ctx context.Context, userId int) error {
-	return uc.repo.LogoutUser(userId)
+	return uc.repo.LogoutUser(ctx, userId)
 }
 
 func (uc *UserUsecase) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
-	return uc.repo.UpdateProfile(userId, userProfile)
+	return uc.repo.UpdateProfile(ctx, userId, userProfile)
 }
 
 func (uc *UserUsecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
-	return uc.repo.UploadFile(file, fileHeader)
+	return uc.repo.UploadFile(ctx, file, fileHeader)
 }
 
 func (uc *UserUsecase) SaveProfilePhoto(ctx context.Context, url string, userId int) error {
-	return uc.repo.UpdateProfilePhoto(url, userId)
+	return uc.repo.UpdateProfilePhoto(ctx, url, userId)
 }

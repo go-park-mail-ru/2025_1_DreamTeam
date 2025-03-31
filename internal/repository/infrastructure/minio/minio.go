@@ -1,6 +1,7 @@
 package minio
 
 import (
+	"context"
 	"fmt"
 	"mime/multipart"
 	"strings"
@@ -19,7 +20,7 @@ func NewMinio(endpoint string, accessKeyID string, secretAccessKey string, useSS
 	return &Minio{MinioClient: minioClient, AvatarsBucket: bucketName}, err
 }
 
-func (mn *Minio) UploadFileToMinIO(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (mn *Minio) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 
 	uniqueID := uuid.New().String()
 	ext := ""

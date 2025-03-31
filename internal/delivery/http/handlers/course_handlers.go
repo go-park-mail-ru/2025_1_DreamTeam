@@ -34,7 +34,7 @@ func (h *CourseHandler) GetCourses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bucketCourses, err := h.useCase.GetBucketCourses()
+	bucketCourses, err := h.useCase.GetBucketCourses(r.Context())
 	if err != nil {
 		log.Printf("from getCourses: %v", err)
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)

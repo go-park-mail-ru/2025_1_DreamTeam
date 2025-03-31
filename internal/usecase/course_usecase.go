@@ -1,12 +1,13 @@
 package usecase
 
 import (
+	"context"
 	"skillForce/internal/models"
 	"skillForce/internal/repository"
 )
 
 type CourseUsecaseInterface interface {
-	GetBucketCourses() ([]*models.Course, error)
+	GetBucketCourses(ctx context.Context) ([]*models.Course, error)
 }
 
 // CourseUsecase - структура бизнес-логики
@@ -20,6 +21,6 @@ func NewCourseUsecase(repo repository.Repository) *CourseUsecase {
 }
 
 // GetBucketCourses - извлекает список курсов из базы данных
-func (uc *CourseUsecase) GetBucketCourses() ([]*models.Course, error) {
-	return uc.repo.GetBucketCourses()
+func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*models.Course, error) {
+	return uc.repo.GetBucketCourses(ctx)
 }

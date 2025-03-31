@@ -15,6 +15,11 @@ func PrintLog(ctx context.Context, funcName string, message string) {
 	logger.WithField("function", funcName).Info(message)
 	ctxLog, _ := ctx.Value(LogsKey).(*CtxLog)
 
+	if _, exist := ctxLog.Data[funcName]; exist {
+		ctxLog.Data[funcName].Message += buf.String()
+		return
+	}
+
 	ctxLog.Data[funcName] = &LogString{
 		Message: buf.String(),
 	}
