@@ -10,6 +10,7 @@ import (
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/internal/usecase"
+	"skillForce/pkg/logs"
 	"time"
 
 	"github.com/badoux/checkmail"
@@ -18,11 +19,15 @@ import (
 // UserHandler - структура обработчика HTTP-запросов
 type UserHandler struct {
 	useCase usecase.UserUsecaseInterface
+	logger  *logs.Logger
 }
 
 // NewUserHandler - конструктор
-func NewUserHandler(uc *usecase.UserUsecase) *UserHandler {
-	return &UserHandler{useCase: uc}
+func NewUserHandler(uc *usecase.UserUsecase, l *logs.Logger) *UserHandler {
+	return &UserHandler{
+		useCase: uc,
+		logger:  l,
+	}
 }
 
 // setCookie - установка куки для контроля, авторизован ли пользователь
@@ -116,7 +121,7 @@ func isValidLoginFields(user *dto.UserDTO) error {
 // @Router /api/register [post]
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		log.Print("from registerUser: method not allowed")
+		h.logger.PrintLog(r.Context(), "RegisterUser", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
@@ -124,14 +129,14 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var userInput dto.UserDTO
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 	if err != nil {
-		log.Printf("from registerUser: %v", err)
+		h.logger.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
 	err = isValidRegistrationFields(&userInput)
 	if err != nil {
-		log.Printf("from registerUser: %v", err)
+		h.logger.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
@@ -139,7 +144,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	user := models.NewUser(userInput)
 	cookie, err := h.useCase.RegisterUser(user)
 	if err != nil {
-		log.Printf("from registerUser: %v", err)
+		h.logger.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 
 		if err.Error() == "email exists" { //TODO: хорошо бы все константы вывести в отдельный файл
 			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
@@ -150,7 +155,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("user %v registered, send him cookie", user)
+	h.logger.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("user %+v registered, send him cookie", user))
 
 	setCookie(w, cookie)
 	response.SendOKResponse(w, r)
@@ -171,7 +176,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 // @Router /api/login [post]
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		log.Print("from loginUser: method not allowed")
+		h.logger.PrintLog(r.Context(), "LoginUser", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
@@ -179,14 +184,14 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	var userInput dto.UserDTO
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 	if err != nil {
-		log.Printf("from loginUser: %v", err)
+		h.logger.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
 	err = isValidLoginFields(&userInput)
 	if err != nil {
-		log.Printf("from loginUser: %v", err)
+		h.logger.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
 		return
 	}
@@ -194,7 +199,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	user := models.NewUser(userInput)
 	cookieValue, err := h.useCase.AuthenticateUser(user)
 	if err != nil {
-		log.Printf("from loginUser: %v", err)
+		h.logger.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 
 		if err.Error() == "email or password incorrect" { //TODO: хорошо бы все константы вывести в отдельный файл
 			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
@@ -204,8 +209,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
-
-	log.Printf("user %v login, send him cookie", user)
+	h.logger.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("user %+v login, send him cookie", user))
 
 	setCookie(w, cookieValue)
 	response.SendOKResponse(w, r)
@@ -223,10 +227,10 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
-		log.Printf("logout user %+v", userProfile)
+		h.logger.PrintLog(r.Context(), "LogoutUser", fmt.Sprintf("logout user %+v", userProfile))
 		err := h.useCase.LogoutUser(userProfile.Id)
 		if err != nil {
-			log.Printf("from logoutUser: %v", err)
+			h.logger.PrintLog(r.Context(), "LogoutUser", fmt.Sprintf("%+v", err))
 			response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 			return
 		}
@@ -259,7 +263,7 @@ func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 		response.SendUserProfile(&userProfileOut, w, r)
 		return
 	}
-	log.Print("from isAuthorized: user not logged in")
+	h.logger.PrintLog(r.Context(), "IsAuthorized", "user not logged in")
 	response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 }
 
@@ -278,7 +282,7 @@ func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
-		log.Print("from updateProfile: user not logged in")
+		h.logger.PrintLog(r.Context(), "UpdateProfile", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
@@ -286,7 +290,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	var newUserProfile models.UserProfile
 	err := json.NewDecoder(r.Body).Decode(&newUserProfile)
 	if err != nil {
-		log.Printf("from updateProfile: %v", err)
+		h.logger.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
@@ -294,12 +298,11 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	//TODO: добавить тут валидацию
 	err = h.useCase.UpdateProfile(userProfile.Id, &newUserProfile)
 	if err != nil {
-		log.Printf("from updateProfile: %v", err)
+		h.logger.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
-
-	log.Printf("user %v updated profile with values %+v", userProfile, newUserProfile)
+	h.logger.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("user %+v updated profile with values %+v", userProfile, newUserProfile))
 
 	response.SendOKResponse(w, r)
 }
@@ -319,21 +322,21 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
-		log.Print("from updateProfile: user not logged in")
+		h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
 
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
-		log.Printf("from updateProfilePhoto: %v", err)
+		h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("photo is too big", http.StatusBadRequest, w, r)
 		return
 	}
 
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
-		log.Printf("from updateProfilePhoto: %v", err)
+		h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
 		return
 	}
@@ -341,16 +344,17 @@ func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request)
 
 	url, err := h.useCase.UploadFile(file, fileHeader)
 	if err != nil {
+		h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		http.Error(w, "Ошибка загрузки в MinIO", http.StatusInternalServerError)
 		return
 	}
 
 	err = h.useCase.SaveProfilePhoto(url, userProfile.Id)
 	if err != nil {
-		log.Printf("from updateProfilePhoto: %v", err)
+		h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "Файл загружен: %s", url)
+	h.logger.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("Файл загружен: %s", url))
 }

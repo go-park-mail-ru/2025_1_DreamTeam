@@ -7,6 +7,7 @@ import (
 	"skillForce/internal/delivery/http/middleware"
 	"skillForce/internal/repository/infrastructure"
 	"skillForce/internal/usecase"
+	"skillForce/pkg/logs"
 
 	_ "skillForce/docs"
 
@@ -21,10 +22,12 @@ func main() {
 	infrastructure := infrastructure.NewInfrastructure(config)
 	defer infrastructure.Close()
 
+	logger := logs.NewLogger()
+
 	siteMux := http.NewServeMux()
 
 	userUseCase := usecase.NewUserUsecase(infrastructure)
-	userHandler := handlers.NewUserHandler(userUseCase)
+	userHandler := handlers.NewUserHandler(userUseCase, logger)
 
 	courseUseCase := usecase.NewCourseUsecase(infrastructure)
 	courseHandler := handlers.NewCourseHandler(courseUseCase)
@@ -40,7 +43,8 @@ func main() {
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
-	siteHandler := middleware.PanicMiddleware(siteMux)
+	siteHandler := logs.LoggerMiddleware(siteMux)
+	siteHandler = middleware.PanicMiddleware(siteHandler)
 	siteHandler = middleware.CorsOptionsMiddleware(siteHandler)
 
 	log.Println("Server started on :8080")

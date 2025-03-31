@@ -8,12 +8,13 @@ require (
 	github.com/badoux/checkmail v1.2.4
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/uuid v1.6.0
-	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/minio/minio-go v6.0.14+incompatible
+	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.8.1
 	golang.org/x/crypto v0.35.0
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -32,5 +33,4 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
