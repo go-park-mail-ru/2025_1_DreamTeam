@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"skillForce/internal/models"
 	"skillForce/pkg/logs"
 )
@@ -27,7 +28,7 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, erro
 		bucketCourses = append(bucketCourses, &course)
 	}
 
-	logs.PrintLog(ctx, "GetBucketCourses", "made query and got rows")
+	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses from db")
 
 	return bucketCourses, nil
 }

@@ -152,6 +152,8 @@ func (d *Database) UpdateProfilePhoto(ctx context.Context, photo_url string, use
 	if err != nil {
 		return err
 	}
-	logs.PrintLog(ctx, "UpdateProfilePhoto", fmt.Sprintf("update profile photo %+v of user with id %+v in db", photo_url, userId))
+
+	logs.PrintLog(ctx, "UpdateProfilePhoto", fmt.Sprintf("update profile photo to %+v of user with id %+v in db", photo_url, userId))
+
 	return err
 }
