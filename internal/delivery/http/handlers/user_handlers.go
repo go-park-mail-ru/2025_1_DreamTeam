@@ -27,23 +27,9 @@ func NewUserHandler(uc *usecase.UserUsecase) *UserHandler {
 	}
 }
 
-/*
-func logs.PrintLog(ctx context.Context, funcName string, message string) {
-	var buf bytes.Buffer
-	logger := logrus.New()
-	logger.SetOutput(&buf)
-
-	logger.WithField("function", funcName).Info(message)
-	ctxLog, _ := ctx.Value(logs.LogsKey).(*logs.CtxLog)
-
-	ctxLog.Data[funcName] = &logs.LogString{
-		Message: buf.String(),
-	}
-}
-*/
 // setCookie - установка куки для контроля, авторизован ли пользователь
 func setCookie(w http.ResponseWriter, cookieValue string) {
-	expiration := time.Now().Add(10 * time.Hour)
+	expiration := time.Now().AddDate(1, 0, 0)
 	cookie := http.Cookie{
 		Name:     "session_id",
 		Value:    cookieValue,
@@ -300,16 +286,17 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newUserProfile models.UserProfile
-	err := json.NewDecoder(r.Body).Decode(&newUserProfile)
+	var UserProfileInput dto.UserProfileDTO
+	err := json.NewDecoder(r.Body).Decode(&UserProfileInput)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
+	newUserProfile := models.NewUserProfile(UserProfileInput)
 	//TODO: добавить тут валидацию
-	err = h.useCase.UpdateProfile(r.Context(), userProfile.Id, &newUserProfile)
+	err = h.useCase.UpdateProfile(r.Context(), userProfile.Id, newUserProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
@@ -370,4 +357,5 @@ func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request)
 	}
 
 	logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("Файл загружен: %s", url))
+	response.SendOKResponse(w, r)
 }

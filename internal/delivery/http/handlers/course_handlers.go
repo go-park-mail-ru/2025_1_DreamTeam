@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
 	"skillForce/internal/usecase"
+	"skillForce/pkg/logs"
 )
 
 // CourseHandler - структура обработчика HTTP-запросов
@@ -29,18 +30,18 @@ func NewCourseHandler(uc *usecase.CourseUsecase) *CourseHandler {
 // @Router /api/getCourses [get]
 func (h *CourseHandler) GetCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		log.Printf("from getCourses: method not allowed")
+		logs.PrintLog(r.Context(), "GetCourses", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
-	bucketCourses, err := h.useCase.GetBucketCourses()
+	bucketCourses, err := h.useCase.GetBucketCourses(r.Context())
 	if err != nil {
-		log.Printf("from getCourses: %v", err)
+		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
 
-	log.Print("send bucket courses")
+	logs.PrintLog(r.Context(), "GetCourses", "send bucket courses")
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
