@@ -73,3 +73,7 @@ func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url strin
 func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }
+
+func (i *Infrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error) {
+	return i.Database.GetCoursesTags(ctx, bucketCoursesWithoutTags)
+}

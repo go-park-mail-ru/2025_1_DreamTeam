@@ -302,6 +302,12 @@ const docTemplate = `{
                 "src_image": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "time_to_pass": {
                     "type": "integer"
                 },

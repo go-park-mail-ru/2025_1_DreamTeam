@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/internal/repository"
 	"skillForce/pkg/logs"
@@ -37,26 +37,42 @@ func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO
 		return nil, err
 	}
 
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCoursesWithoutRating)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
 	bucketCourses := make([]*dto.CourseDTO, 0, len(bucketCoursesWithoutRating))
 	for _, course := range bucketCoursesWithoutRating {
 		rating, ok := coursesRatings[course.Id]
 		if !ok {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
-			return nil, errors.New("not enough ratings for courses")
+			rating = models.CourseRating{
+				Rating: 0,
+			}
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
 		}
 		bucketCourses = append(bucketCourses, &dto.CourseDTO{
-			Id:          course.Id,
-			CreatorId:   course.CreatorId,
-			Title:       course.Title,
-			Description: course.Description,
-			ScrImage:    course.ScrImage,
-			Price:       course.Price,
-			TimeToPass:  course.TimeToPass,
-			Rating:      rating.Rating,
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     course.Description,
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating.Rating,
+			Tags:            tags,
+			PurchasesAmount: course.PurchasesAmount,
 		})
 	}
 
-	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses and ratings from db, mapping to dto")
+	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
 
 	return bucketCourses, nil
 }

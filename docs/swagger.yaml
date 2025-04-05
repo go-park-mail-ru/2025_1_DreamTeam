@@ -15,6 +15,10 @@ definitions:
         type: number
       src_image:
         type: string
+      tags:
+        items:
+          type: string
+        type: array
       time_to_pass:
         type: integer
       title:

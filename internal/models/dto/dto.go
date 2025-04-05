@@ -15,13 +15,14 @@ type UserProfileDTO struct {
 }
 
 type CourseDTO struct {
-	Id              int     `json:"id"`
-	Price           int     `json:"price"`
-	PurchasesAmount int     `json:"purchases_amount"`
-	CreatorId       int     `json:"creator_id"`
-	TimeToPass      int     `json:"time_to_pass"`
-	Rating          float32 `json:"rating"`
-	Title           string  `json:"title"`
-	Description     string  `json:"description"`
-	ScrImage        string  `json:"src_image"`
+	Id              int      `json:"id"`
+	Price           int      `json:"price"`
+	PurchasesAmount int      `json:"purchases_amount"`
+	CreatorId       int      `json:"creator_id"`
+	TimeToPass      int      `json:"time_to_pass"`
+	Rating          float32  `json:"rating"`
+	Tags            []string `json:"tags"`
+	Title           string   `json:"title"`
+	Description     string   `json:"description"`
+	ScrImage        string   `json:"src_image"`
 }

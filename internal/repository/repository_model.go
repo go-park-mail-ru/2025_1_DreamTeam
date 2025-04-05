@@ -16,4 +16,5 @@ type Repository interface {
 	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 	UpdateProfilePhoto(ctx context.Context, url string, userId int) error
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error)
+	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error)
 }

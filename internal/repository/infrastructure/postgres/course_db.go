@@ -57,6 +57,11 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 			sumMetrics += metric
 			countMetrics++
 		}
+
+		if countMetrics == 0 {
+			continue
+		}
+
 		coursesRatings[course.Id] = models.CourseRating{
 			CourseId: course.Id,
 			Rating:   sumMetrics / countMetrics,
@@ -64,4 +69,43 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 	}
 	logs.PrintLog(ctx, "GetCoursesRaitings", "get courses ratings from db")
 	return coursesRatings, nil
+}
+
+func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error) {
+	coursesTags := make(map[int][]string, len(bucketCoursesWithoutTags))
+
+	for _, course := range bucketCoursesWithoutTags {
+		rows, err := d.conn.Query(`
+			SELECT vt.Title
+			FROM TAGS t
+			JOIN VALID_TAGS vt ON t.Tag_ID = vt.ID
+			WHERE t.Course_ID = $1
+		`, course.Id)
+
+		if err != nil {
+			logs.PrintLog(ctx, "GetCoursesTags", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		defer rows.Close()
+
+		var tags []string
+
+		for rows.Next() {
+			var tag string
+			if err := rows.Scan(&tag); err != nil {
+				logs.PrintLog(ctx, "GetCoursesTags", fmt.Sprintf("%+v", err))
+				return nil, err
+			}
+			tags = append(tags, tag)
+		}
+
+		if len(tags) == 0 {
+			continue
+		}
+
+		coursesTags[course.Id] = tags
+
+	}
+	logs.PrintLog(ctx, "GetCoursesTags", "get courses tags from db")
+	return coursesTags, nil
 }
