@@ -226,7 +226,7 @@ const docTemplate = `{
         },
         "/api/updateProfile": {
             "post": {
-                "description": "Updates the profile information of the authorized user",
+                "description": "Updates the profile photo of the authorized user",
                 "consumes": [
                     "application/json"
                 ],
@@ -236,7 +236,7 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user profile",
+                "summary": "Update user profile photo",
                 "parameters": [
                     {
                         "description": "Updated user profile",
@@ -278,7 +278,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "models.Course": {
+        "dto.CourseDTO": {
             "type": "object",
             "properties": {
                 "creator_id": {
@@ -296,6 +296,9 @@ const docTemplate = `{
                 "purchases_amount": {
                     "type": "integer"
                 },
+                "rating": {
+                    "type": "number"
+                },
                 "src_image": {
                     "type": "string"
                 },
@@ -307,21 +310,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.User": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserProfile": {
+        "dto.UserProfileDTO": {
             "type": "object",
             "properties": {
                 "avatar_src": {
@@ -341,13 +330,59 @@ const docTemplate = `{
                 }
             }
         },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "salt": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.UserProfile": {
+            "type": "object",
+            "properties": {
+                "avatarSrc": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hideEmail": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.BucketCoursesResponse": {
             "type": "object",
             "properties": {
                 "bucket_courses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Course"
+                        "$ref": "#/definitions/dto.CourseDTO"
                     }
                 }
             }
@@ -364,7 +399,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user": {
-                    "$ref": "#/definitions/models.UserProfile"
+                    "$ref": "#/definitions/dto.UserProfileDTO"
                 }
             }
         }

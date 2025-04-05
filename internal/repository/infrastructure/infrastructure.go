@@ -69,3 +69,7 @@ func (i *Infrastructure) UploadFile(ctx context.Context, file multipart.File, fi
 func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url string, userId int) error {
 	return i.Database.UpdateProfilePhoto(ctx, photo_url, userId)
 }
+
+func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error) {
+	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
+}

@@ -16,6 +16,7 @@ func PrintLog(ctx context.Context, funcName string, message string) {
 	ctxLog, _ := ctx.Value(LogsKey).(*CtxLog)
 
 	if _, exist := ctxLog.Data[funcName]; exist {
+		ctxLog.Data[funcName].Message += "\t"
 		ctxLog.Data[funcName].Message += buf.String()
 		return
 	}

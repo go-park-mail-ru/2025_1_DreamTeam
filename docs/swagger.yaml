@@ -1,5 +1,5 @@
 definitions:
-  models.Course:
+  dto.CourseDTO:
     properties:
       creator_id:
         type: integer
@@ -11,6 +11,8 @@ definitions:
         type: integer
       purchases_amount:
         type: integer
+      rating:
+        type: number
       src_image:
         type: string
       time_to_pass:
@@ -18,16 +20,7 @@ definitions:
       title:
         type: string
     type: object
-  models.User:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  models.UserProfile:
+  dto.UserProfileDTO:
     properties:
       avatar_src:
         type: string
@@ -40,11 +33,41 @@ definitions:
       name:
         type: string
     type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      salt:
+        items:
+          type: integer
+        type: array
+    type: object
+  models.UserProfile:
+    properties:
+      avatarSrc:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      hideEmail:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   response.BucketCoursesResponse:
     properties:
       bucket_courses:
         items:
-          $ref: '#/definitions/models.Course'
+          $ref: '#/definitions/dto.CourseDTO'
         type: array
     type: object
   response.ErrorResponse:
@@ -55,7 +78,7 @@ definitions:
   response.UserProfileResponse:
     properties:
       user:
-        $ref: '#/definitions/models.UserProfile'
+        $ref: '#/definitions/dto.UserProfileDTO'
     type: object
 info:
   contact: {}
@@ -203,7 +226,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates the profile information of the authorized user
+      description: Updates the profile photo of the authorized user
       parameters:
       - description: Updated user profile
         in: body
@@ -230,7 +253,7 @@ paths:
           description: server error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-      summary: Update user profile
+      summary: Update user profile photo
       tags:
       - users
 swagger: "2.0"

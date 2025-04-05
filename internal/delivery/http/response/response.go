@@ -3,7 +3,6 @@ package response
 import (
 	"encoding/json"
 	"net/http"
-	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 )
 
@@ -12,7 +11,7 @@ type ErrorResponse struct {
 }
 
 type BucketCoursesResponse struct {
-	BucketCourses []*models.Course `json:"bucket_courses"`
+	BucketCourses []*dto.CourseDTO `json:"bucket_courses"`
 }
 
 type UserProfileResponse struct {
@@ -34,7 +33,7 @@ func SendOKResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 // SendBucketCoursesResponse - отправка списка курсов в JSON-формате
-func SendBucketCoursesResponse(bucketCourses []*models.Course, w http.ResponseWriter, r *http.Request) {
+func SendBucketCoursesResponse(bucketCourses []*dto.CourseDTO, w http.ResponseWriter, r *http.Request) {
 	response := BucketCoursesResponse{BucketCourses: bucketCourses}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
