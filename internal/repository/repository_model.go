@@ -4,6 +4,7 @@ import (
 	"context"
 	"mime/multipart"
 	"skillForce/internal/models"
+	"skillForce/internal/models/dto"
 )
 
 type Repository interface {
@@ -17,4 +18,6 @@ type Repository interface {
 	UpdateProfilePhoto(ctx context.Context, url string, userId int) (string, error)
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error)
+	GetCourseById(ctx context.Context, courseId int) (*models.Course, error)
+	FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) error
 }

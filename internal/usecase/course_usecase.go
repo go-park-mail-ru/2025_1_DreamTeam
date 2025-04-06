@@ -61,3 +61,26 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 
 	return bucketCourses, nil
 }
+
+func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
+	var lessonHeader dto.LessonDtoHeader
+
+	course, err := uc.repo.GetCourseById(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	lessonHeader.CourseTitle = course.Title
+
+	err = uc.repo.FillLessonHeader(ctx, userId, courseId, &lessonHeader)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	lessonDto := &dto.LessonDTO{
+		LessonHeader: lessonHeader,
+	}
+
+	return lessonDto, nil
+}

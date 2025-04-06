@@ -26,3 +26,64 @@ type CourseDTO struct {
 	Description     string   `json:"description"`
 	ScrImage        string   `json:"src_image"`
 }
+
+type LessonDTO struct {
+	LessonHeader LessonDtoHeader `json:"header"`
+	Blocks       []struct {
+		Body string `json:"body"`
+	} `json:"blocks"`
+	Footer struct {
+		NextLessonId     int `json:"next_lesson_id"`
+		PreviousLessonId int `json:"previous_lesson_id"`
+	} `json:"footer"`
+}
+
+type LessonDtoHeader struct {
+	CourseTitle string `json:"course_title"`
+	Part        struct {
+		Order int    `json:"order"`
+		Title string `json:"title"`
+	} `json:"part"`
+	Bucket struct {
+		Order int    `json:"order"`
+		Title string `json:"title"`
+	} `json:"bucket"`
+	Points []struct {
+		LessonId int    `json:"lesson_id"`
+		Type     string `json:"type"`
+		IsDone   bool   `json:"is_done"`
+	}
+}
+
+/*
+{
+  "Header": {
+    "CourseTitle": "Информационная безопасность",
+      "Part": {
+        "Order": 1,
+        "Title": "Введение"
+      },
+      "Bucket": {
+        "Order": 1,
+        "Title": "Первый урок"
+      },
+      "Points": [
+          {
+            "LessonId": 0,
+      "Type": <"text", "video", "test">,
+      "IsDone": true
+      },
+     ],
+  },
+  "Blocks": [
+      {"Body": "*html*"},
+      {"Body": "*html*"},
+    {"Body": "*html*"},
+  ],
+  "Footer": {
+    "NextLessonId": 1,
+    "PreviousLessonId": 0,
+  },
+}
+
+*/

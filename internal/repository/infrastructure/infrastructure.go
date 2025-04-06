@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"skillForce/config"
 	"skillForce/internal/models"
+	"skillForce/internal/models/dto"
 	"skillForce/internal/repository/infrastructure/minio"
 	"skillForce/internal/repository/infrastructure/postgres"
 )
@@ -76,4 +77,12 @@ func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWi
 
 func (i *Infrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error) {
 	return i.Database.GetCoursesTags(ctx, bucketCoursesWithoutTags)
+}
+
+func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*models.Course, error) {
+	return i.Database.GetCourseById(ctx, courseId)
+}
+
+func (i *Infrastructure) FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) error {
+	return i.Database.FillLessonHeader(ctx, userId, courseId, LessonHeader)
 }

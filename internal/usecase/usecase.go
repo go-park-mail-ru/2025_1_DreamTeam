@@ -17,6 +17,7 @@ type UsecaseInterface interface {
 	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 	SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error)
 	GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error)
+	GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error)
 }
 
 type Usecase struct {
