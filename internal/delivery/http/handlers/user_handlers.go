@@ -8,24 +8,11 @@ import (
 	"skillForce/internal/delivery/http/response"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
-	"skillForce/internal/usecase"
 	"skillForce/pkg/logs"
 	"time"
 
 	"github.com/badoux/checkmail"
 )
-
-// UserHandler - структура обработчика HTTP-запросов
-type UserHandler struct {
-	useCase usecase.UserUsecaseInterface
-}
-
-// NewUserHandler - конструктор
-func NewUserHandler(uc *usecase.UserUsecase) *UserHandler {
-	return &UserHandler{
-		useCase: uc,
-	}
-}
 
 // setCookie - установка куки для контроля, авторизован ли пользователь
 func setCookie(w http.ResponseWriter, cookieValue string) {
@@ -57,7 +44,7 @@ func deleteCookie(w http.ResponseWriter) {
 }
 
 // checkCookie - проверка наличия куки
-func (h *UserHandler) checkCookie(r *http.Request) *models.UserProfile {
+func (h *Handler) checkCookie(r *http.Request) *models.UserProfile {
 	session, err := r.Cookie("session_id")
 	logs.PrintLog(r.Context(), "checkCookie", "checking cookie")
 	loggedIn := (err != http.ErrNoCookie)
@@ -117,7 +104,7 @@ func isValidLoginFields(user *dto.UserDTO) error {
 // @Failure 405 {object} response.ErrorResponse "method not allowed"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/register [post]
-func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "RegisterUser", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
@@ -172,7 +159,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 405 {object} response.ErrorResponse "method not allowed"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/login [post]
-func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "LoginUser", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
@@ -222,7 +209,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string} string "200 OK"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/logout [post]
-func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
 		logs.PrintLog(r.Context(), "LogoutUser", fmt.Sprintf("logout user %+v", userProfile))
@@ -247,7 +234,7 @@ func (h *UserHandler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} response.UserProfileResponse "User profile"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Router /api/isAuthorized [get]
-func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile != nil {
 		userProfileOut := dto.UserProfileDTO{
@@ -278,7 +265,7 @@ func (h *UserHandler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
-func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", "user not logged in")
@@ -319,7 +306,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
-func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", "user not logged in")
@@ -349,13 +336,13 @@ func (h *UserHandler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.useCase.SaveProfilePhoto(r.Context(), url, userProfile.Id)
+	newPhotoUrl, err := h.useCase.SaveProfilePhoto(r.Context(), url, userProfile.Id)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 		return
 	}
 
-	logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("Файл загружен: %s", url))
-	response.SendOKResponse(w, r)
+	logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("Файл загружен: %s", newPhotoUrl))
+	response.SendPhotoUrl(newPhotoUrl, w, r)
 }

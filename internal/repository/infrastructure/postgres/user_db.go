@@ -147,13 +147,13 @@ func (d *Database) UpdateProfile(ctx context.Context, userId int, userProfile *m
 	return err
 }
 
-func (d *Database) UpdateProfilePhoto(ctx context.Context, photo_url string, userId int) error {
-	_, err := d.conn.Exec("UPDATE usertable SET avatar_src = $1 WHERE id = $2", photo_url, userId)
+func (d *Database) UpdateProfilePhoto(ctx context.Context, photoUrl string, userId int) (string, error) {
+	_, err := d.conn.Exec("UPDATE usertable SET avatar_src = $1 WHERE id = $2", photoUrl, userId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	logs.PrintLog(ctx, "UpdateProfilePhoto", fmt.Sprintf("update profile photo to %+v of user with id %+v in db", photo_url, userId))
+	logs.PrintLog(ctx, "UpdateProfilePhoto", fmt.Sprintf("update profile photo to %+v of user with id %+v in db", photoUrl, userId))
 
-	return err
+	return photoUrl, nil
 }

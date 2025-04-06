@@ -18,6 +18,10 @@ type UserProfileResponse struct {
 	UserProfile *dto.UserProfileDTO `json:"user"`
 }
 
+type PhotoUrlResponse struct {
+	Url string `json:"url"`
+}
+
 // SendErrorResponse - отправка ошибки в JSON-формате
 func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter, r *http.Request) {
 	response := ErrorResponse{ErrorStr: textError}
@@ -43,6 +47,14 @@ func SendBucketCoursesResponse(bucketCourses []*dto.CourseDTO, w http.ResponseWr
 // SendUserProfile - отправка профиля пользователя в JSON-формате
 func SendUserProfile(UserProfile *dto.UserProfileDTO, w http.ResponseWriter, r *http.Request) {
 	response := UserProfileResponse{UserProfile: UserProfile}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// SendPhotoUrl - отправка ссылки на фото в JSON-формате
+func SendPhotoUrl(url string, w http.ResponseWriter, r *http.Request) {
+	response := PhotoUrlResponse{Url: url}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

@@ -24,20 +24,18 @@ func main() {
 
 	siteMux := http.NewServeMux()
 
-	userUseCase := usecase.NewUserUsecase(infrastructure)
-	userHandler := handlers.NewUserHandler(userUseCase)
+	useCase := usecase.NewUsecase(infrastructure)
+	handler := handlers.NewHandler(useCase)
 
-	courseUseCase := usecase.NewCourseUsecase(infrastructure)
-	courseHandler := handlers.NewCourseHandler(courseUseCase)
+	siteMux.HandleFunc("/api/register", handler.RegisterUser)
+	siteMux.HandleFunc("/api/login", handler.LoginUser)
+	siteMux.HandleFunc("/api/logout", handler.LogoutUser)
+	siteMux.HandleFunc("/api/isAuthorized", handler.IsAuthorized)
+	siteMux.HandleFunc("/api/updateProfile", handler.UpdateProfile)
+	siteMux.HandleFunc("/api/updateProfilePhoto", handler.UpdateProfilePhoto)
 
-	siteMux.HandleFunc("/api/register", userHandler.RegisterUser)
-	siteMux.HandleFunc("/api/login", userHandler.LoginUser)
-	siteMux.HandleFunc("/api/logout", userHandler.LogoutUser)
-	siteMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
-	siteMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
-	siteMux.HandleFunc("/api/updateProfilePhoto", userHandler.UpdateProfilePhoto)
-
-	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+	siteMux.HandleFunc("/api/getCourses", handler.GetCourses)
+	siteMux.HandleFunc("/api/getCourseLesson", handler.GetCourseLesson)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 

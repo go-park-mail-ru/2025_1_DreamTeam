@@ -66,7 +66,7 @@ func (i *Infrastructure) UploadFile(ctx context.Context, file multipart.File, fi
 	return i.Minio.UploadFileToMinIO(ctx, file, fileHeader)
 }
 
-func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url string, userId int) error {
+func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url string, userId int) (string, error) {
 	return i.Database.UpdateProfilePhoto(ctx, photo_url, userId)
 }
 

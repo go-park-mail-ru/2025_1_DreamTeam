@@ -5,26 +5,11 @@ import (
 	"fmt"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
-	"skillForce/internal/repository"
 	"skillForce/pkg/logs"
 )
 
-type CourseUsecaseInterface interface {
-	GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error)
-}
-
-// CourseUsecase - структура бизнес-логики
-type CourseUsecase struct {
-	repo repository.Repository
-}
-
-// NewCourseUsecase - конструктор
-func NewCourseUsecase(repo repository.Repository) *CourseUsecase {
-	return &CourseUsecase{repo: repo}
-}
-
 // GetBucketCourses - извлекает список курсов из базы данных
-func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
+func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
 	bucketCoursesWithoutRating, err := uc.repo.GetBucketCourses(ctx)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
