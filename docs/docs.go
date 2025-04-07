@@ -15,6 +15,62 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/getCourseLesson": {
+            "get": {
+                "description": "Returns the lesson the user should take in the course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get lesson of a course for the user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "next lesson of the course",
+                        "schema": {
+                            "$ref": "#/definitions/response.LessonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid course ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/getCourses": {
             "get": {
                 "description": "Retrieves a list of available courses",
@@ -33,6 +89,69 @@ const docTemplate = `{
                         "description": "List of courses",
                         "schema": {
                             "$ref": "#/definitions/response.BucketCoursesResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/getNextLesson": {
+            "get": {
+                "description": "Returns the next lesson the user should take based on current lesson and course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get next lesson in a course",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current Lesson ID",
+                        "name": "lessonId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "next lesson content",
+                        "schema": {
+                            "$ref": "#/definitions/response.LessonBodyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid course or lesson ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "405": {
@@ -316,6 +435,94 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.LessonDTO": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "$ref": "#/definitions/dto.LessonDtoHeader"
+                },
+                "lesson_body": {
+                    "$ref": "#/definitions/dto.LessonDtoBody"
+                }
+            }
+        },
+        "dto.LessonDtoBody": {
+            "type": "object",
+            "properties": {
+                "blocks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "body": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "footer": {
+                    "type": "object",
+                    "properties": {
+                        "next_lesson_id": {
+                            "type": "integer"
+                        },
+                        "previous_lesson_id": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "dto.LessonDtoHeader": {
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "type": "object",
+                    "properties": {
+                        "order": {
+                            "type": "integer"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "course_id": {
+                    "type": "integer"
+                },
+                "course_title": {
+                    "type": "string"
+                },
+                "part": {
+                    "type": "object",
+                    "properties": {
+                        "order": {
+                            "type": "integer"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "points": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "is_done": {
+                                "type": "boolean"
+                            },
+                            "lesson_id": {
+                                "type": "integer"
+                            },
+                            "type": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "dto.UserProfileDTO": {
             "type": "object",
             "properties": {
@@ -398,6 +605,22 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "response.LessonBodyResponse": {
+            "type": "object",
+            "properties": {
+                "lesson_body": {
+                    "$ref": "#/definitions/dto.LessonDtoBody"
+                }
+            }
+        },
+        "response.LessonResponse": {
+            "type": "object",
+            "properties": {
+                "lesson": {
+                    "$ref": "#/definitions/dto.LessonDTO"
                 }
             }
         },

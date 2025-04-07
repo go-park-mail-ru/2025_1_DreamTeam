@@ -37,8 +37,8 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetCourseLesson godoc
-// @Summary Get next lesson of a course for the user
-// @Description Returns the next lesson the user should take in the specified course
+// @Summary Get lesson of a course for the user
+// @Description Returns the lesson the user should take in the course
 // @Tags courses
 // @Accept json
 // @Produce json
@@ -49,7 +49,6 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 // @Failure 405 {object} response.ErrorResponse "method not allowed"
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/getCourseLesson [get]
-
 func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetCourseLesson", "method not allowed")
@@ -83,4 +82,61 @@ func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 
 	logs.PrintLog(r.Context(), "GetCourseLesson", "send course lesson")
 	response.SendLesson(lesson, w, r)
+}
+
+// GetNextLesson godoc
+// @Summary Get next lesson in a course
+// @Description Returns the next lesson the user should take based on current lesson and course
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param courseId query int true "Course ID"
+// @Param lessonId query int true "Current Lesson ID"
+// @Success 200 {object} response.LessonBodyResponse "next lesson content"
+// @Failure 400 {object} response.ErrorResponse "invalid course or lesson ID"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/getNextLesson [get]
+func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetNextLesson", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.checkCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	lessonIdStr := r.URL.Query().Get("lessonId")
+	lessonId, err := strconv.Atoi(lessonIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	lessonBody, err := h.useCase.GetLessonBody(r.Context(), userProfile.Id, courseId, lessonId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "GetNextLesson", "send lesson body to user")
+	response.SendLessonBody(lessonBody, w, r)
 }

@@ -124,7 +124,7 @@ func (d *Database) GetCourseById(ctx context.Context, courseId int) (*models.Cou
 	return &course, nil
 }
 
-func (d *Database) markLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
+func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
 	_, err := d.conn.Exec(
 		"INSERT INTO LESSON_CHECKPOINT (user_id, lesson_id, course_id) VALUES ($1, $2, $3)",
 		userId, lessonId, courseId)
@@ -204,7 +204,7 @@ func (d *Database) fillLessonHeaderNewCourse(ctx context.Context, userId int, co
 	currentLessonId := points[0].LessonId
 	currentLessonType := points[0].Type
 
-	err = d.markLessonCompleted(ctx, userId, courseId, currentLessonId)
+	err = d.MarkLessonCompleted(ctx, userId, courseId, currentLessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
 		return 0, 0, "", err

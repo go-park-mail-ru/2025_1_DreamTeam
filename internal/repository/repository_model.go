@@ -22,4 +22,5 @@ type Repository interface {
 	FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error)
 	GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error)
 	GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error)
+	MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error
 }

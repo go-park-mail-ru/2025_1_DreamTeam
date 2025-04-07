@@ -29,7 +29,11 @@ type CourseDTO struct {
 
 type LessonDTO struct {
 	LessonHeader LessonDtoHeader `json:"header"`
-	Blocks       []struct {
+	LessonBody   LessonDtoBody   `json:"lesson_body"`
+}
+
+type LessonDtoBody struct {
+	Blocks []struct {
 		Body string `json:"body"`
 	} `json:"blocks"`
 	Footer struct {
@@ -40,6 +44,7 @@ type LessonDTO struct {
 
 type LessonDtoHeader struct {
 	CourseTitle string `json:"course_title"`
+	CourseId    int    `json:"course_id"`
 	Part        struct {
 		Order int    `json:"order"`
 		Title string `json:"title"`

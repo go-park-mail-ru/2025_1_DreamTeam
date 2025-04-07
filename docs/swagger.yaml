@@ -24,6 +24,62 @@ definitions:
       title:
         type: string
     type: object
+  dto.LessonDTO:
+    properties:
+      header:
+        $ref: '#/definitions/dto.LessonDtoHeader'
+      lesson_body:
+        $ref: '#/definitions/dto.LessonDtoBody'
+    type: object
+  dto.LessonDtoBody:
+    properties:
+      blocks:
+        items:
+          properties:
+            body:
+              type: string
+          type: object
+        type: array
+      footer:
+        properties:
+          next_lesson_id:
+            type: integer
+          previous_lesson_id:
+            type: integer
+        type: object
+    type: object
+  dto.LessonDtoHeader:
+    properties:
+      bucket:
+        properties:
+          order:
+            type: integer
+          title:
+            type: string
+        type: object
+      course_id:
+        type: integer
+      course_title:
+        type: string
+      part:
+        properties:
+          order:
+            type: integer
+          title:
+            type: string
+        type: object
+      points:
+        items:
+          properties:
+            is_done:
+              type: boolean
+            lesson_id:
+              type: integer
+            type:
+              type: string
+          type: object
+        type: array
+    type: object
   dto.UserProfileDTO:
     properties:
       avatar_src:
@@ -79,6 +135,16 @@ definitions:
       error:
         type: string
     type: object
+  response.LessonBodyResponse:
+    properties:
+      lesson_body:
+        $ref: '#/definitions/dto.LessonDtoBody'
+    type: object
+  response.LessonResponse:
+    properties:
+      lesson:
+        $ref: '#/definitions/dto.LessonDTO'
+    type: object
   response.UserProfileResponse:
     properties:
       user:
@@ -87,6 +153,43 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/getCourseLesson:
+    get:
+      consumes:
+      - application/json
+      description: Returns the lesson the user should take in the course
+      parameters:
+      - description: Course ID
+        in: query
+        name: courseId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: next lesson of the course
+          schema:
+            $ref: '#/definitions/response.LessonResponse'
+        "400":
+          description: invalid course ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get lesson of a course for the user
+      tags:
+      - courses
   /api/getCourses:
     get:
       consumes:
@@ -108,6 +211,49 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Get list of courses
+      tags:
+      - courses
+  /api/getNextLesson:
+    get:
+      consumes:
+      - application/json
+      description: Returns the next lesson the user should take based on current lesson
+        and course
+      parameters:
+      - description: Course ID
+        in: query
+        name: courseId
+        required: true
+        type: integer
+      - description: Current Lesson ID
+        in: query
+        name: lessonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: next lesson content
+          schema:
+            $ref: '#/definitions/response.LessonBodyResponse'
+        "400":
+          description: invalid course or lesson ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get next lesson in a course
       tags:
       - courses
   /api/isAuthorized:

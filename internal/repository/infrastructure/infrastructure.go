@@ -94,3 +94,7 @@ func (i *Infrastructure) GetLessonBlocks(ctx context.Context, currentLessonId in
 func (i *Infrastructure) GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error) {
 	return i.Database.GetLessonFooters(ctx, currentLessonId, currentBucketId)
 }
+
+func (i *Infrastructure) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
+	return i.Database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+}
