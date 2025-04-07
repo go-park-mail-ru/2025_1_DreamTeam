@@ -332,6 +332,43 @@ paths:
       summary: Logout user
       tags:
       - users
+  /api/markLessonAsNotCompleted:
+    get:
+      consumes:
+      - application/json
+      description: Marks a lesson as not completed for the authorized user
+      parameters:
+      - description: Lesson ID
+        in: query
+        name: lessonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid lesson ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Mark lesson as not completed
+      tags:
+      - lessons
   /api/register:
     post:
       consumes:

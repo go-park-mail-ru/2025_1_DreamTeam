@@ -159,3 +159,7 @@ func (uc *Usecase) GetLessonBody(ctx context.Context, userId int, courseId int, 
 
 	return &LessonBody, err
 }
+
+func (uc *Usecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
+	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
+}

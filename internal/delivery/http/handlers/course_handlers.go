@@ -140,3 +140,50 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 	logs.PrintLog(r.Context(), "GetNextLesson", "send lesson body to user")
 	response.SendLessonBody(lessonBody, w, r)
 }
+
+// MarkLessonAsNotCompleted godoc
+// @Summary Mark lesson as not completed
+// @Description Marks a lesson as not completed for the authorized user
+// @Tags lessons
+// @Accept json
+// @Produce json
+// @Param lessonId query int true "Lesson ID"
+// @Success 200 {object} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid lesson ID"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/markLessonAsNotCompleted [get]
+func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetNextLesson", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.checkCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	lessonIdStr := r.URL.Query().Get("lessonId")
+	lessonId, err := strconv.Atoi(lessonIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	err = h.useCase.MarkLessonAsNotCompleted(r.Context(), userProfile.Id, lessonId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}

@@ -138,6 +138,20 @@ func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, courseId
 	return nil
 }
 
+func (d *Database) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
+	_, err := d.conn.Exec(
+		"DELETE FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2",
+		userId, lessonId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "markLessonAsNotComplete", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	logs.PrintLog(ctx, "markLessonAsNotComplete", fmt.Sprintf("mark that lesson id:%+v is not learned by the user id:%+v", lessonId, userId))
+	return nil
+}
+
 func (d *Database) fillLessonHeaderNewCourse(ctx context.Context, userId int, courseId int, lessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
 	var part models.CoursePart
 	err := d.conn.QueryRow(`
