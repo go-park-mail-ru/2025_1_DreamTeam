@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 func CorsOptionsMiddleware(next http.Handler) http.Handler {
@@ -27,6 +28,7 @@ func PanicMiddleware(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				log.Print("panicMiddleware ", r.URL.Path)
 				log.Print("recovered ", err)
+				debug.PrintStack()
 				http.Error(w, "server error", 500)
 			}
 		}()

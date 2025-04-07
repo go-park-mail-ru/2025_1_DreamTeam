@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -125,113 +124,298 @@ func (d *Database) GetCourseById(ctx context.Context, courseId int) (*models.Cou
 	return &course, nil
 }
 
-func (d *Database) FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) error {
-	var LessonId int
-	err := d.conn.QueryRow(`
-			SELECT Lesson_ID
-			FROM LESSON_CHECKPOINT
-			WHERE User_ID = $1 AND Course_ID = $2
-			ORDER BY Updated_at DESC
-			LIMIT 1;
-		`, userId, courseId).Scan(
-		&LessonId)
+func (d *Database) markLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
+	_, err := d.conn.Exec(
+		"INSERT INTO LESSON_CHECKPOINT (user_id, lesson_id, course_id) VALUES ($1, $2, $3)",
+		userId, lessonId, courseId)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("no lesson found for user id:%+v and course id:%+v", userId, courseId))
+		logs.PrintLog(ctx, "markLessonComplete", fmt.Sprintf("%+v", err))
+		return err
+	}
 
-			var part models.CoursePart
-			err := d.conn.QueryRow(`
+	logs.PrintLog(ctx, "markLessonComplete", fmt.Sprintf("mark that lesson id:%+v is learned by the user id:%+v", lessonId, userId))
+	return nil
+}
+
+func (d *Database) fillLessonHeaderNewCourse(ctx context.Context, userId int, courseId int, lessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
+	var part models.CoursePart
+	err := d.conn.QueryRow(`
 					SELECT title, part_order, id
 					FROM part
 					WHERE course_id = $1
 					ORDER BY part_order ASC
 					LIMIT 1;
 				`, courseId).Scan(
-				&part.Title, &part.Order, &part.Id)
+		&part.Title, &part.Order, &part.Id)
 
-			if err != nil {
-				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("course %+v has no parts:%+v", courseId, err))
-			}
+	if err != nil {
+		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("course %+v has no parts:%+v", courseId, err))
+	}
 
-			LessonHeader.Part.Order = part.Order
-			LessonHeader.Part.Title = part.Title
+	lessonHeader.Part.Order = part.Order
+	lessonHeader.Part.Title = part.Title
 
-			var bucket models.LessonBucket
-			err = d.conn.QueryRow(`
+	var bucket models.LessonBucket
+	err = d.conn.QueryRow(`
 					SELECT title, lesson_bucket_order, id
 					FROM lesson_bucket
 					WHERE part_id = $1
 					ORDER BY lesson_bucket_order ASC
 					LIMIT 1;
 				`, part.Id).Scan(
-				&bucket.Title, &bucket.Order, &bucket.Id)
+		&bucket.Title, &bucket.Order, &bucket.Id)
 
-			if err != nil {
-				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("part %+v has no buckets:%+v", part.Id, err))
-			}
+	if err != nil {
+		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("part %+v has no buckets:%+v", part.Id, err))
+	}
 
-			LessonHeader.Bucket.Order = bucket.Order
-			LessonHeader.Bucket.Title = bucket.Title
+	lessonHeader.Bucket.Order = bucket.Order
+	lessonHeader.Bucket.Title = bucket.Title
 
-			rows, err := d.conn.Query(`
+	rows, err := d.conn.Query(`
 					SELECT id, type
 					FROM LESSON
 					WHERE lesson_bucket_id = $1
 					ORDER BY Lesson_Order ASC
 				`, bucket.Id)
 
-			if err != nil {
-				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-				return err
-			}
-			defer rows.Close()
+	if err != nil {
+		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
+		return 0, 0, "", err
+	}
+	defer rows.Close()
 
-			var points []models.LessonPoint
-			for rows.Next() {
-				var point models.LessonPoint
-				if err := rows.Scan(&point.LessonId, &point.Type); err != nil {
-					logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-					return err
-				}
-				points = append(points, point)
-			}
-
-			if len(points) == 0 {
-				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
-				return errors.New("no points found in bucket")
-			}
-
-			for _, point := range points {
-				err := d.conn.QueryRow(`
-					SELECT EXISTS(SELECT 1
-					FROM LESSON_CHECKPOINT
-					WHERE Lesson_ID = $1)
-				`, point.LessonId).Scan(&point.IsDone)
-				if err != nil {
-					logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-					return err
-				}
-			}
-
-			for _, point := range points {
-				LessonHeader.Points = append(LessonHeader.Points, struct {
-					LessonId int    `json:"lesson_id"`
-					Type     string `json:"type"`
-					IsDone   bool   `json:"is_done"`
-				}{
-					LessonId: point.LessonId,
-					Type:     point.Type,
-					IsDone:   point.IsDone,
-				})
-			}
-
-			return nil
+	var points []models.LessonPoint
+	for rows.Next() {
+		var point models.LessonPoint
+		if err := rows.Scan(&point.LessonId, &point.Type); err != nil {
+			logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
+			return 0, 0, "", err
 		}
-
-		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-		return err
+		points = append(points, point)
 	}
 
-	return nil
+	if len(points) == 0 {
+		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
+		return 0, 0, "", errors.New("no points found in bucket")
+	}
+
+	currentLessonId := points[0].LessonId
+	currentLessonType := points[0].Type
+
+	err = d.markLessonCompleted(ctx, userId, courseId, currentLessonId)
+	if err != nil {
+		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
+		return 0, 0, "", err
+	}
+	points[0].IsDone = true
+
+	for _, point := range points {
+		lessonHeader.Points = append(lessonHeader.Points, struct {
+			LessonId int    `json:"lesson_id"`
+			Type     string `json:"type"`
+			IsDone   bool   `json:"is_done"`
+		}{
+			LessonId: point.LessonId,
+			Type:     point.Type,
+			IsDone:   point.IsDone,
+		})
+	}
+
+	return currentLessonId, bucket.Id, currentLessonType, nil
+}
+
+func (d *Database) FillLessonHeader(ctx context.Context, userId int, courseId int, lessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
+	rows1, err := d.conn.Query(`
+			SELECT cp.Lesson_ID, l.type
+			FROM LESSON_CHECKPOINT cp
+			JOIN LESSON l ON l.ID = cp.Lesson_ID
+			WHERE cp.User_ID = $1 AND cp.Course_ID = $2
+			ORDER BY cp.Updated_at DESC
+		`, userId, courseId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+		return 0, 0, "", err
+	}
+	defer rows1.Close()
+
+	var lessonPoint models.LessonPoint
+	var visitedLessonPointsIds []int
+	firstRow := true
+	for rows1.Next() {
+		if firstRow {
+			firstRow = false
+			err := rows1.Scan(&lessonPoint.LessonId, &lessonPoint.Type)
+			if err != nil {
+				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+				return 0, 0, "", err
+			}
+			visitedLessonPointsIds = append(visitedLessonPointsIds, lessonPoint.LessonId)
+			continue
+		}
+		var lessonPointId int
+		var lessonPointType string
+		err := rows1.Scan(&lessonPointId, &lessonPointType)
+		if err != nil {
+			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+			return 0, 0, "", err
+		}
+		visitedLessonPointsIds = append(visitedLessonPointsIds, lessonPointId)
+	}
+
+	if len(visitedLessonPointsIds) == 0 {
+		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("no visited lesson points fo user %+v in course %+v", userId, courseId))
+		return d.fillLessonHeaderNewCourse(ctx, userId, courseId, lessonHeader)
+	}
+
+	logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("lesson point %+v", lessonPoint))
+	logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("visited lesson points ids %+v", visitedLessonPointsIds))
+
+	var part models.CoursePart
+	var bucket models.LessonBucket
+	err = d.conn.QueryRow(`
+			SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID
+			FROM PART p
+			JOIN LESSON_BUCKET lb ON lb.Part_ID = p.ID
+			JOIN LESSON l ON l.Lesson_Bucket_ID = lb.ID
+			WHERE l.ID = $1
+		`, lessonPoint.LessonId).Scan(
+		&part.Title, &part.Order, &part.Id, &bucket.Title, &bucket.Order, &bucket.Id)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+		return 0, 0, "", err
+	}
+
+	lessonHeader.Part.Order = part.Order
+	lessonHeader.Part.Title = part.Title
+	lessonHeader.Bucket.Order = bucket.Order
+	lessonHeader.Bucket.Title = bucket.Title
+
+	logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("part %+v, bucket %+v", part, bucket))
+
+	rows2, err := d.conn.Query(`
+					SELECT id, type
+					FROM LESSON
+					WHERE lesson_bucket_id = $1
+					ORDER BY Lesson_Order ASC
+				`, bucket.Id)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+		return 0, 0, "", err
+	}
+	defer rows2.Close()
+
+	var points []models.LessonPoint
+	for rows2.Next() {
+		var point models.LessonPoint
+		if err := rows2.Scan(&point.LessonId, &point.Type); err != nil {
+			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
+			return 0, 0, "", err
+		}
+		for _, visitedLessonPointId := range visitedLessonPointsIds {
+			if point.LessonId == visitedLessonPointId {
+				point.IsDone = true
+				continue
+			}
+		}
+		points = append(points, point)
+	}
+
+	if len(points) == 0 {
+		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
+		return 0, 0, "", errors.New("no points found in bucket")
+	}
+
+	for _, point := range points {
+		lessonHeader.Points = append(lessonHeader.Points, struct {
+			LessonId int    `json:"lesson_id"`
+			Type     string `json:"type"`
+			IsDone   bool   `json:"is_done"`
+		}{
+			LessonId: point.LessonId,
+			Type:     point.Type,
+			IsDone:   point.IsDone,
+		})
+	}
+
+	return lessonPoint.LessonId, bucket.Id, lessonPoint.Type, nil
+}
+
+func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error) {
+	var blocks []string
+	rows, err := d.conn.Query(`
+			SELECT tlb.value
+			FROM TEXT_LESSON_BLOCK tlb
+			JOIN TEXT_LESSON tl ON tlb.Text_Lesson_ID = tl.ID
+			WHERE tl.Lesson_ID = $1
+			ORDER BY tlb.Text_Lesson_Block_Order ASC
+		`, currentLessonId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var block string
+		if err := rows.Scan(&block); err != nil {
+			logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		blocks = append(blocks, block)
+	}
+	return blocks, nil
+}
+
+func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error) {
+	footers := []int{-1, -1}
+
+	var currentOrder int
+	err := d.conn.QueryRow(`
+			SELECT lesson_order
+			FROM LESSON
+			WHERE id = $1
+		`, currentLessonId).Scan(&currentOrder)
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	rows, err := d.conn.Query(`
+			SELECT id, lesson_order
+			FROM LESSON
+			WHERE lesson_bucket_id = $1
+			ORDER BY Lesson_Order ASC
+		`, currentBucketId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var footer struct {
+			LessonId int
+			Order    int
+		}
+
+		if err := rows.Scan(&footer.LessonId, &footer.Order); err != nil {
+			logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if footer.Order == currentOrder-1 {
+			footers[0] = footer.LessonId
+			continue
+		} else if footer.Order == currentOrder+1 {
+			footers[1] = footer.LessonId
+		}
+	}
+
+	return footers, nil
 }

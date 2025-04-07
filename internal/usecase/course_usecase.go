@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
@@ -72,15 +73,50 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 	}
 	lessonHeader.CourseTitle = course.Title
 
-	err = uc.repo.FillLessonHeader(ctx, userId, courseId, &lessonHeader)
+	currentLessonId, currentBucketId, lessonType, err := uc.repo.FillLessonHeader(ctx, userId, courseId, &lessonHeader)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	lessonDto := &dto.LessonDTO{
-		LessonHeader: lessonHeader,
+	if lessonType == "text" { //TODO: сделать switch case
+		lessonDto := &dto.LessonDTO{
+			LessonHeader: lessonHeader,
+		}
+
+		blocks, err := uc.repo.GetLessonBlocks(ctx, currentLessonId)
+
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		for _, block := range blocks {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
+			lessonDto.Blocks = append(lessonDto.Blocks, struct {
+				Body string `json:"body"`
+			}{
+				Body: block,
+			})
+		}
+
+		footers, err := uc.repo.GetLessonFooters(ctx, currentLessonId, currentBucketId)
+
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if len(footers) != 2 {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("lesson %d has %d footers", currentLessonId, len(footers)))
+			return nil, errors.New("lesson has wrong number of footers")
+		}
+
+		lessonDto.Footer.NextLessonId = footers[1]
+		lessonDto.Footer.PreviousLessonId = footers[0]
+
+		return lessonDto, err
 	}
 
-	return lessonDto, nil
+	return nil, nil
 }

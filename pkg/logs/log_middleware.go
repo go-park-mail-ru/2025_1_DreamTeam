@@ -14,7 +14,7 @@ type LogString struct {
 
 type CtxLog struct {
 	sync.Mutex
-	Data map[string]*LogString
+	Data []*LogString
 }
 
 type key int
@@ -26,10 +26,11 @@ func logContext(ctx context.Context, path string) {
 	if !ok {
 		return
 	}
+
 	buf := bytes.NewBufferString(path)
 	buf.WriteString("\n")
-	for _, value := range logs.Data {
-		buf.WriteString(fmt.Sprintf("\t%s", value.Message))
+	for _, log := range logs.Data {
+		buf.WriteString(fmt.Sprintf("\t%s", log.Message))
 	}
 	fmt.Println(buf.String())
 }
@@ -39,7 +40,7 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		ctx = context.WithValue(ctx, LogsKey, &CtxLog{
-			Data: make(map[string]*LogString),
+			Data: make([]*LogString, 0),
 		})
 		defer logContext(ctx, r.URL.Path)
 		next.ServeHTTP(w, r.WithContext(ctx))

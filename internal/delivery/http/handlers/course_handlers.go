@@ -64,6 +64,8 @@ func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logs.PrintLog(r.Context(), "GetCourseLesson", fmt.Sprintf("user %+v is authorized", userProfile))
+
 	courseIdStr := r.URL.Query().Get("courseId")
 	courseId, err := strconv.Atoi(courseIdStr)
 	if err != nil {
