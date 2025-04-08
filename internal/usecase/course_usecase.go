@@ -163,3 +163,58 @@ func (uc *Usecase) GetLessonBody(ctx context.Context, userId int, courseId int, 
 func (uc *Usecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
+
+func (uc *Usecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {
+	var roadmap dto.CourseRoadmapDTO
+
+	var parts []*models.CoursePart
+	parts, err := uc.repo.GetCourseParts(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	for _, part := range parts {
+		buckets, err := uc.repo.GetPartBuckets(ctx, part.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		part.Buckets = buckets
+
+		var bucketsDto []*dto.LessonBucketDTO
+		for _, bucket := range buckets {
+			lessonPoints, err := uc.repo.GetBucketLessons(ctx, userId, courseId, bucket.Id)
+			if err != nil {
+				logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
+				return nil, err
+			}
+
+			var lessonDtoPoints []*dto.LessonPointDTO
+			for _, lessonPoint := range lessonPoints {
+				var lessonDto dto.LessonPointDTO
+				lessonDto.LessonId = lessonPoint.LessonId
+				lessonDto.Title = lessonPoint.Title
+				lessonDto.IsDone = lessonPoint.IsDone
+
+				lessonDtoPoints = append(lessonDtoPoints, &lessonDto)
+			}
+
+			var bucketDto dto.LessonBucketDTO
+			bucketDto.Id = bucket.Id
+			bucketDto.Title = bucket.Title
+			bucketDto.Lessons = lessonDtoPoints
+
+			bucketsDto = append(bucketsDto, &bucketDto)
+		}
+
+		var partDto dto.CoursePartDTO
+		partDto.Id = part.Id
+		partDto.Title = part.Title
+		partDto.Buckets = bucketsDto
+
+		roadmap.Parts = append(roadmap.Parts, &partDto)
+	}
+
+	return &roadmap, nil
+}

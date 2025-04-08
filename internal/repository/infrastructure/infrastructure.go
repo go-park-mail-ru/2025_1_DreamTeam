@@ -102,3 +102,15 @@ func (i *Infrastructure) MarkLessonCompleted(ctx context.Context, userId int, co
 func (i *Infrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return i.Database.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
+
+func (i *Infrastructure) GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error) {
+	return i.Database.GetCourseParts(ctx, courseId)
+}
+
+func (i *Infrastructure) GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error) {
+	return i.Database.GetPartBuckets(ctx, partId)
+}
+
+func (i *Infrastructure) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error) {
+	return i.Database.GetBucketLessons(ctx, userId, courseId, bucketId)
+}

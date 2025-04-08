@@ -60,35 +60,24 @@ type LessonDtoHeader struct {
 	}
 }
 
-/*
-{
-  "Header": {
-    "CourseTitle": "Информационная безопасность",
-      "Part": {
-        "Order": 1,
-        "Title": "Введение"
-      },
-      "Bucket": {
-        "Order": 1,
-        "Title": "Первый урок"
-      },
-      "Points": [
-          {
-            "LessonId": 0,
-      "Type": <"text", "video", "test">,
-      "IsDone": true
-      },
-     ],
-  },
-  "Blocks": [
-      {"Body": "*html*"},
-      {"Body": "*html*"},
-    {"Body": "*html*"},
-  ],
-  "Footer": {
-    "NextLessonId": 1,
-    "PreviousLessonId": 0,
-  },
+type CourseRoadmapDTO struct {
+	Parts []*CoursePartDTO `json:"parts"`
 }
 
-*/
+type LessonPointDTO struct {
+	LessonId int    `json:"lesson_id"`
+	Title    string `json:"lesson_title"`
+	IsDone   bool   `json:"is_done"`
+}
+
+type LessonBucketDTO struct {
+	Id      int               `json:"bucket_id"`
+	Title   string            `json:"bucket_title"`
+	Lessons []*LessonPointDTO `json:"lessons"`
+}
+
+type CoursePartDTO struct {
+	Id      int                `json:"part_id"`
+	Title   string             `json:"part_title"`
+	Buckets []*LessonBucketDTO `json:"buckets"`
+}

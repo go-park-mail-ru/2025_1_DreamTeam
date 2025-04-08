@@ -433,3 +433,107 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, cu
 
 	return footers, nil
 }
+
+func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error) {
+	var courseParts []*models.CoursePart
+	rows, err := d.conn.Query(`
+			SELECT id, title
+			FROM PART
+			WHERE course_id = $1
+			ORDER BY part_order ASC
+		`, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var coursePart models.CoursePart
+		if err := rows.Scan(&coursePart.Id, &coursePart.Title); err != nil {
+			logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("get course part %+v", coursePart))
+		courseParts = append(courseParts, &coursePart)
+	}
+	return courseParts, nil
+}
+
+func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error) {
+	var buckets []*models.LessonBucket
+	rows, err := d.conn.Query(`
+			SELECT id, title
+			FROM LESSON_BUCKET
+			WHERE part_id = $1
+			ORDER BY lesson_bucket_order ASC
+		`, partId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bucket models.LessonBucket
+		if err := rows.Scan(&bucket.Id, &bucket.Title); err != nil {
+			logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("get bucket %+v", bucket))
+		buckets = append(buckets, &bucket)
+	}
+	return buckets, nil
+}
+
+func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error) {
+	completedLessons := make(map[int]bool)
+	rows1, err := d.conn.Query(`
+			SELECT lesson_id
+			FROM LESSON_CHECKPOINT
+			WHERE user_id = $1 AND course_id = $2
+		`, userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows1.Close()
+
+	for rows1.Next() {
+		var completedLessonId int
+		if err := rows1.Scan(&completedLessonId); err != nil {
+			logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		completedLessons[completedLessonId] = true
+	}
+
+	var lessons []*models.LessonPoint
+	rows2, err := d.conn.Query(`
+			SELECT id, title
+			FROM LESSON
+			WHERE lesson_bucket_id = $1
+			ORDER BY lesson_order ASC
+		`, bucketId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows2.Close()
+
+	for rows2.Next() {
+		var lesson models.LessonPoint
+		if err := rows2.Scan(&lesson.LessonId, &lesson.Title); err != nil {
+			logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if _, ok := completedLessons[lesson.LessonId]; ok {
+			lesson.IsDone = true
+		}
+
+		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("get lesson %+v", lesson))
+		lessons = append(lessons, &lesson)
+	}
+	return lessons, nil
+}

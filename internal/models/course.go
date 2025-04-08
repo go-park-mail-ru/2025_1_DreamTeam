@@ -17,19 +17,22 @@ type CourseRating struct {
 }
 
 type CoursePart struct {
-	Id    int
-	Order int
-	Title string
+	Id      int
+	Order   int
+	Title   string
+	Buckets []*LessonBucket
 }
 
 type LessonBucket struct {
-	Id    int
-	Order int
-	Title string
+	Id      int
+	Order   int
+	Title   string
+	Lessons []*LessonPoint
 }
 
 type LessonPoint struct {
 	LessonId int
+	Title    string
 	Type     string
 	IsDone   bool
 }

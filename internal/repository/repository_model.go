@@ -24,4 +24,7 @@ type Repository interface {
 	GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error)
 	MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
+	GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error)
+	GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error)
+	GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error)
 }
