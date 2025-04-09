@@ -82,3 +82,7 @@ type CoursePartDTO struct {
 	Title   string             `json:"part_title"`
 	Buckets []*LessonBucketDTO `json:"buckets"`
 }
+
+type LessonIDRequest struct {
+	Id int `json:"lesson_id"`
+}

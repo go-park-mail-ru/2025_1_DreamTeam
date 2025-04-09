@@ -565,7 +565,19 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 }
 
 func (d *Database) AddUserToCourse(ctx context.Context, userId int, courseId int) error {
-	_, err := d.conn.Exec(
+	exists := false
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM SIGNUPS WHERE user_id = $1 AND course_id = $2)",
+		userId, courseId).Scan(&exists)
+	if err != nil {
+		logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("%+v", err))
+	}
+
+	if exists {
+		logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("user with id %+v is already in course with id %+v", userId, courseId))
+		return nil
+	}
+
+	_, err = d.conn.Exec(
 		"INSERT INTO SIGNUPS (user_id, course_id) VALUES ($1, $2)",
 		userId, courseId)
 	if err != nil {

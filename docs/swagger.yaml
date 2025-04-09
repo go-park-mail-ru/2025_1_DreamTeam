@@ -24,6 +24,35 @@ definitions:
       title:
         type: string
     type: object
+  dto.CoursePartDTO:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/dto.LessonBucketDTO'
+        type: array
+      part_id:
+        type: integer
+      part_title:
+        type: string
+    type: object
+  dto.CourseRoadmapDTO:
+    properties:
+      parts:
+        items:
+          $ref: '#/definitions/dto.CoursePartDTO'
+        type: array
+    type: object
+  dto.LessonBucketDTO:
+    properties:
+      bucket_id:
+        type: integer
+      bucket_title:
+        type: string
+      lessons:
+        items:
+          $ref: '#/definitions/dto.LessonPointDTO'
+        type: array
+    type: object
   dto.LessonDTO:
     properties:
       header:
@@ -80,6 +109,31 @@ definitions:
           type: object
         type: array
     type: object
+  dto.LessonIDRequest:
+    properties:
+      lesson_id:
+        type: integer
+    type: object
+  dto.LessonPointDTO:
+    properties:
+      is_done:
+        type: boolean
+      lesson_id:
+        type: integer
+      lesson_title:
+        type: string
+      lesson_type:
+        type: string
+    type: object
+  dto.UserDTO:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
   dto.UserProfileDTO:
     properties:
       avatar_src:
@@ -129,6 +183,11 @@ definitions:
         items:
           $ref: '#/definitions/dto.CourseDTO'
         type: array
+    type: object
+  response.CourseRoadmapResponse:
+    properties:
+      course_roadmap:
+        $ref: '#/definitions/dto.CourseRoadmapDTO'
     type: object
   response.ErrorResponse:
     properties:
@@ -188,6 +247,43 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Get lesson of a course for the user
+      tags:
+      - courses
+  /api/getCourseRoadmap:
+    get:
+      consumes:
+      - application/json
+      description: Returns the roadmap of a course for the authenticated user
+      parameters:
+      - description: Course ID
+        in: query
+        name: courseId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Course roadmap
+          schema:
+            $ref: '#/definitions/response.CourseRoadmapResponse'
+        "400":
+          description: invalid course ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get course roadmap
       tags:
       - courses
   /api/getCourses:
@@ -286,7 +382,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/dto.UserDTO'
       produces:
       - application/json
       responses:
@@ -333,42 +429,44 @@ paths:
       tags:
       - users
   /api/markLessonAsNotCompleted:
-    get:
+    post:
       consumes:
       - application/json
-      description: Marks a lesson as not completed for the authorized user
+      description: Marks the specified lesson as not completed for the authenticated
+        user
       parameters:
       - description: Lesson ID
-        in: query
+        in: body
         name: lessonId
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/dto.LessonIDRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: 200 OK
+          description: OK
           schema:
             type: string
         "400":
-          description: invalid lesson ID
+          description: ivalid lesson ID
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "401":
-          description: not authorized
+          description: unauthorized
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "405":
-          description: method not allowed
+          description: uethod not allowed
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "500":
-          description: server error
+          description: internal server error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-      summary: Mark lesson as not completed
+      summary: Mark a lesson as not completed
       tags:
-      - lessons
+      - courses
   /api/register:
     post:
       consumes:

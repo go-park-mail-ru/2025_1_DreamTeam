@@ -71,6 +71,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/getCourseRoadmap": {
+            "get": {
+                "description": "Returns the roadmap of a course for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get course roadmap",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Course roadmap",
+                        "schema": {
+                            "$ref": "#/definitions/response.CourseRoadmapResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid course ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/getCourses": {
             "get": {
                 "description": "Retrieves a list of available courses",
@@ -218,7 +274,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/dto.UserDTO"
                         }
                     }
                 ],
@@ -286,8 +342,8 @@ const docTemplate = `{
             }
         },
         "/api/markLessonAsNotCompleted": {
-            "get": {
-                "description": "Marks a lesson as not completed for the authorized user",
+            "post": {
+                "description": "Marks the specified lesson as not completed for the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -295,45 +351,47 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "lessons"
+                    "courses"
                 ],
-                "summary": "Mark lesson as not completed",
+                "summary": "Mark a lesson as not completed",
                 "parameters": [
                     {
-                        "type": "integer",
                         "description": "Lesson ID",
                         "name": "lessonId",
-                        "in": "query",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LessonIDRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "200 OK",
+                        "description": "OK",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
-                        "description": "invalid lesson ID",
+                        "description": "ivalid lesson ID",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "not authorized",
+                        "description": "unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "405": {
-                        "description": "method not allowed",
+                        "description": "uethod not allowed",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "server error",
+                        "description": "internal server error",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -491,6 +549,51 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CoursePartDTO": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.LessonBucketDTO"
+                    }
+                },
+                "part_id": {
+                    "type": "integer"
+                },
+                "part_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CourseRoadmapDTO": {
+            "type": "object",
+            "properties": {
+                "parts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CoursePartDTO"
+                    }
+                }
+            }
+        },
+        "dto.LessonBucketDTO": {
+            "type": "object",
+            "properties": {
+                "bucket_id": {
+                    "type": "integer"
+                },
+                "bucket_title": {
+                    "type": "string"
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.LessonPointDTO"
+                    }
+                }
+            }
+        },
         "dto.LessonDTO": {
             "type": "object",
             "properties": {
@@ -579,6 +682,45 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.LessonIDRequest": {
+            "type": "object",
+            "properties": {
+                "lesson_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.LessonPointDTO": {
+            "type": "object",
+            "properties": {
+                "is_done": {
+                    "type": "boolean"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "lesson_title": {
+                    "type": "string"
+                },
+                "lesson_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserProfileDTO": {
             "type": "object",
             "properties": {
@@ -653,6 +795,14 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.CourseDTO"
                     }
+                }
+            }
+        },
+        "response.CourseRoadmapResponse": {
+            "type": "object",
+            "properties": {
+                "course_roadmap": {
+                    "$ref": "#/definitions/dto.CourseRoadmapDTO"
                 }
             }
         },

@@ -106,7 +106,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.User true "User information"
+// @Param user body dto.UserDTO true "User information"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request | password too short | invalid email"
 // @Failure 404 {object} response.ErrorResponse "email or password incorrect"

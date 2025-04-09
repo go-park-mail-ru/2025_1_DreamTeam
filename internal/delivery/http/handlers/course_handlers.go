@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
+	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 	"strconv"
 )
@@ -142,20 +144,20 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 }
 
 // MarkLessonAsNotCompleted godoc
-// @Summary Mark lesson as not completed
-// @Description Marks a lesson as not completed for the authorized user
-// @Tags courses
-// @Accept json
-// @Produce json
-// @Param lessonId query int true "Lesson ID"
-// @Success 200 {object} string "200 OK"
-// @Failure 400 {object} response.ErrorResponse "invalid lesson ID"
-// @Failure 401 {object} response.ErrorResponse "not authorized"
-// @Failure 405 {object} response.ErrorResponse "method not allowed"
-// @Failure 500 {object} response.ErrorResponse "server error"
-// @Router /api/markLessonAsNotCompleted [get]
+// @Summary      Mark a lesson as not completed
+// @Description  Marks the specified lesson as not completed for the authenticated user
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        lessonId body dto.LessonIDRequest true "Lesson ID"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "ivalid lesson ID"
+// @Failure      401 {object} response.ErrorResponse "unauthorized"
+// @Failure      405 {object} response.ErrorResponse "uethod not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/markLessonAsNotCompleted [post]
 func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
@@ -170,15 +172,15 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 
 	logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
-	lessonIdStr := r.URL.Query().Get("lessonId")
-	lessonId, err := strconv.Atoi(lessonIdStr)
+	lessonId := dto.LessonIDRequest{}
+	err := json.NewDecoder(r.Body).Decode(&lessonId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = h.useCase.MarkLessonAsNotCompleted(r.Context(), userProfile.Id, lessonId)
+	err = h.useCase.MarkLessonAsNotCompleted(r.Context(), userProfile.Id, lessonId.Id)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -188,6 +190,19 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 	response.SendOKResponse(w, r)
 }
 
+// GetCourseRoadmap godoc
+// @Summary      Get course roadmap
+// @Description  Returns the roadmap of a course for the authenticated user
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        courseId query int true "Course ID"
+// @Success      200 {object} response.CourseRoadmapResponse "Course roadmap"
+// @Failure      400 {object} response.ErrorResponse "invalid course ID"
+// @Failure      401 {object} response.ErrorResponse "unauthorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/getCourseRoadmap [get]
 func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetCourseRoadmap", "method not allowed")
