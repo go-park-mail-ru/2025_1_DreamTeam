@@ -7,11 +7,12 @@ import (
 )
 
 type Database struct {
-	conn *sql.DB
+	conn           *sql.DB
+	SESSION_SECRET string
 }
 
 // NewDatabase - конструктор
-func NewDatabase(connStr string) (*Database, error) {
+func NewDatabase(connStr string, SESSION_SECRET string) (*Database, error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -22,7 +23,7 @@ func NewDatabase(connStr string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{conn: db}, nil
+	return &Database{conn: db, SESSION_SECRET: SESSION_SECRET}, nil
 }
 
 // Close - закрытие соединения с базой данных

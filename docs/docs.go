@@ -195,7 +195,7 @@ const docTemplate = `{
                     "200": {
                         "description": "next lesson content",
                         "schema": {
-                            "$ref": "#/definitions/response.LessonBodyResponse"
+                            "$ref": "#/definitions/response.LessonResponse"
                         }
                     },
                     "400": {
@@ -811,14 +811,6 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "type": "string"
-                }
-            }
-        },
-        "response.LessonBodyResponse": {
-            "type": "object",
-            "properties": {
-                "lesson_body": {
-                    "$ref": "#/definitions/dto.LessonDtoBody"
                 }
             }
         },

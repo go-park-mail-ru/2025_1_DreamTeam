@@ -24,7 +24,7 @@ func NewInfrastructure(conf *config.Config) *Infrastructure {
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", conf.Database.Host, conf.Database.Port, conf.Database.User, conf.Database.Password, conf.Database.Name)
-	database, err := postgres.NewDatabase(dsn)
+	database, err := postgres.NewDatabase(dsn, conf.Secrets.JwtSessionSecret)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

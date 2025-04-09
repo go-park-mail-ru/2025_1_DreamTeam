@@ -94,7 +94,7 @@ func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param courseId query int true "Course ID"
 // @Param lessonId query int true "Current Lesson ID"
-// @Success 200 {object} response.LessonBodyResponse "next lesson content"
+// @Success 200 {object} response.LessonResponse "next lesson content"
 // @Failure 400 {object} response.ErrorResponse "invalid course or lesson ID"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Failure 405 {object} response.ErrorResponse "method not allowed"
@@ -132,7 +132,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lessonBody, err := h.useCase.GetLessonBody(r.Context(), userProfile.Id, courseId, lessonId)
+	lesson, err := h.useCase.GetNextLesson(r.Context(), userProfile.Id, courseId, lessonId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -140,7 +140,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logs.PrintLog(r.Context(), "GetNextLesson", "send lesson body to user")
-	response.SendLessonBody(lessonBody, w, r)
+	response.SendLesson(lesson, w, r)
 }
 
 // MarkLessonAsNotCompleted godoc

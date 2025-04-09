@@ -18,7 +18,7 @@ type UsecaseInterface interface {
 	SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error)
 	GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error)
 	GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error)
-	GetLessonBody(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDtoBody, error)
+	GetNextLesson(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDTO, error)
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
 }

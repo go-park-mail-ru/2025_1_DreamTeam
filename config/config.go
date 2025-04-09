@@ -23,6 +23,10 @@ type Config struct {
 		BucketName      string `yaml:"bucket_name"`
 		UseSSL          bool   `yaml:"use_ssl"`
 	} `yaml:"minio"`
+
+	Secrets struct {
+		JwtSessionSecret string `yaml:"jwt_session_secret"`
+	} `yaml:"secrets"`
 }
 
 // LoadConfig загружает конфигурацию из YAML-файла

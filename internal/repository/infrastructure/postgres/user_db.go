@@ -13,14 +13,12 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-var SECRET = []byte("dream_team_secret_jehpfqjbhjfkjlGUGeqJIBxcfimor")
-
 func (d *Database) saveSession(userId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
 	})
 
-	secretToken, err := token.SignedString(SECRET)
+	secretToken, err := token.SignedString(d.SESSION_SECRET)
 	if err != nil {
 		return "", err
 	}
