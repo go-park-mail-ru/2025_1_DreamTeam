@@ -14,7 +14,7 @@ import (
 func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, error) {
 	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
 	var bucketCourses []*models.Course
-	rows, err := d.conn.Query("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass, purchases_amount FROM course LIMIT 16")
+	rows, err := d.conn.Query("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course LIMIT 16")
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -23,7 +23,7 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, erro
 
 	for rows.Next() {
 		var course models.Course
-		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass, &course.PurchasesAmount); err != nil {
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
@@ -36,8 +36,24 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, erro
 	return bucketCourses, nil
 }
 
-func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error) {
-	coursesRatings := make(map[int]models.CourseRating, len(bucketCoursesWithoutRating))
+func (d *Database) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error) {
+	coursesPurchases := make(map[int]int, len(bucketCoursesWithoutPurchases))
+
+	for _, course := range bucketCoursesWithoutPurchases {
+		var purchases int
+		err := d.conn.QueryRow("SELECT COUNT(*) FROM SIGNUPS WHERE course_id = $1", course.Id).Scan(&purchases)
+		if err != nil {
+			logs.PrintLog(ctx, "GetBucketCoursesPurchases", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		coursesPurchases[course.Id] = purchases
+	}
+	return coursesPurchases, nil
+}
+
+func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error) {
+	coursesRatings := make(map[int]float32, len(bucketCoursesWithoutRating))
 
 	for _, course := range bucketCoursesWithoutRating {
 		rows, err := d.conn.Query("SELECT rating FROM course_metrik WHERE course_id = $1", course.Id)
@@ -64,11 +80,9 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 			continue
 		}
 
-		coursesRatings[course.Id] = models.CourseRating{
-			CourseId: course.Id,
-			Rating:   sumMetrics / countMetrics,
-		}
+		coursesRatings[course.Id] = sumMetrics / countMetrics
 	}
+
 	logs.PrintLog(ctx, "GetCoursesRaitings", "get courses ratings from db")
 	return coursesRatings, nil
 }
@@ -114,8 +128,8 @@ func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags 
 
 func (d *Database) GetCourseById(ctx context.Context, courseId int) (*models.Course, error) {
 	var course models.Course
-	err := d.conn.QueryRow("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass, purchases_amount FROM course WHERE id = $1", courseId).Scan(
-		&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass, &course.PurchasesAmount)
+	err := d.conn.QueryRow("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course WHERE id = $1", courseId).Scan(
+		&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseById", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -125,16 +139,28 @@ func (d *Database) GetCourseById(ctx context.Context, courseId int) (*models.Cou
 }
 
 func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
-	_, err := d.conn.Exec(
+	exists := false
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2 AND course_id = $3)",
+		userId, lessonId, courseId).Scan(&exists)
+	if err != nil {
+		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("%+v", err))
+	}
+
+	if exists {
+		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("lesson id:%+v is already learned by the user id:%+v", lessonId, userId))
+		return nil
+	}
+
+	_, err = d.conn.Exec(
 		"INSERT INTO LESSON_CHECKPOINT (user_id, lesson_id, course_id) VALUES ($1, $2, $3)",
 		userId, lessonId, courseId)
 
 	if err != nil {
-		logs.PrintLog(ctx, "markLessonComplete", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("%+v", err))
 		return err
 	}
 
-	logs.PrintLog(ctx, "markLessonComplete", fmt.Sprintf("mark that lesson id:%+v is learned by the user id:%+v", lessonId, userId))
+	logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("mark that lesson id:%+v is learned by the user id:%+v", lessonId, userId))
 	return nil
 }
 
@@ -510,7 +536,7 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 
 	var lessons []*models.LessonPoint
 	rows2, err := d.conn.Query(`
-			SELECT id, title
+			SELECT id, title, type
 			FROM LESSON
 			WHERE lesson_bucket_id = $1
 			ORDER BY lesson_order ASC
@@ -523,7 +549,7 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 
 	for rows2.Next() {
 		var lesson models.LessonPoint
-		if err := rows2.Scan(&lesson.LessonId, &lesson.Title); err != nil {
+		if err := rows2.Scan(&lesson.LessonId, &lesson.Title, &lesson.Type); err != nil {
 			logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
@@ -536,4 +562,16 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		lessons = append(lessons, &lesson)
 	}
 	return lessons, nil
+}
+
+func (d *Database) AddUserToCourse(ctx context.Context, userId int, courseId int) error {
+	_, err := d.conn.Exec(
+		"INSERT INTO SIGNUPS (user_id, course_id) VALUES ($1, $2)",
+		userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("%+v", err))
+		return err
+	}
+	logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("add user with id %+v to course with id %+v", userId, courseId))
+	return nil
 }

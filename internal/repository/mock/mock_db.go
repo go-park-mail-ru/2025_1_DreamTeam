@@ -20,14 +20,13 @@ func NewmockDB(is_auth bool) *mockDB {
 	}
 	for i := 1; i <= 4; i++ {
 		course := models.Course{
-			Id:              i,
-			Price:           i,
-			PurchasesAmount: i,
-			CreatorId:       i,
-			TimeToPass:      i,
-			Title:           fmt.Sprintf("Курс #%d", i),
-			Description:     fmt.Sprintf("Описание курса #%d", i),
-			ScrImage:        fmt.Sprintf("image_%d.jpg", i),
+			Id:          i,
+			Price:       i,
+			CreatorId:   i,
+			TimeToPass:  i,
+			Title:       fmt.Sprintf("Курс #%d", i),
+			Description: fmt.Sprintf("Описание курса #%d", i),
+			ScrImage:    fmt.Sprintf("image_%d.jpg", i),
 		}
 		mockDB.courses[i] = &course
 	}

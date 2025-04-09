@@ -16,7 +16,7 @@ type Repository interface {
 	UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error
 	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 	UpdateProfilePhoto(ctx context.Context, url string, userId int) (string, error)
-	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error)
+	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error)
 	GetCourseById(ctx context.Context, courseId int) (*models.Course, error)
 	FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error)
@@ -27,4 +27,6 @@ type Repository interface {
 	GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error)
 	GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error)
 	GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error)
+	AddUserToCourse(ctx context.Context, userId int, courseId int) error
+	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error)
 }

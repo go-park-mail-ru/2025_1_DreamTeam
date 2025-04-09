@@ -29,20 +29,30 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 		return nil, err
 	}
 
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCoursesWithoutRating)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
 	bucketCourses := make([]*dto.CourseDTO, 0, len(bucketCoursesWithoutRating))
 	for _, course := range bucketCoursesWithoutRating {
 		rating, ok := coursesRatings[course.Id]
 		if !ok {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
-			rating = models.CourseRating{
-				Rating: 0,
-			}
+			rating = 0
 		}
 
 		tags, ok := courseTags[course.Id]
 		if !ok {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
 			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
 		}
 		bucketCourses = append(bucketCourses, &dto.CourseDTO{
 			Id:              course.Id,
@@ -52,9 +62,9 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 			ScrImage:        course.ScrImage,
 			Price:           course.Price,
 			TimeToPass:      course.TimeToPass,
-			Rating:          rating.Rating,
+			Rating:          rating,
 			Tags:            tags,
-			PurchasesAmount: course.PurchasesAmount,
+			PurchasesAmount: purchases,
 		})
 	}
 
@@ -64,8 +74,13 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 }
 
 func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
-	var lessonHeader dto.LessonDtoHeader
+	err := uc.repo.AddUserToCourse(ctx, userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
 
+	var lessonHeader dto.LessonDtoHeader
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -196,6 +211,7 @@ func (uc *Usecase) GetCourseRoadmap(ctx context.Context, userId int, courseId in
 				lessonDto.LessonId = lessonPoint.LessonId
 				lessonDto.Title = lessonPoint.Title
 				lessonDto.IsDone = lessonPoint.IsDone
+				lessonDto.Type = lessonPoint.Type
 
 				lessonDtoPoints = append(lessonDtoPoints, &lessonDto)
 			}

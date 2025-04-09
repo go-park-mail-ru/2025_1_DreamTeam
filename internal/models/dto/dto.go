@@ -66,6 +66,7 @@ type CourseRoadmapDTO struct {
 
 type LessonPointDTO struct {
 	LessonId int    `json:"lesson_id"`
+	Type     string `json:"lesson_type"`
 	Title    string `json:"lesson_title"`
 	IsDone   bool   `json:"is_done"`
 }

@@ -1,19 +1,13 @@
 package models
 
 type Course struct {
-	Id              int
-	Price           int
-	PurchasesAmount int
-	CreatorId       int
-	TimeToPass      int
-	Title           string
-	Description     string
-	ScrImage        string
-}
-
-type CourseRating struct {
-	CourseId int
-	Rating   float32
+	Id          int
+	Price       int
+	CreatorId   int
+	TimeToPass  int
+	Title       string
+	Description string
+	ScrImage    string
 }
 
 type CoursePart struct {

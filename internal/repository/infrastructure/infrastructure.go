@@ -71,7 +71,7 @@ func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url strin
 	return i.Database.UpdateProfilePhoto(ctx, photo_url, userId)
 }
 
-func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]models.CourseRating, error) {
+func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }
 
@@ -113,4 +113,12 @@ func (i *Infrastructure) GetPartBuckets(ctx context.Context, partId int) ([]*mod
 
 func (i *Infrastructure) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error) {
 	return i.Database.GetBucketLessons(ctx, userId, courseId, bucketId)
+}
+
+func (i *Infrastructure) AddUserToCourse(ctx context.Context, userId int, courseId int) error {
+	return i.Database.AddUserToCourse(ctx, userId, courseId)
+}
+
+func (i *Infrastructure) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error) {
+	return i.Database.GetCoursesPurchases(ctx, bucketCoursesWithoutPurchases)
 }
