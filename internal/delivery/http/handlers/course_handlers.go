@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
+	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 	"strconv"
@@ -36,6 +37,42 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 
 	logs.PrintLog(r.Context(), "GetCourses", "send bucket courses")
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
+}
+
+// GetCourse godoc
+// @Summary Get course
+// @Description Retrieves a course by ID
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param courseId query int true "Course ID"
+// @Success 200 {object} response.CourseResponse "course"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/getCourses [get]
+func (h *Handler) GetCourse(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetCourse", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	courseId, err := strconv.Atoi(r.URL.Query().Get("courseId"))
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid course ID", http.StatusBadRequest, w, r)
+		return
+	}
+
+	course, err := h.useCase.GetCourse(r.Context(), courseId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "GetCourse", "send course")
+	response.SendCourseResponse(course, w, r)
 }
 
 // GetCourseLesson godoc
@@ -199,7 +236,6 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 // @Param        courseId query int true "Course ID"
 // @Success      200 {object} response.CourseRoadmapResponse "Course roadmap"
 // @Failure      400 {object} response.ErrorResponse "invalid course ID"
-// @Failure      401 {object} response.ErrorResponse "unauthorized"
 // @Failure      405 {object} response.ErrorResponse "method not allowed"
 // @Failure      500 {object} response.ErrorResponse "internal server error"
 // @Router       /api/getCourseRoadmap [get]
@@ -213,8 +249,7 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	userProfile := h.checkCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "GetCourseRoadmap", "user not logged in")
-		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
-		return
+		userProfile = &models.UserProfile{Id: -1}
 	}
 
 	logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("user %+v is authorized", userProfile))

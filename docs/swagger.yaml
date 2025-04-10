@@ -184,6 +184,11 @@ definitions:
           $ref: '#/definitions/dto.CourseDTO'
         type: array
     type: object
+  response.CourseResponse:
+    properties:
+      course:
+        $ref: '#/definitions/dto.CourseDTO'
+    type: object
   response.CourseRoadmapResponse:
     properties:
       course_roadmap:
@@ -266,10 +271,6 @@ paths:
           description: invalid course ID
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-        "401":
-          description: unauthorized
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
         "405":
           description: method not allowed
           schema:
@@ -285,14 +286,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves a list of available courses
+      description: Retrieves a course by ID
+      parameters:
+      - description: Course ID
+        in: query
+        name: courseId
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: List of courses
+          description: course
           schema:
-            $ref: '#/definitions/response.BucketCoursesResponse'
+            $ref: '#/definitions/response.CourseResponse'
         "405":
           description: method not allowed
           schema:
@@ -301,7 +308,7 @@ paths:
           description: server error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-      summary: Get list of courses
+      summary: Get course
       tags:
       - courses
   /api/getNextLesson:

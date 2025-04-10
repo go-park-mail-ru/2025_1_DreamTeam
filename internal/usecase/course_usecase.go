@@ -7,36 +7,37 @@ import (
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
+	"skillForce/pkg/sanitize"
 )
 
 // GetBucketCourses - извлекает список курсов из базы данных
 func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
-	bucketCoursesWithoutRating, err := uc.repo.GetBucketCourses(ctx)
+	bucketCourses, err := uc.repo.GetBucketCourses(ctx)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCoursesWithoutRating)
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCoursesWithoutRating)
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	bucketCourses := make([]*dto.CourseDTO, 0, len(bucketCoursesWithoutRating))
-	for _, course := range bucketCoursesWithoutRating {
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
 		rating, ok := coursesRatings[course.Id]
 		if !ok {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
@@ -54,11 +55,11 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
 			purchases = 0
 		}
-		bucketCourses = append(bucketCourses, &dto.CourseDTO{
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
 			Id:              course.Id,
 			CreatorId:       course.CreatorId,
 			Title:           course.Title,
-			Description:     course.Description,
+			Description:     sanitize.Sanitize(course.Description),
 			ScrImage:        course.ScrImage,
 			Price:           course.Price,
 			TimeToPass:      course.TimeToPass,
@@ -70,7 +71,74 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 
 	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
 
-	return bucketCourses, nil
+	return resultBucketCourses, nil
+}
+
+func (uc *Usecase) GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error) {
+	course, err := uc.repo.GetCourseById(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("get course %+v from db", course))
+
+	bucketCourses := []*models.Course{course}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+		})
+	}
+
+	logs.PrintLog(ctx, "GetCourse", "get course with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses[0], nil
+
 }
 
 func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
@@ -108,6 +176,7 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		}
 		var LessonBody dto.LessonDtoBody
 		for _, block := range blocks {
+			block = sanitize.Sanitize(block)
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
 			LessonBody.Blocks = append(LessonBody.Blocks, struct {
 				Body string `json:"body"`
@@ -147,6 +216,7 @@ func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, 
 	}
 	var LessonBody dto.LessonDtoBody
 	for _, block := range blocks {
+		block = sanitize.Sanitize(block)
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
 		LessonBody.Blocks = append(LessonBody.Blocks, struct {
 			Body string `json:"body"`
@@ -155,7 +225,13 @@ func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, 
 		})
 	}
 
-	footers, err := uc.repo.GetLessonFooters(ctx, lessonId, lessonId)
+	bucket, err := uc.repo.GetBucketByLessonId(ctx, lessonId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	footers, err := uc.repo.GetLessonFooters(ctx, lessonId, bucket.Id)
 
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))

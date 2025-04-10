@@ -14,6 +14,10 @@ type BucketCoursesResponse struct {
 	BucketCourses []*dto.CourseDTO `json:"bucket_courses"`
 }
 
+type CourseResponse struct {
+	Course *dto.CourseDTO `json:"course"`
+}
+
 type UserProfileResponse struct {
 	UserProfile *dto.UserProfileDTO `json:"user"`
 }
@@ -89,6 +93,13 @@ func SendLessonBody(lessonBody *dto.LessonDtoBody, w http.ResponseWriter, r *htt
 
 func SendCourseRoadmap(courseRoadmap *dto.CourseRoadmapDTO, w http.ResponseWriter, r *http.Request) {
 	response := CourseRoadmapResponse{CourseRoadmap: courseRoadmap}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func SendCourseResponse(course *dto.CourseDTO, w http.ResponseWriter, r *http.Request) {
+	response := CourseResponse{Course: course}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

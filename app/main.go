@@ -35,6 +35,7 @@ func main() {
 	siteMux.HandleFunc("/api/updateProfilePhoto", handler.UpdateProfilePhoto)
 
 	siteMux.HandleFunc("/api/getCourses", handler.GetCourses)
+	siteMux.HandleFunc("/api/getCourse", handler.GetCourse)
 	siteMux.HandleFunc("/api/getCourseLesson", handler.GetCourseLesson)
 	siteMux.HandleFunc("/api/getNextLesson", handler.GetNextLesson)
 	siteMux.HandleFunc("/api/markLessonAsNotCompleted", handler.MarkLessonAsNotCompleted)

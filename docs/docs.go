@@ -106,12 +106,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
                     "405": {
                         "description": "method not allowed",
                         "schema": {
@@ -129,7 +123,7 @@ const docTemplate = `{
         },
         "/api/getCourses": {
             "get": {
-                "description": "Retrieves a list of available courses",
+                "description": "Retrieves a course by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -139,12 +133,21 @@ const docTemplate = `{
                 "tags": [
                     "courses"
                 ],
-                "summary": "Get list of courses",
+                "summary": "Get course",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of courses",
+                        "description": "course",
                         "schema": {
-                            "$ref": "#/definitions/response.BucketCoursesResponse"
+                            "$ref": "#/definitions/response.CourseResponse"
                         }
                     },
                     "405": {
@@ -795,6 +798,14 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.CourseDTO"
                     }
+                }
+            }
+        },
+        "response.CourseResponse": {
+            "type": "object",
+            "properties": {
+                "course": {
+                    "$ref": "#/definitions/dto.CourseDTO"
                 }
             }
         },

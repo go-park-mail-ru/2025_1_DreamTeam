@@ -411,6 +411,24 @@ func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]
 	return blocks, nil
 }
 
+func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int) (*models.LessonBucket, error) {
+	var bucketId int
+	err := d.conn.QueryRow(`
+			SELECT lesson_bucket_id
+			FROM LESSON
+			WHERE id = $1
+		`, currentLessonId).Scan(&bucketId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketByLessonId", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	bucket := &models.LessonBucket{
+		Id: bucketId,
+	}
+	return bucket, nil
+}
+
 func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error) {
 	footers := []int{-1, -1}
 
@@ -424,6 +442,8 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, cu
 		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
+
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current order: %d", currentOrder))
 
 	rows, err := d.conn.Query(`
 			SELECT id, lesson_order
@@ -449,9 +469,10 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, cu
 			return nil, err
 		}
 
+		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("footer: %+v", footer))
+
 		if footer.Order == currentOrder-1 {
 			footers[0] = footer.LessonId
-			continue
 		} else if footer.Order == currentOrder+1 {
 			footers[1] = footer.LessonId
 		}

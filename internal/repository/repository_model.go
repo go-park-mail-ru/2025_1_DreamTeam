@@ -29,4 +29,5 @@ type Repository interface {
 	GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error)
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error)
+	GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error)
 }

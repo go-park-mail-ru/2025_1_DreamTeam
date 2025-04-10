@@ -21,6 +21,7 @@ type UsecaseInterface interface {
 	GetNextLesson(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDTO, error)
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
+	GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error)
 }
 
 type Usecase struct {

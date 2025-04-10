@@ -122,3 +122,7 @@ func (i *Infrastructure) AddUserToCourse(ctx context.Context, userId int, course
 func (i *Infrastructure) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error) {
 	return i.Database.GetCoursesPurchases(ctx, bucketCoursesWithoutPurchases)
 }
+
+func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error) {
+	return i.Database.GetBucketByLessonId(ctx, lessonId)
+}
