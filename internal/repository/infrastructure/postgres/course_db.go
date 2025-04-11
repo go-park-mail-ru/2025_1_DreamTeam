@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -266,7 +267,7 @@ func (d *Database) fillLessonHeaderNewCourse(ctx context.Context, userId int, co
 	return currentLessonId, bucket.Id, currentLessonType, nil
 }
 
-func (d *Database) FillLessonHeader(ctx context.Context, userId int, courseId int, lessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
+func (d *Database) FillLastLessonHeader(ctx context.Context, userId int, courseId int, lessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
 	rows1, err := d.conn.Query(`
 			SELECT cp.Lesson_ID, l.type
 			FROM LESSON_CHECKPOINT cp
@@ -385,6 +386,105 @@ func (d *Database) FillLessonHeader(ctx context.Context, userId int, courseId in
 	return lessonPoint.LessonId, bucket.Id, lessonPoint.Type, nil
 }
 
+func (d *Database) FillLessonHeaderByLessonId(ctx context.Context, userId int, courseId int, currentLessonId int, LessonHeader *dto.LessonDtoHeader) error {
+	course, err := d.GetCourseById(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	LessonHeader.CourseId = course.Id
+	LessonHeader.CourseTitle = course.Title
+
+	var part models.CoursePart
+	var bucket models.LessonBucket
+	err = d.conn.QueryRow(`
+			SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID
+			FROM lesson l
+			JOIN LESSON_BUCKET lb ON l.LESSON_BUCKET_ID = lb.ID
+			JOIN PART p ON lb.PART_ID = p.ID
+			WHERE l.ID = $1
+		`, currentLessonId).Scan(
+		&part.Title, &part.Order, &part.Id, &bucket.Title, &bucket.Order, &bucket.Id)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	LessonHeader.Part.Order = part.Order
+	LessonHeader.Part.Title = part.Title
+	LessonHeader.Bucket.Order = bucket.Order
+	LessonHeader.Bucket.Title = bucket.Title
+
+	rows1, err := d.conn.Query(`
+		SELECT lesson_id
+		FROM LESSON_CHECKPOINT
+		WHERE course_id = $1
+	`, courseId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		return err
+	}
+	defer rows1.Close()
+
+	visitedLessonPointsIds := make(map[int]bool)
+	for rows1.Next() {
+		var visitedLessonPointId int
+		if err := rows1.Scan(&visitedLessonPointId); err != nil {
+			logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+			return err
+		}
+		visitedLessonPointsIds[visitedLessonPointId] = true
+	}
+
+	rows2, err := d.conn.Query(`
+		SELECT id, type
+		FROM LESSON
+		WHERE lesson_bucket_id = $1
+	`, bucket.Id)
+
+	if err != nil {
+		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		return err
+	}
+	defer rows1.Close()
+
+	var points []*dto.LessonPointDTO
+	for rows2.Next() {
+		var point models.LessonPoint
+		if err := rows2.Scan(&point.LessonId, &point.Type); err != nil {
+			logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+			return err
+		}
+		points = append(points, &dto.LessonPointDTO{
+			LessonId: point.LessonId,
+			Type:     point.Type,
+			IsDone:   visitedLessonPointsIds[point.LessonId],
+		})
+	}
+
+	if len(points) == 0 {
+		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
+		return errors.New("no points found in bucket")
+	}
+
+	for _, point := range points {
+		LessonHeader.Points = append(LessonHeader.Points, struct {
+			LessonId int    `json:"lesson_id"`
+			Type     string `json:"type"`
+			IsDone   bool   `json:"is_done"`
+		}{
+			LessonId: point.LessonId,
+			Type:     point.Type,
+			IsDone:   point.IsDone,
+		})
+	}
+
+	return nil
+}
+
 func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error) {
 	var blocks []string
 	rows, err := d.conn.Query(`
@@ -429,28 +529,31 @@ func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int)
 	return bucket, nil
 }
 
-func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error) {
-	footers := []int{-1, -1}
+func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error) {
+	footers := []int{-1, -1, -1}
 
-	var currentOrder int
+	var currentLessonOrder int
+	var currentBucket models.LessonBucket
 	err := d.conn.QueryRow(`
-			SELECT lesson_order
-			FROM LESSON
-			WHERE id = $1
-		`, currentLessonId).Scan(&currentOrder)
+			SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
+			FROM LESSON l
+			JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+			WHERE l.id = $1
+		`, currentLessonId).Scan(&currentLessonOrder, &currentBucket.Id, &currentBucket.Order)
 	if err != nil {
 		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current order: %d", currentOrder))
+	footers[1] = currentLessonId
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current order: %d", currentLessonOrder))
 
 	rows, err := d.conn.Query(`
 			SELECT id, lesson_order
 			FROM LESSON
 			WHERE lesson_bucket_id = $1
 			ORDER BY Lesson_Order ASC
-		`, currentBucketId)
+		`, currentBucket.Id)
 
 	if err != nil {
 		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
@@ -469,13 +572,32 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int, cu
 			return nil, err
 		}
 
-		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("footer: %+v", footer))
-
-		if footer.Order == currentOrder-1 {
+		if footer.Order == currentLessonOrder-1 {
 			footers[0] = footer.LessonId
-		} else if footer.Order == currentOrder+1 {
-			footers[1] = footer.LessonId
+		} else if footer.Order == currentLessonOrder+1 {
+			footers[2] = footer.LessonId
 		}
+
+		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("footer: %+v", footer))
+	}
+
+	if footers[0] == -1 && currentBucket.Order > 1 {
+		var prevLessonId int
+		err := d.conn.QueryRow(`
+				SELECT l.id
+				FROM LESSON_BUCKET lb
+				JOIN LESSON l ON l.lesson_bucket_id = lb.id
+				WHERE lb.lesson_bucket_order = $1
+				ORDER BY l.Lesson_Order DESC
+				LIMIT 1
+			`, currentBucket.Order-1).Scan(&prevLessonId)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+				return nil, err
+			}
+		}
+		footers[0] = prevLessonId
 	}
 
 	return footers, nil

@@ -83,16 +83,16 @@ func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*mode
 	return i.Database.GetCourseById(ctx, courseId)
 }
 
-func (i *Infrastructure) FillLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
-	return i.Database.FillLessonHeader(ctx, userId, courseId, LessonHeader)
+func (i *Infrastructure) FillLastLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
+	return i.Database.FillLastLessonHeader(ctx, userId, courseId, LessonHeader)
 }
 
 func (i *Infrastructure) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error) {
 	return i.Database.GetLessonBlocks(ctx, currentLessonId)
 }
 
-func (i *Infrastructure) GetLessonFooters(ctx context.Context, currentLessonId int, currentBucketId int) ([]int, error) {
-	return i.Database.GetLessonFooters(ctx, currentLessonId, currentBucketId)
+func (i *Infrastructure) GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error) {
+	return i.Database.GetLessonFooters(ctx, currentLessonId)
 }
 
 func (i *Infrastructure) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
@@ -125,4 +125,8 @@ func (i *Infrastructure) GetCoursesPurchases(ctx context.Context, bucketCoursesW
 
 func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error) {
 	return i.Database.GetBucketByLessonId(ctx, lessonId)
+}
+
+func (i *Infrastructure) FillLessonHeaderByLessonId(ctx context.Context, userId int, courseId int, currentLessonId int, LessonHeader *dto.LessonDtoHeader) error {
+	return i.Database.FillLessonHeaderByLessonId(ctx, userId, courseId, currentLessonId, LessonHeader)
 }

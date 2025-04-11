@@ -13,12 +13,12 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func (d *Database) saveSession(userId int) (string, error) {
+func (d *Database) saveSession(ctx context.Context, userId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
 	})
 
-	secretToken, err := token.SignedString(d.SESSION_SECRET)
+	secretToken, err := token.SignedString([]byte(d.SESSION_SECRET))
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +67,7 @@ func (d *Database) RegisterUser(ctx context.Context, user *models.User) (string,
 		}
 	}
 
-	cookieValue, err := d.saveSession(user.Id)
+	cookieValue, err := d.saveSession(ctx, user.Id)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +116,7 @@ func (d *Database) AuthenticateUser(ctx context.Context, email string, password 
 
 	logs.PrintLog(ctx, "AuthenticateUser", fmt.Sprintf("login user with email %+v in db", email))
 
-	cookieValue, err := d.saveSession(id)
+	cookieValue, err := d.saveSession(ctx, id)
 	if err != nil {
 		return "", err
 	}

@@ -38,6 +38,7 @@ type LessonDtoBody struct {
 	} `json:"blocks"`
 	Footer struct {
 		NextLessonId     int `json:"next_lesson_id"`
+		CurrentLessonId  int `json:"current_lesson_id"`
 		PreviousLessonId int `json:"previous_lesson_id"`
 	} `json:"footer"`
 }
