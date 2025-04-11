@@ -600,6 +600,25 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 		footers[0] = prevLessonId
 	}
 
+	if footers[2] == -1 && currentBucket.Order < 2 {
+		var nextLessonId int
+		err := d.conn.QueryRow(`
+				SELECT l.id
+				FROM LESSON_BUCKET lb
+				JOIN LESSON l ON l.lesson_bucket_id = lb.id
+				WHERE lb.lesson_bucket_order = $1
+				ORDER BY l.Lesson_Order ASC
+				LIMIT 1
+			`, currentBucket.Order+1).Scan(&nextLessonId)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+				return nil, err
+			}
+		}
+		footers[2] = nextLessonId
+	}
+
 	return footers, nil
 }
 
