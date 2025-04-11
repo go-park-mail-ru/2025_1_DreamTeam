@@ -155,3 +155,16 @@ func (d *Database) UpdateProfilePhoto(ctx context.Context, photoUrl string, user
 
 	return photoUrl, nil
 }
+
+func (d *Database) DeleteProfilePhoto(ctx context.Context, userId int) error {
+	delaultAvatar := "http://217.16.21.64:8006/avatars/default_avatar.png"
+	_, err := d.conn.Exec("UPDATE usertable SET avatar_src = $1 WHERE id = $2", delaultAvatar, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "DeleteProfilePhoto", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	logs.PrintLog(ctx, "DeleteProfilePhoto", fmt.Sprintf("update profile photo to default of user with id %+v in db", userId))
+
+	return nil
+}

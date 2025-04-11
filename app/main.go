@@ -33,6 +33,7 @@ func main() {
 	siteMux.HandleFunc("/api/isAuthorized", handler.IsAuthorized)
 	siteMux.HandleFunc("/api/updateProfile", handler.UpdateProfile)
 	siteMux.HandleFunc("/api/updateProfilePhoto", handler.UpdateProfilePhoto)
+	siteMux.HandleFunc("/api/deleteProfilePhoto", handler.DeleteProfilePhoto)
 
 	siteMux.HandleFunc("/api/getCourses", handler.GetCourses)
 	siteMux.HandleFunc("/api/getCourse", handler.GetCourse)

@@ -31,4 +31,5 @@ type Repository interface {
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error)
 	GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error)
+	DeleteProfilePhoto(ctx context.Context, userId int) error
 }

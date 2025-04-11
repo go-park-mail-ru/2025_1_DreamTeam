@@ -42,3 +42,7 @@ func (uc *Usecase) UploadFile(ctx context.Context, file multipart.File, fileHead
 func (uc *Usecase) SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error) {
 	return uc.repo.UpdateProfilePhoto(ctx, url, userId)
 }
+
+func (uc *Usecase) DeleteProfilePhoto(ctx context.Context, userId int) error {
+	return uc.repo.DeleteProfilePhoto(ctx, userId)
+}

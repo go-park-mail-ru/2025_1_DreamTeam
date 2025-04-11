@@ -300,3 +300,34 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("Файл загружен: %s", newPhotoUrl))
 	response.SendPhotoUrl(newPhotoUrl, w, r)
 }
+
+// DeleteProfilePhoto godoc
+// @Summary Delete user`s profile photo
+// @Description Deletes the profile photo of the authorized user and sets the default avatar
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param profile body models.UserProfile true "Updated user profile"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid request"
+// @Failure 401 {object} response.ErrorResponse "not authorized"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/deleteProfilePhoto [post]
+func (h *Handler) DeleteProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	userProfile := h.checkCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "DeleteProfilePhoto", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	err := h.useCase.DeleteProfilePhoto(r.Context(), userProfile.Id)
+	if err != nil {
+		logs.PrintLog(r.Context(), "DeleteProfilePhoto", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "DeleteProfilePhoto", fmt.Sprintf("Аватарка пользователя %+v заменена на стандартную", userProfile.Id))
+	response.SendOKResponse(w, r)
+}

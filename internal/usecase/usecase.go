@@ -22,6 +22,7 @@ type UsecaseInterface interface {
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
 	GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error)
+	DeleteProfilePhoto(ctx context.Context, userId int) error
 }
 
 type Usecase struct {

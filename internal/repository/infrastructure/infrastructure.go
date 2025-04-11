@@ -130,3 +130,7 @@ func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) 
 func (i *Infrastructure) FillLessonHeaderByLessonId(ctx context.Context, userId int, courseId int, currentLessonId int, LessonHeader *dto.LessonDtoHeader) error {
 	return i.Database.FillLessonHeaderByLessonId(ctx, userId, courseId, currentLessonId, LessonHeader)
 }
+
+func (i *Infrastructure) DeleteProfilePhoto(ctx context.Context, userId int) error {
+	return i.Database.DeleteProfilePhoto(ctx, userId)
+}
