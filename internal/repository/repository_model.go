@@ -19,8 +19,8 @@ type Repository interface {
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error)
 	GetCourseById(ctx context.Context, courseId int) (*models.Course, error)
-	FillLastLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error)
-	FillLessonHeaderByLessonId(ctx context.Context, userId int, courseId int, currentLessonId int, LessonHeader *dto.LessonDtoHeader) error
+	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error)
+	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)
 	GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error)
 	GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error)
 	MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error

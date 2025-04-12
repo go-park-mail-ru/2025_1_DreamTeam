@@ -83,8 +83,8 @@ func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*mode
 	return i.Database.GetCourseById(ctx, courseId)
 }
 
-func (i *Infrastructure) FillLastLessonHeader(ctx context.Context, userId int, courseId int, LessonHeader *dto.LessonDtoHeader) (int, int, string, error) {
-	return i.Database.FillLastLessonHeader(ctx, userId, courseId, LessonHeader)
+func (i *Infrastructure) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error) {
+	return i.Database.GetLastLessonHeader(ctx, userId, courseId)
 }
 
 func (i *Infrastructure) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error) {
@@ -127,8 +127,8 @@ func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) 
 	return i.Database.GetBucketByLessonId(ctx, lessonId)
 }
 
-func (i *Infrastructure) FillLessonHeaderByLessonId(ctx context.Context, userId int, courseId int, currentLessonId int, LessonHeader *dto.LessonDtoHeader) error {
-	return i.Database.FillLessonHeaderByLessonId(ctx, userId, courseId, currentLessonId, LessonHeader)
+func (i *Infrastructure) GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error) {
+	return i.Database.GetLessonHeaderByLessonId(ctx, userId, currentLessonId)
 }
 
 func (i *Infrastructure) DeleteProfilePhoto(ctx context.Context, userId int) error {

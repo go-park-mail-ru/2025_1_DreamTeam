@@ -148,16 +148,7 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		return nil, err
 	}
 
-	var lessonHeader dto.LessonDtoHeader
-	course, err := uc.repo.GetCourseById(ctx, courseId)
-	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, err
-	}
-	lessonHeader.CourseTitle = course.Title
-	lessonHeader.CourseId = course.Id
-
-	currentLessonId, _, lessonType, err := uc.repo.FillLastLessonHeader(ctx, userId, courseId, &lessonHeader)
+	lessonHeader, currentLessonId, lessonType, err := uc.repo.GetLastLessonHeader(ctx, userId, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -165,7 +156,7 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 
 	if lessonType == "text" { //TODO: сделать switch case
 		lessonDto := &dto.LessonDTO{
-			LessonHeader: lessonHeader,
+			LessonHeader: *lessonHeader,
 		}
 
 		blocks, err := uc.repo.GetLessonBlocks(ctx, currentLessonId)
@@ -210,11 +201,11 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 
 func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, lessonId int) (*dto.LessonDTO, error) {
 	blocks, err := uc.repo.GetLessonBlocks(ctx, lessonId)
-
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
+
 	var LessonBody dto.LessonDtoBody
 	for _, block := range blocks {
 		block = sanitize.Sanitize(block)
@@ -227,7 +218,6 @@ func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, 
 	}
 
 	footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
-
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -248,23 +238,14 @@ func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, 
 		return nil, err
 	}
 
-	var lessonHeader dto.LessonDtoHeader
-	course, err := uc.repo.GetCourseById(ctx, courseId)
-	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, err
-	}
-	lessonHeader.CourseTitle = course.Title
-	lessonHeader.CourseId = course.Id
-
-	err = uc.repo.FillLessonHeaderByLessonId(ctx, userId, courseId, lessonId, &lessonHeader)
+	lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	lessonDto := &dto.LessonDTO{
-		LessonHeader: lessonHeader,
+		LessonHeader: *lessonHeader,
 		LessonBody:   LessonBody,
 	}
 
