@@ -39,6 +39,16 @@ func (d *Database) userExists(email string) (bool, error) {
 	return exists, err
 }
 
+func (d *Database) GetUserById(ctx context.Context, userId int) (*models.User, error) {
+	var user models.User
+	err := d.conn.QueryRow("SELECT email, name, hide_email FROM usertable WHERE id = $1", userId).Scan(&user.Email, &user.Name, &user.HideEmail)
+	if err != nil {
+		logs.PrintLog(ctx, "GetUserById", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (d *Database) parseToken(ctx context.Context, token string) (map[string]interface{}, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

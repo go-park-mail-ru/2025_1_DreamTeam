@@ -91,7 +91,7 @@ func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*mode
 	return i.Database.GetCourseById(ctx, courseId)
 }
 
-func (i *Infrastructure) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error) {
+func (i *Infrastructure) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error) {
 	return i.Database.GetLastLessonHeader(ctx, userId, courseId)
 }
 
@@ -153,4 +153,16 @@ func (i *Infrastructure) SendRegMail(ctx context.Context, user *models.User, tok
 
 func (i *Infrastructure) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
 	return i.Database.GetUserByToken(ctx, token)
+}
+
+func (i *Infrastructure) SendWelcomeMail(ctx context.Context, user *models.User) error {
+	return i.Mail.SendWelcomeMail(ctx, user)
+}
+
+func (i *Infrastructure) GetUserById(ctx context.Context, userId int) (*models.User, error) {
+	return i.Database.GetUserById(ctx, userId)
+}
+
+func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error {
+	return i.Mail.SendWelcomeCourseMail(ctx, user, courseId)
 }

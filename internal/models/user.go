@@ -3,11 +3,12 @@ package models
 import "skillForce/internal/models/dto"
 
 type User struct {
-	Id       int
-	Name     string
-	Email    string
-	Password string
-	Salt     []byte
+	Id        int
+	Name      string
+	Email     string
+	Password  string
+	Salt      []byte
+	HideEmail bool
 }
 
 type UserProfile struct {
