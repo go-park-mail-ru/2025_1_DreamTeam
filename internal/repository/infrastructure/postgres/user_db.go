@@ -39,6 +39,34 @@ func (d *Database) userExists(email string) (bool, error) {
 	return exists, err
 }
 
+func (d *Database) parseToken(ctx context.Context, token string) (map[string]interface{}, error) {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(d.SESSION_SECRET), nil
+	})
+
+	if err != nil {
+		logs.PrintLog(ctx, "parseToken", fmt.Sprintf("token parse error: %+v", err))
+		return nil, err
+	}
+
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		if exp, ok := claims["expire"].(float64); ok {
+			if int64(exp) < time.Now().Unix() {
+				return nil, errors.New("token expired")
+			}
+		} else {
+			return nil, errors.New("invalid or missing 'expire' field")
+		}
+
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
+}
+
 // RegisterUser - сохраняет нового пользователя в базе данных и создает сессию, тоже сохраняя её в базе
 func (d *Database) RegisterUser(ctx context.Context, user *models.User) (string, error) {
 	emailExists, err := d.userExists(user.Email)
@@ -75,6 +103,46 @@ func (d *Database) RegisterUser(ctx context.Context, user *models.User) (string,
 	logs.PrintLog(ctx, "RegisterUser", fmt.Sprintf("save session of user %+v in db", user))
 
 	return cookieValue, nil
+}
+
+func (d *Database) ValidUser(ctx context.Context, user *models.User) (string, error) {
+	emailExists, err := d.userExists(user.Email)
+	if err != nil {
+		return "", err
+	}
+	if emailExists {
+		return "", errors.New("email exists")
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"name":     user.Name,
+		"email":    user.Email,
+		"password": user.Password,
+		"expire":   time.Now().Add(time.Hour).Unix(),
+	})
+
+	secretToken, err := token.SignedString([]byte(d.SESSION_SECRET))
+	if err != nil {
+		logs.PrintLog(ctx, "ValidUser", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
+	logs.PrintLog(ctx, "ValidUser", fmt.Sprintf("create token for user %+v", user))
+	return secretToken, nil
+}
+
+func (d *Database) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	claims, err := d.parseToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Name = claims["name"].(string)
+	user.Email = claims["email"].(string)
+	user.Password = claims["password"].(string)
+
+	return &user, nil
 }
 
 // GetUserByCookie - получение пользователя по cookie

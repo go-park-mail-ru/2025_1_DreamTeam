@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Регистрация на платформе</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background-color: #ffffff;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333333;
+    }
+    p {
+      font-size: 16px;
+      color: #555555;
+      line-height: 1.5;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888888;
+    }
+    a {
+      color: #2a7ae2;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>{{ .UserName }}, добро пожаловать на платформу SkillForce!</h1>
+    <p>Вы успешно зарегистрировались на нашей платформе. Мы рады видеть вас в числе наших пользователей!</p>
+    <p>Чтобы сделать ваш опыт максимально комфортным, мы время от времени отправляем мотивационные и статистические уведомления.</p>
+    <p>Для успешного окончания регистрации <a href="{{ .Url }}">перейдите по ссылке</a>.</p>
+    <div class="footer">
+      <p>С уважением,<br/>команда SkillForce</p>
+    </div>
+  </div>
+</body>
+</html>

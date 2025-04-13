@@ -32,4 +32,7 @@ type Repository interface {
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error)
 	GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error)
 	DeleteProfilePhoto(ctx context.Context, userId int) error
+	ValidUser(ctx context.Context, user *models.User) (string, error)
+	SendRegMail(ctx context.Context, user *models.User, token string) error
+	GetUserByToken(ctx context.Context, token string) (*models.User, error)
 }

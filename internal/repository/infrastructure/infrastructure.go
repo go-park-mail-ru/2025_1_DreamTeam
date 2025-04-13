@@ -8,6 +8,7 @@ import (
 	"skillForce/config"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
+	"skillForce/internal/repository/infrastructure/mail"
 	"skillForce/internal/repository/infrastructure/minio"
 	"skillForce/internal/repository/infrastructure/postgres"
 )
@@ -15,6 +16,7 @@ import (
 type Infrastructure struct {
 	Database *postgres.Database
 	Minio    *minio.Minio
+	Mail     *mail.Mail
 }
 
 func NewInfrastructure(conf *config.Config) *Infrastructure {
@@ -29,9 +31,15 @@ func NewInfrastructure(conf *config.Config) *Infrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	mail := mail.NewMail(conf.Mail.From, conf.Mail.Password, conf.Mail.Host, conf.Mail.Port)
+	if err != nil {
+		log.Fatalf("Failed to connect to mail: %v", err)
+	}
+
 	return &Infrastructure{
 		Database: database,
 		Minio:    mn,
+		Mail:     mail,
 	}
 }
 
@@ -133,4 +141,16 @@ func (i *Infrastructure) GetLessonHeaderByLessonId(ctx context.Context, userId i
 
 func (i *Infrastructure) DeleteProfilePhoto(ctx context.Context, userId int) error {
 	return i.Database.DeleteProfilePhoto(ctx, userId)
+}
+
+func (i *Infrastructure) ValidUser(ctx context.Context, user *models.User) (string, error) {
+	return i.Database.ValidUser(ctx, user)
+}
+
+func (i *Infrastructure) SendRegMail(ctx context.Context, user *models.User, token string) error {
+	return i.Mail.SendRegMail(ctx, user, token)
+}
+
+func (i *Infrastructure) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
+	return i.Database.GetUserByToken(ctx, token)
 }
