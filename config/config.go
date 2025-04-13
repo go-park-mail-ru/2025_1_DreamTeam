@@ -21,6 +21,7 @@ type Config struct {
 		AccessKey       string `yaml:"access_key"`
 		SecretAccessKey string `yaml:"secret_access_key"`
 		BucketName      string `yaml:"bucket_name"`
+		VideoBucket     string `yaml:"video_bucket_name"`
 		UseSSL          bool   `yaml:"use_ssl"`
 	} `yaml:"minio"`
 

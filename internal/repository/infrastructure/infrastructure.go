@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
 	"skillForce/config"
@@ -18,7 +19,7 @@ type Infrastructure struct {
 }
 
 func NewInfrastructure(conf *config.Config) *Infrastructure {
-	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName)
+	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName, conf.Minio.VideoBucket)
 	if err != nil {
 		log.Fatalf("Failed to connect to MinIO: %v", err)
 	}
@@ -133,4 +134,16 @@ func (i *Infrastructure) GetLessonHeaderByLessonId(ctx context.Context, userId i
 
 func (i *Infrastructure) DeleteProfilePhoto(ctx context.Context, userId int) error {
 	return i.Database.DeleteProfilePhoto(ctx, userId)
+}
+
+func (i *Infrastructure) GetVideoUrl(ctx context.Context, lesson_id int) (string, error) {
+	return i.Database.GetVideoUrl(ctx, lesson_id)
+}
+
+func (i *Infrastructure) GetVideoRange(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
+	return i.Minio.GetVideoRange(ctx, name, start, end)
+}
+
+func (i *Infrastructure) Stat(ctx context.Context, name string) (dto.VideoMeta, error) {
+	return i.Minio.Stat(ctx, name)
 }

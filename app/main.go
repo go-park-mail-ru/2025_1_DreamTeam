@@ -41,6 +41,7 @@ func main() {
 	siteMux.HandleFunc("/api/getNextLesson", handler.GetNextLesson)
 	siteMux.HandleFunc("/api/markLessonAsNotCompleted", handler.MarkLessonAsNotCompleted)
 	siteMux.HandleFunc("/api/getCourseRoadmap", handler.GetCourseRoadmap)
+	siteMux.HandleFunc("/api/video", handler.ServeVideo)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 

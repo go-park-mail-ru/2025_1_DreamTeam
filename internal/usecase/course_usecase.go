@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
@@ -310,4 +311,16 @@ func (uc *Usecase) GetCourseRoadmap(ctx context.Context, userId int, courseId in
 	}
 
 	return &roadmap, nil
+}
+
+func (uc *Usecase) GetVideoUrl(ctx context.Context, lesson_id int) (string, error) {
+	return uc.repo.GetVideoUrl(ctx, lesson_id)
+}
+
+func (uc *Usecase) GetMeta(ctx context.Context, name string) (dto.VideoMeta, error) {
+	return uc.repo.Stat(ctx, name)
+}
+
+func (uc *Usecase) GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
+	return uc.repo.GetVideoRange(ctx, name, start, end)
 }

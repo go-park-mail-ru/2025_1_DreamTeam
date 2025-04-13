@@ -9,6 +9,7 @@ import (
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 	"strconv"
+	"strings"
 )
 
 // GetCourses godoc
@@ -272,4 +273,69 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	logs.PrintLog(r.Context(), "GetCourseRoadmap", "send course roadmap to user")
 	response.SendCourseRoadmap(courseRoadmap, w, r)
 
+}
+
+func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	lesson_id := r.URL.Query().Get("lesson_id")
+
+	if lesson_id == "" {
+		response.SendErrorResponse("not found lesson_id parameter", http.StatusBadRequest, w, r)
+		return
+	}
+
+	lesson_id_int, err := strconv.Atoi(lesson_id)
+	if err != nil {
+		response.SendErrorResponse("invalid lesson_id parameter", http.StatusBadRequest, w, r)
+		return
+	}
+
+	videoSrc, err := h.useCase.GetVideoUrl(ctx, lesson_id_int)
+
+	if err != nil {
+		response.SendErrorResponse("video not found", http.StatusNotFound, w, r)
+		return
+	}
+
+	name := strings.Split(videoSrc, "/")[len(strings.Split(videoSrc, "/"))-1]
+
+	meta, err := h.useCase.GetMeta(ctx, name)
+	if err != nil {
+		response.SendErrorResponse("video not found", http.StatusNotFound, w, r)
+		return
+	}
+
+	rangeHeader := r.Header.Get("Range")
+	if rangeHeader == "" {
+		reader, err := h.useCase.GetFragment(ctx, name, 0, meta.Size-1)
+		if err != nil {
+			response.SendErrorResponse("video getting error"+err.Error(), http.StatusInternalServerError, w, r)
+			return
+		}
+		defer reader.Close()
+
+		response.SendVideoRange(0, meta.Size-1, meta.Size, reader, w, r)
+		return
+	}
+
+	var start, end int64
+	rangeParts := strings.Split(strings.Replace(rangeHeader, "bytes=", "", 1), "-")
+	start, _ = strconv.ParseInt(rangeParts[0], 10, 64)
+	if rangeParts[1] != "" {
+		end, _ = strconv.ParseInt(rangeParts[1], 10, 64)
+	} else {
+		end = meta.Size - 1
+	}
+	if end >= meta.Size {
+		end = meta.Size - 1
+	}
+
+	reader, err := h.useCase.GetFragment(ctx, name, start, end)
+	if err != nil {
+		response.SendErrorResponse("reading frame error"+err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+	defer reader.Close()
+
+	response.SendVideoRange(start, end, meta.Size, reader, w, r)
 }

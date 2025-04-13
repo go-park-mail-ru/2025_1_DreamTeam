@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"io"
 	"mime/multipart"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
@@ -23,6 +24,9 @@ type UsecaseInterface interface {
 	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
 	GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error)
 	DeleteProfilePhoto(ctx context.Context, userId int) error
+	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
+	GetMeta(ctx context.Context, name string) (dto.VideoMeta, error)
+	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 }
 
 type Usecase struct {

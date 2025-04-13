@@ -87,3 +87,13 @@ type CoursePartDTO struct {
 type LessonIDRequest struct {
 	Id int `json:"lesson_id"`
 }
+
+type VideoRangeRequest struct {
+	Start int64
+	End   int64
+}
+
+type VideoMeta struct {
+	Name string
+	Size int64
+}

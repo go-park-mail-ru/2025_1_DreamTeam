@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"io"
 	"mime/multipart"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
@@ -32,4 +33,7 @@ type Repository interface {
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error)
 	GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error)
 	DeleteProfilePhoto(ctx context.Context, userId int) error
+	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
+	GetVideoRange(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
+	Stat(ctx context.Context, name string) (dto.VideoMeta, error)
 }

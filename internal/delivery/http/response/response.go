@@ -2,6 +2,8 @@ package response
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"skillForce/internal/models/dto"
 )
@@ -103,4 +105,25 @@ func SendCourseResponse(course *dto.CourseDTO, w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+
+func SendVideoRange(start, end, total int64, reader io.Reader, w http.ResponseWriter, r *http.Request) {
+	length := end - start + 1
+
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, total))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", length))
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.WriteHeader(http.StatusPartialContent)
+
+	buf := make([]byte, 64*1024)
+	for {
+		n, err := reader.Read(buf)
+		if n > 0 {
+			w.Write(buf[:n])
+		}
+		if err != nil {
+			break
+		}
+	}
 }

@@ -763,3 +763,13 @@ func (d *Database) AddUserToCourse(ctx context.Context, userId int, courseId int
 	logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("add user with id %+v to course with id %+v", userId, courseId))
 	return nil
 }
+
+func (d *Database) GetVideoUrl(ctx context.Context, lessonId int) (string, error) {
+	var videoUrl string
+	err := d.conn.QueryRow("SELECT video_src FROM video_lesson WHERE lesson_id = $1", lessonId).Scan(&videoUrl)
+	if err != nil {
+		logs.PrintLog(ctx, "GetVideo", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	return videoUrl, nil
+}
