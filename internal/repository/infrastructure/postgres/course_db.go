@@ -179,7 +179,7 @@ func (d *Database) MarkLessonAsNotCompleted(ctx context.Context, userId int, les
 	return nil
 }
 
-func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error) {
+func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error) {
 	var part models.CoursePart
 	err := d.conn.QueryRow(`
 					SELECT title, part_order, id
@@ -224,7 +224,7 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 
 	if err != nil {
 		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 	defer rows.Close()
 
@@ -233,14 +233,14 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 		var point models.LessonPoint
 		if err := rows.Scan(&point.LessonId, &point.Type); err != nil {
 			logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
-			return nil, 0, "", err
+			return nil, 0, "", false, err
 		}
 		points = append(points, point)
 	}
 
 	if len(points) == 0 {
 		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 
 	currentLessonId := points[0].LessonId
@@ -249,7 +249,7 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 	err = d.MarkLessonCompleted(ctx, userId, courseId, currentLessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 	points[0].IsDone = true
 
@@ -265,15 +265,15 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 		})
 	}
 
-	return &lessonHeader, currentLessonId, currentLessonType, nil
+	return &lessonHeader, currentLessonId, currentLessonType, true, nil
 }
 
-func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error) {
+func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error) {
 	var lessonHeader dto.LessonDtoHeader
 	course, err := d.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 	lessonHeader.CourseTitle = course.Title
 	lessonHeader.CourseId = course.Id
@@ -288,7 +288,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 
 	if err != nil {
 		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 	defer rows1.Close()
 
@@ -301,7 +301,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 			err := rows1.Scan(&lessonPoint.LessonId, &lessonPoint.Type)
 			if err != nil {
 				logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-				return nil, 0, "", err
+				return nil, 0, "", false, err
 			}
 			visitedLessonPointsIds = append(visitedLessonPointsIds, lessonPoint.LessonId)
 			continue
@@ -311,7 +311,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 		err := rows1.Scan(&lessonPointId, &lessonPointType)
 		if err != nil {
 			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-			return nil, 0, "", err
+			return nil, 0, "", false, err
 		}
 		visitedLessonPointsIds = append(visitedLessonPointsIds, lessonPointId)
 	}
@@ -337,7 +337,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 
 	if err != nil {
 		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 
 	lessonHeader.Part.Order = part.Order
@@ -356,7 +356,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 
 	if err != nil {
 		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 	defer rows2.Close()
 
@@ -365,7 +365,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 		var point models.LessonPoint
 		if err := rows2.Scan(&point.LessonId, &point.Type); err != nil {
 			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
-			return nil, 0, "", err
+			return nil, 0, "", false, err
 		}
 		for _, visitedLessonPointId := range visitedLessonPointsIds {
 			if point.LessonId == visitedLessonPointId {
@@ -378,7 +378,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 
 	if len(points) == 0 {
 		logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("no points found in bucket %+v", bucket.Id))
-		return nil, 0, "", err
+		return nil, 0, "", false, err
 	}
 
 	for _, point := range points {
@@ -393,7 +393,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 		})
 	}
 
-	return &lessonHeader, lessonPoint.LessonId, lessonPoint.Type, nil
+	return &lessonHeader, lessonPoint.LessonId, lessonPoint.Type, false, nil
 }
 
 func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error) {

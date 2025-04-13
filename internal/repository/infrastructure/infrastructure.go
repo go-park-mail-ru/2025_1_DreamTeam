@@ -9,6 +9,7 @@ import (
 	"skillForce/config"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
+	"skillForce/internal/repository/infrastructure/mail"
 	"skillForce/internal/repository/infrastructure/minio"
 	"skillForce/internal/repository/infrastructure/postgres"
 )
@@ -16,6 +17,7 @@ import (
 type Infrastructure struct {
 	Database *postgres.Database
 	Minio    *minio.Minio
+	Mail     *mail.Mail
 }
 
 func NewInfrastructure(conf *config.Config) *Infrastructure {
@@ -30,9 +32,15 @@ func NewInfrastructure(conf *config.Config) *Infrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	mail := mail.NewMail(conf.Mail.From, conf.Mail.Password, conf.Mail.Host, conf.Mail.Port)
+	if err != nil {
+		log.Fatalf("Failed to connect to mail: %v", err)
+	}
+
 	return &Infrastructure{
 		Database: database,
 		Minio:    mn,
+		Mail:     mail,
 	}
 }
 
@@ -84,7 +92,7 @@ func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*mode
 	return i.Database.GetCourseById(ctx, courseId)
 }
 
-func (i *Infrastructure) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error) {
+func (i *Infrastructure) GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error) {
 	return i.Database.GetLastLessonHeader(ctx, userId, courseId)
 }
 
@@ -146,4 +154,28 @@ func (i *Infrastructure) GetVideoRange(ctx context.Context, name string, start, 
 
 func (i *Infrastructure) Stat(ctx context.Context, name string) (dto.VideoMeta, error) {
 	return i.Minio.Stat(ctx, name)
+}
+
+func (i *Infrastructure) ValidUser(ctx context.Context, user *models.User) (string, error) {
+	return i.Database.ValidUser(ctx, user)
+}
+
+func (i *Infrastructure) SendRegMail(ctx context.Context, user *models.User, token string) error {
+	return i.Mail.SendRegMail(ctx, user, token)
+}
+
+func (i *Infrastructure) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
+	return i.Database.GetUserByToken(ctx, token)
+}
+
+func (i *Infrastructure) SendWelcomeMail(ctx context.Context, user *models.User) error {
+	return i.Mail.SendWelcomeMail(ctx, user)
+}
+
+func (i *Infrastructure) GetUserById(ctx context.Context, userId int) (*models.User, error) {
+	return i.Database.GetUserById(ctx, userId)
+}
+
+func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error {
+	return i.Mail.SendWelcomeCourseMail(ctx, user, courseId)
 }

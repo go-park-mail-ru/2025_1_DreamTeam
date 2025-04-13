@@ -28,6 +28,13 @@ type Config struct {
 	Secrets struct {
 		JwtSessionSecret string `yaml:"jwt_session_secret"`
 	} `yaml:"secrets"`
+
+	Mail struct {
+		From     string `yaml:"from"`
+		Password string `yaml:"password"`
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+	}
 }
 
 // LoadConfig загружает конфигурацию из YAML-файла

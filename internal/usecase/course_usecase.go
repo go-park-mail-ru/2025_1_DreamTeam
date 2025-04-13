@@ -149,7 +149,7 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		return nil, err
 	}
 
-	lessonHeader, currentLessonId, lessonType, err := uc.repo.GetLastLessonHeader(ctx, userId, courseId)
+	lessonHeader, currentLessonId, lessonType, first, err := uc.repo.GetLastLessonHeader(ctx, userId, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -193,6 +193,22 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 		lessonDto.LessonBody = LessonBody
+
+		if first {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
+			user, err := uc.repo.GetUserById(ctx, userId)
+			if err != nil {
+				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
+				return nil, err
+			}
+
+			if !user.HideEmail {
+				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
+				}
+			}
+		}
 
 		return lessonDto, err
 	}

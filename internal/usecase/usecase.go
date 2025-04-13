@@ -10,7 +10,8 @@ import (
 )
 
 type UsecaseInterface interface {
-	RegisterUser(ctx context.Context, user *models.User) (string, error)
+	RegisterUser(ctx context.Context, token string) (string, error)
+	ValidUser(ctx context.Context, user *models.User) error
 	AuthenticateUser(ctx context.Context, user *models.User) (string, error)
 	GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error)
 	LogoutUser(ctx context.Context, userId int) error

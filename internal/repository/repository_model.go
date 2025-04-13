@@ -20,7 +20,7 @@ type Repository interface {
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error)
 	GetCourseById(ctx context.Context, courseId int) (*models.Course, error)
-	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, error)
+	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)
 	GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error)
 	GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error)
@@ -36,4 +36,10 @@ type Repository interface {
 	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
 	GetVideoRange(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 	Stat(ctx context.Context, name string) (dto.VideoMeta, error)
+	ValidUser(ctx context.Context, user *models.User) (string, error)
+	SendRegMail(ctx context.Context, user *models.User, token string) error
+	SendWelcomeMail(ctx context.Context, user *models.User) error
+	GetUserByToken(ctx context.Context, token string) (*models.User, error)
+	SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error
+	GetUserById(ctx context.Context, userId int) (*models.User, error)
 }

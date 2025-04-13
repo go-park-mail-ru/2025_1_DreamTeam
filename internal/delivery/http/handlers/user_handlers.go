@@ -81,21 +81,67 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.NewUser(userInput)
-	cookie, err := h.useCase.RegisterUser(r.Context(), user)
+	err = h.useCase.ValidUser(r.Context(), user)
 	if err != nil {
-		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
-
-		if err.Error() == "email exists" { //TODO: хорошо бы все константы вывести в отдельный файл
-			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
+		if errors.Is(err, errors.New("email exists")) {
+			logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
+			response.SendErrorResponse("email exists", http.StatusNotFound, w, r)
 			return
 		}
 
-		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusConflict, w, r)
 		return
 	}
 
-	logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("user %+v registered, send him cookie", user))
+	logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("send email to confirm user %+v", user))
+	response.SendOKResponse(w, r)
+}
 
+// ConfirmUserEmail godoc
+// @Summary Confirm user email
+// @Description Confirm user email using the token from the registration email
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param token query string true "Token from registration email"
+// @Success 200 {string} string "200 OK"
+// @Failure 400 {object} response.ErrorResponse "invalid token"
+// @Failure 404 {object} response.ErrorResponse "email exists"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/validEmail [get]
+func (h *Handler) ConfirmUserEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "ConfirmUserEmail", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		logs.PrintLog(r.Context(), "ConfirmUserEmail", "invalid token")
+		response.SendErrorResponse("invalid token", http.StatusBadRequest, w, r)
+		return
+	}
+
+	cookie, err := h.useCase.RegisterUser(r.Context(), token)
+	if err != nil {
+		if errors.Is(err, errors.New("invalid token")) {
+			logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
+			response.SendErrorResponse("invalid token", http.StatusBadRequest, w, r)
+			return
+		}
+		if errors.Is(err, errors.New("email exists")) {
+			logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
+			response.SendErrorResponse("email exists", http.StatusNotFound, w, r)
+			return
+		}
+		logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		return
+	}
+	logs.PrintLog(r.Context(), "ConfirmUserEmail", "register user and send him cookie")
 	setCookie(w, cookie)
 	response.SendOKResponse(w, r)
 }

@@ -2,17 +2,41 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"mime/multipart"
 	"skillForce/internal/models"
 	"skillForce/pkg/hash"
+	"skillForce/pkg/logs"
 )
 
 // RegisterUser - регистрация пользователя
-func (uc *Usecase) RegisterUser(ctx context.Context, user *models.User) (string, error) {
-	err := hash.HashPasswordAndCreateSalt(user)
+func (uc *Usecase) ValidUser(ctx context.Context, user *models.User) error {
+	token, err := uc.repo.ValidUser(ctx, user)
+	if err != nil {
+		logs.PrintLog(ctx, "ValidUser", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	err = uc.repo.SendRegMail(ctx, user, token)
+	if err != nil {
+		logs.PrintLog(ctx, "SendMail", fmt.Sprintf("%+v", err))
+		return err
+	}
+	return nil
+}
+
+func (uc *Usecase) RegisterUser(ctx context.Context, token string) (string, error) {
+	user, err := uc.repo.GetUserByToken(ctx, token)
 	if err != nil {
 		return "", err
 	}
+
+	err = hash.HashPasswordAndCreateSalt(user)
+	if err != nil {
+		return "", err
+	}
+
+	_ = uc.repo.SendWelcomeMail(ctx, user)
 
 	return uc.repo.RegisterUser(ctx, user)
 }
