@@ -42,4 +42,5 @@ type Repository interface {
 	GetUserByToken(ctx context.Context, token string) (*models.User, error)
 	SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error
 	GetUserById(ctx context.Context, userId int) (*models.User, error)
+	IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error)
 }

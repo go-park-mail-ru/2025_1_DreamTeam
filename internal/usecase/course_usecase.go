@@ -75,7 +75,7 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 	return resultBucketCourses, nil
 }
 
-func (uc *Usecase) GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error) {
+func (uc *Usecase) GetCourse(ctx context.Context, courseId int, userProfile *models.UserProfile) (*dto.CourseDTO, error) {
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
@@ -134,6 +134,14 @@ func (uc *Usecase) GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO,
 			Tags:            tags,
 			PurchasesAmount: purchases,
 		})
+	}
+
+	if userProfile != nil {
+		resultBucketCourses[0].IsPurchased, err = uc.repo.IsUserPurchasedCourse(ctx, userProfile.Id, course.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user purchased course: %+v", err))
+			return nil, err
+		}
 	}
 
 	logs.PrintLog(ctx, "GetCourse", "get course with ratings and tags from db, mapping to dto")

@@ -65,7 +65,8 @@ func (h *Handler) GetCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	course, err := h.useCase.GetCourse(r.Context(), courseId)
+	userProfile := h.checkCookie(r)
+	course, err := h.useCase.GetCourse(r.Context(), courseId, userProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)

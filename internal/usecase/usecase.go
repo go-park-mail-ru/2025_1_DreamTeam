@@ -23,7 +23,7 @@ type UsecaseInterface interface {
 	GetNextLesson(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDTO, error)
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
-	GetCourse(ctx context.Context, courseId int) (*dto.CourseDTO, error)
+	GetCourse(ctx context.Context, courseId int, userProfile *models.UserProfile) (*dto.CourseDTO, error)
 	DeleteProfilePhoto(ctx context.Context, userId int) error
 	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
 	GetMeta(ctx context.Context, name string) (dto.VideoMeta, error)

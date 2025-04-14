@@ -51,7 +51,7 @@ func (m *Mail) SendRegMail(ctx context.Context, user *models.User, token string)
 		return err
 	}
 
-	url := fmt.Sprintf("http://217.16.21.64:8080/api/validEmail?token=%s", token)
+	url := fmt.Sprintf("http://217.16.21.64/validate/%s", token)
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{UserName: user.Name, Url: url})
 	if err != nil {

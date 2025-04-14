@@ -773,3 +773,20 @@ func (d *Database) GetVideoUrl(ctx context.Context, lessonId int) (string, error
 	}
 	return videoUrl, nil
 }
+
+func (d *Database) IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM SIGNUPS WHERE user_id = $1 AND course_id = $2)",
+		userId, courseId).Scan(&exists)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		logs.PrintLog(ctx, "IsUserPurchasedCourse", fmt.Sprintf("%+v", err))
+		return false, nil
+	}
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsUserPurchasedCourse", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+	return exists, nil
+}

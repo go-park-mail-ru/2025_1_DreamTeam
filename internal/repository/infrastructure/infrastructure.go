@@ -179,3 +179,7 @@ func (i *Infrastructure) GetUserById(ctx context.Context, userId int) (*models.U
 func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error {
 	return i.Mail.SendWelcomeCourseMail(ctx, user, courseId)
 }
+
+func (i *Infrastructure) IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsUserPurchasedCourse(ctx, userId, courseId)
+}
