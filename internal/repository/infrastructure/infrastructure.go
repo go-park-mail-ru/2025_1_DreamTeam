@@ -7,11 +7,13 @@ import (
 	"log"
 	"mime/multipart"
 	"skillForce/config"
-	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/internal/repository/infrastructure/mail"
 	"skillForce/internal/repository/infrastructure/minio"
 	"skillForce/internal/repository/infrastructure/postgres"
+
+	coursemodels "skillForce/internal/models/course"
+	usermodels "skillForce/internal/models/user"
 )
 
 type Infrastructure struct {
@@ -48,7 +50,7 @@ func (i *Infrastructure) Close() {
 	i.Database.Close()
 }
 
-func (i *Infrastructure) RegisterUser(ctx context.Context, user *models.User) (string, error) {
+func (i *Infrastructure) RegisterUser(ctx context.Context, user *usermodels.User) (string, error) {
 	return i.Database.RegisterUser(ctx, user)
 }
 
@@ -56,7 +58,7 @@ func (i *Infrastructure) AuthenticateUser(ctx context.Context, email string, pas
 	return i.Database.AuthenticateUser(ctx, email, password)
 }
 
-func (i *Infrastructure) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
+func (i *Infrastructure) GetUserByCookie(ctx context.Context, cookieValue string) (*usermodels.UserProfile, error) {
 	return i.Database.GetUserByCookie(ctx, cookieValue)
 }
 
@@ -64,11 +66,11 @@ func (i *Infrastructure) LogoutUser(ctx context.Context, userId int) error {
 	return i.Database.LogoutUser(ctx, userId)
 }
 
-func (i *Infrastructure) GetBucketCourses(ctx context.Context) ([]*models.Course, error) {
+func (i *Infrastructure) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error) {
 	return i.Database.GetBucketCourses(ctx)
 }
 
-func (i *Infrastructure) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
+func (i *Infrastructure) UpdateProfile(ctx context.Context, userId int, userProfile *usermodels.UserProfile) error {
 	return i.Database.UpdateProfile(ctx, userId, userProfile)
 }
 
@@ -80,15 +82,15 @@ func (i *Infrastructure) UpdateProfilePhoto(ctx context.Context, photo_url strin
 	return i.Database.UpdateProfilePhoto(ctx, photo_url, userId)
 }
 
-func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error) {
+func (i *Infrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }
 
-func (i *Infrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error) {
+func (i *Infrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error) {
 	return i.Database.GetCoursesTags(ctx, bucketCoursesWithoutTags)
 }
 
-func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*models.Course, error) {
+func (i *Infrastructure) GetCourseById(ctx context.Context, courseId int) (*coursemodels.Course, error) {
 	return i.Database.GetCourseById(ctx, courseId)
 }
 
@@ -112,15 +114,15 @@ func (i *Infrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId in
 	return i.Database.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
 
-func (i *Infrastructure) GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error) {
+func (i *Infrastructure) GetCourseParts(ctx context.Context, courseId int) ([]*coursemodels.CoursePart, error) {
 	return i.Database.GetCourseParts(ctx, courseId)
 }
 
-func (i *Infrastructure) GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error) {
+func (i *Infrastructure) GetPartBuckets(ctx context.Context, partId int) ([]*coursemodels.LessonBucket, error) {
 	return i.Database.GetPartBuckets(ctx, partId)
 }
 
-func (i *Infrastructure) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error) {
+func (i *Infrastructure) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*coursemodels.LessonPoint, error) {
 	return i.Database.GetBucketLessons(ctx, userId, courseId, bucketId)
 }
 
@@ -128,11 +130,11 @@ func (i *Infrastructure) AddUserToCourse(ctx context.Context, userId int, course
 	return i.Database.AddUserToCourse(ctx, userId, courseId)
 }
 
-func (i *Infrastructure) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error) {
+func (i *Infrastructure) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*coursemodels.Course) (map[int]int, error) {
 	return i.Database.GetCoursesPurchases(ctx, bucketCoursesWithoutPurchases)
 }
 
-func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) (*models.LessonBucket, error) {
+func (i *Infrastructure) GetBucketByLessonId(ctx context.Context, lessonId int) (*coursemodels.LessonBucket, error) {
 	return i.Database.GetBucketByLessonId(ctx, lessonId)
 }
 
@@ -156,27 +158,27 @@ func (i *Infrastructure) Stat(ctx context.Context, name string) (dto.VideoMeta, 
 	return i.Minio.Stat(ctx, name)
 }
 
-func (i *Infrastructure) ValidUser(ctx context.Context, user *models.User) (string, error) {
+func (i *Infrastructure) ValidUser(ctx context.Context, user *usermodels.User) (string, error) {
 	return i.Database.ValidUser(ctx, user)
 }
 
-func (i *Infrastructure) SendRegMail(ctx context.Context, user *models.User, token string) error {
+func (i *Infrastructure) SendRegMail(ctx context.Context, user *usermodels.User, token string) error {
 	return i.Mail.SendRegMail(ctx, user, token)
 }
 
-func (i *Infrastructure) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
+func (i *Infrastructure) GetUserByToken(ctx context.Context, token string) (*usermodels.User, error) {
 	return i.Database.GetUserByToken(ctx, token)
 }
 
-func (i *Infrastructure) SendWelcomeMail(ctx context.Context, user *models.User) error {
+func (i *Infrastructure) SendWelcomeMail(ctx context.Context, user *usermodels.User) error {
 	return i.Mail.SendWelcomeMail(ctx, user)
 }
 
-func (i *Infrastructure) GetUserById(ctx context.Context, userId int) (*models.User, error) {
+func (i *Infrastructure) GetUserById(ctx context.Context, userId int) (*usermodels.User, error) {
 	return i.Database.GetUserById(ctx, userId)
 }
 
-func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error {
+func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
 	return i.Mail.SendWelcomeCourseMail(ctx, user, courseId)
 }
 
@@ -188,6 +190,6 @@ func (i *Infrastructure) GetLessonVideo(ctx context.Context, lessonId int) ([]st
 	return i.Database.GetLessonVideo(ctx, lessonId)
 }
 
-func (i *Infrastructure) GetLessonById(ctx context.Context, lessonId int) (*models.LessonPoint, error) {
+func (i *Infrastructure) GetLessonById(ctx context.Context, lessonId int) (*coursemodels.LessonPoint, error) {
 	return i.Database.GetLessonById(ctx, lessonId)
 }

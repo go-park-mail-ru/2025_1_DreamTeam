@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 
-	"skillForce/internal/models"
+	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 )
 
 // GetBucketCourses - извлекает список курсов из базы данных
-func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, error) {
+func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error) {
 	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
-	var bucketCourses []*models.Course
+	var bucketCourses []*coursemodels.Course
 	rows, err := d.conn.Query("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course LIMIT 16")
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
@@ -23,7 +23,7 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, erro
 	defer rows.Close()
 
 	for rows.Next() {
-		var course models.Course
+		var course coursemodels.Course
 		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
 			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -37,7 +37,7 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*models.Course, erro
 	return bucketCourses, nil
 }
 
-func (d *Database) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*models.Course) (map[int]int, error) {
+func (d *Database) GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*coursemodels.Course) (map[int]int, error) {
 	coursesPurchases := make(map[int]int, len(bucketCoursesWithoutPurchases))
 
 	for _, course := range bucketCoursesWithoutPurchases {
@@ -53,7 +53,7 @@ func (d *Database) GetCoursesPurchases(ctx context.Context, bucketCoursesWithout
 	return coursesPurchases, nil
 }
 
-func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*models.Course) (map[int]float32, error) {
+func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error) {
 	coursesRatings := make(map[int]float32, len(bucketCoursesWithoutRating))
 
 	for _, course := range bucketCoursesWithoutRating {
@@ -88,7 +88,7 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 	return coursesRatings, nil
 }
 
-func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*models.Course) (map[int][]string, error) {
+func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error) {
 	coursesTags := make(map[int][]string, len(bucketCoursesWithoutTags))
 
 	for _, course := range bucketCoursesWithoutTags {
@@ -127,8 +127,8 @@ func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags 
 	return coursesTags, nil
 }
 
-func (d *Database) GetCourseById(ctx context.Context, courseId int) (*models.Course, error) {
-	var course models.Course
+func (d *Database) GetCourseById(ctx context.Context, courseId int) (*coursemodels.Course, error) {
+	var course coursemodels.Course
 	err := d.conn.QueryRow("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course WHERE id = $1", courseId).Scan(
 		&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass)
 	if err != nil {
@@ -180,7 +180,7 @@ func (d *Database) MarkLessonAsNotCompleted(ctx context.Context, userId int, les
 }
 
 func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error) {
-	var part models.CoursePart
+	var part coursemodels.CoursePart
 	err := d.conn.QueryRow(`
 					SELECT title, part_order, id
 					FROM part
@@ -198,7 +198,7 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 	lessonHeader.Part.Order = part.Order
 	lessonHeader.Part.Title = part.Title
 
-	var bucket models.LessonBucket
+	var bucket coursemodels.LessonBucket
 	err = d.conn.QueryRow(`
 					SELECT title, lesson_bucket_order, id
 					FROM lesson_bucket
@@ -228,9 +228,9 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 	}
 	defer rows.Close()
 
-	var points []models.LessonPoint
+	var points []coursemodels.LessonPoint
 	for rows.Next() {
-		var point models.LessonPoint
+		var point coursemodels.LessonPoint
 		if err := rows.Scan(&point.LessonId, &point.Type); err != nil {
 			logs.PrintLog(ctx, "fillLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
 			return nil, 0, "", false, err
@@ -292,7 +292,7 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 	}
 	defer rows1.Close()
 
-	var lessonPoint models.LessonPoint
+	var lessonPoint coursemodels.LessonPoint
 	var visitedLessonPointsIds []int
 	firstRow := true
 	for rows1.Next() {
@@ -324,8 +324,8 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 	logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("lesson point %+v", lessonPoint))
 	logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("visited lesson points ids %+v", visitedLessonPointsIds))
 
-	var part models.CoursePart
-	var bucket models.LessonBucket
+	var part coursemodels.CoursePart
+	var bucket coursemodels.LessonBucket
 	err = d.conn.QueryRow(`
 			SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID
 			FROM PART p
@@ -360,9 +360,9 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 	}
 	defer rows2.Close()
 
-	var points []models.LessonPoint
+	var points []coursemodels.LessonPoint
 	for rows2.Next() {
-		var point models.LessonPoint
+		var point coursemodels.LessonPoint
 		if err := rows2.Scan(&point.LessonId, &point.Type); err != nil {
 			logs.PrintLog(ctx, "FillLessonHeader", fmt.Sprintf("%+v", err))
 			return nil, 0, "", false, err
@@ -397,9 +397,9 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 }
 
 func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error) {
-	var course models.Course
-	var part models.CoursePart
-	var bucket models.LessonBucket
+	var course coursemodels.Course
+	var part coursemodels.CoursePart
+	var bucket coursemodels.LessonBucket
 	err := d.conn.QueryRow(`
 			SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID, c.ID, c.Title
 			FROM lesson l
@@ -461,7 +461,7 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 
 	var points []*dto.LessonPointDTO
 	for rows2.Next() {
-		var point models.LessonPoint
+		var point coursemodels.LessonPoint
 		if err := rows2.Scan(&point.LessonId, &point.Type); err != nil {
 			logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -539,8 +539,8 @@ func (d *Database) GetLessonVideo(ctx context.Context, currentLessonId int) ([]s
 	return []string{videoSrc}, nil
 }
 
-func (d *Database) GetLessonById(ctx context.Context, lessonId int) (*models.LessonPoint, error) {
-	var lesson models.LessonPoint
+func (d *Database) GetLessonById(ctx context.Context, lessonId int) (*coursemodels.LessonPoint, error) {
+	var lesson coursemodels.LessonPoint
 	err := d.conn.QueryRow(`
 			SELECT id, title, type
 			FROM LESSON
@@ -553,7 +553,7 @@ func (d *Database) GetLessonById(ctx context.Context, lessonId int) (*models.Les
 	return &lesson, nil
 }
 
-func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int) (*models.LessonBucket, error) {
+func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int) (*coursemodels.LessonBucket, error) {
 	var bucketId int
 	err := d.conn.QueryRow(`
 			SELECT lesson_bucket_id
@@ -565,7 +565,7 @@ func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int)
 		return nil, err
 	}
 
-	bucket := &models.LessonBucket{
+	bucket := &coursemodels.LessonBucket{
 		Id: bucketId,
 	}
 	return bucket, nil
@@ -575,7 +575,7 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 	footers := []int{-1, -1, -1}
 
 	var currentLessonOrder int
-	var currentBucket models.LessonBucket
+	var currentBucket coursemodels.LessonBucket
 	err := d.conn.QueryRow(`
 			SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
 			FROM LESSON l
@@ -664,8 +664,8 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 	return footers, nil
 }
 
-func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*models.CoursePart, error) {
-	var courseParts []*models.CoursePart
+func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*coursemodels.CoursePart, error) {
+	var courseParts []*coursemodels.CoursePart
 	rows, err := d.conn.Query(`
 			SELECT id, title
 			FROM PART
@@ -679,7 +679,7 @@ func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*models.
 	defer rows.Close()
 
 	for rows.Next() {
-		var coursePart models.CoursePart
+		var coursePart coursemodels.CoursePart
 		if err := rows.Scan(&coursePart.Id, &coursePart.Title); err != nil {
 			logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -690,8 +690,8 @@ func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*models.
 	return courseParts, nil
 }
 
-func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*models.LessonBucket, error) {
-	var buckets []*models.LessonBucket
+func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*coursemodels.LessonBucket, error) {
+	var buckets []*coursemodels.LessonBucket
 	rows, err := d.conn.Query(`
 			SELECT id, title
 			FROM LESSON_BUCKET
@@ -705,7 +705,7 @@ func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*models.Le
 	defer rows.Close()
 
 	for rows.Next() {
-		var bucket models.LessonBucket
+		var bucket coursemodels.LessonBucket
 		if err := rows.Scan(&bucket.Id, &bucket.Title); err != nil {
 			logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -716,7 +716,7 @@ func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*models.Le
 	return buckets, nil
 }
 
-func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*models.LessonPoint, error) {
+func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId int, bucketId int) ([]*coursemodels.LessonPoint, error) {
 	completedLessons := make(map[int]bool)
 	rows1, err := d.conn.Query(`
 			SELECT lesson_id
@@ -738,7 +738,7 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		completedLessons[completedLessonId] = true
 	}
 
-	var lessons []*models.LessonPoint
+	var lessons []*coursemodels.LessonPoint
 	rows2, err := d.conn.Query(`
 			SELECT id, title, type
 			FROM LESSON
@@ -752,7 +752,7 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 	defer rows2.Close()
 
 	for rows2.Next() {
-		var lesson models.LessonPoint
+		var lesson coursemodels.LessonPoint
 		if err := rows2.Scan(&lesson.LessonId, &lesson.Title, &lesson.Type); err != nil {
 			logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 			return nil, err

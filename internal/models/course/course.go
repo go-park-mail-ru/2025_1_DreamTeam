@@ -1,4 +1,4 @@
-package models
+package coursemodels
 
 type Course struct {
 	Id          int

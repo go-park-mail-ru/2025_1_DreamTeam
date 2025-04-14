@@ -8,8 +8,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
-	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
+	models "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 
 	"github.com/badoux/checkmail"
@@ -112,7 +112,11 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.NewUser(userInput)
+	user := &models.User{
+		Name:     userInput.Name,
+		Email:    userInput.Email,
+		Password: userInput.Password,
+	}
 	err = h.userUsecase.ValidUser(r.Context(), user)
 	if err != nil {
 		if errors.Is(err, errors.New("email exists")) {
@@ -213,12 +217,15 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.NewUser(userInput)
+	user := &models.User{
+		Email:    userInput.Email,
+		Password: userInput.Password,
+	}
 	cookieValue, err := h.userUsecase.AuthenticateUser(r.Context(), user)
 	if err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 
-		if err.Error() == "email or password incorrect" { //TODO: хорошо бы все константы вывести в отдельный файл
+		if errors.Is(err, errors.New("email or password incorrect")) {
 			response.SendErrorResponse(err.Error(), http.StatusNotFound, w, r)
 			return
 		}
@@ -313,7 +320,12 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUserProfile := models.NewUserProfile(UserProfileInput)
+	newUserProfile := &models.UserProfile{
+		Name:      UserProfileInput.Name,
+		Bio:       UserProfileInput.Bio,
+		AvatarSrc: UserProfileInput.AvatarSrc,
+		HideEmail: UserProfileInput.HideEmail,
+	}
 	//TODO: добавить тут валидацию
 	err = h.userUsecase.UpdateProfile(r.Context(), userProfile.Id, newUserProfile)
 	if err != nil {

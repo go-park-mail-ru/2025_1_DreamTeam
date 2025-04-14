@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 	"net/smtp"
 	"os"
-	"skillForce/internal/models"
 	"skillForce/pkg/logs"
+	"text/template"
+
+	usermodels "skillForce/internal/models/user"
 )
 
 type EmailData struct {
@@ -33,7 +34,7 @@ func NewMail(from string, password string, host string, port string) *Mail {
 	}
 }
 
-func (m *Mail) SendRegMail(ctx context.Context, user *models.User, token string) error {
+func (m *Mail) SendRegMail(ctx context.Context, user *usermodels.User, token string) error {
 	auth := smtp.PlainAuth("", m.from, m.password, m.host)
 
 	subject := "Регистрация на платформе SkillForce"
@@ -73,7 +74,7 @@ func (m *Mail) SendRegMail(ctx context.Context, user *models.User, token string)
 	return nil
 }
 
-func (m *Mail) SendWelcomeMail(ctx context.Context, user *models.User) error {
+func (m *Mail) SendWelcomeMail(ctx context.Context, user *usermodels.User) error {
 	auth := smtp.PlainAuth("", m.from, m.password, m.host)
 
 	subject := "Добро пожаловать на платформу SkillForce"
@@ -112,7 +113,7 @@ func (m *Mail) SendWelcomeMail(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error {
+func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
 	auth := smtp.PlainAuth("", m.from, m.password, m.host)
 
 	subject := "Продолжайте своё обучение!"

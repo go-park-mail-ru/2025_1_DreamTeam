@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"skillForce/internal/models"
+	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/hash"
 	"skillForce/pkg/logs"
 	"time"
@@ -39,8 +39,8 @@ func (d *Database) userExists(email string) (bool, error) {
 	return exists, err
 }
 
-func (d *Database) GetUserById(ctx context.Context, userId int) (*models.User, error) {
-	var user models.User
+func (d *Database) GetUserById(ctx context.Context, userId int) (*usermodels.User, error) {
+	var user usermodels.User
 	err := d.conn.QueryRow("SELECT email, name, hide_email FROM usertable WHERE id = $1", userId).Scan(&user.Email, &user.Name, &user.HideEmail)
 	if err != nil {
 		logs.PrintLog(ctx, "GetUserById", fmt.Sprintf("%+v", err))
@@ -78,7 +78,7 @@ func (d *Database) parseToken(ctx context.Context, token string) (map[string]int
 }
 
 // RegisterUser - сохраняет нового пользователя в базе данных и создает сессию, тоже сохраняя её в базе
-func (d *Database) RegisterUser(ctx context.Context, user *models.User) (string, error) {
+func (d *Database) RegisterUser(ctx context.Context, user *usermodels.User) (string, error) {
 	emailExists, err := d.userExists(user.Email)
 	if err != nil {
 		return "", err
@@ -115,7 +115,7 @@ func (d *Database) RegisterUser(ctx context.Context, user *models.User) (string,
 	return cookieValue, nil
 }
 
-func (d *Database) ValidUser(ctx context.Context, user *models.User) (string, error) {
+func (d *Database) ValidUser(ctx context.Context, user *usermodels.User) (string, error) {
 	emailExists, err := d.userExists(user.Email)
 	if err != nil {
 		return "", err
@@ -141,8 +141,8 @@ func (d *Database) ValidUser(ctx context.Context, user *models.User) (string, er
 	return secretToken, nil
 }
 
-func (d *Database) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
-	var user models.User
+func (d *Database) GetUserByToken(ctx context.Context, token string) (*usermodels.User, error) {
+	var user usermodels.User
 	claims, err := d.parseToken(ctx, token)
 	if err != nil {
 		return nil, err
@@ -156,8 +156,8 @@ func (d *Database) GetUserByToken(ctx context.Context, token string) (*models.Us
 }
 
 // GetUserByCookie - получение пользователя по cookie
-func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
-	var userProfile models.UserProfile
+func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*usermodels.UserProfile, error) {
+	var userProfile usermodels.UserProfile
 	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, COALESCE(u.bio, ''), u.avatar_src, u.hide_email FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expire > NOW();",
 		cookieValue).Scan(&userProfile.Id, &userProfile.Email, &userProfile.Name, &userProfile.Bio, &userProfile.AvatarSrc, &userProfile.HideEmail)
 	if err != nil {
@@ -213,7 +213,7 @@ func (d *Database) LogoutUser(ctx context.Context, userId int) error {
 	return err
 }
 
-func (d *Database) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
+func (d *Database) UpdateProfile(ctx context.Context, userId int, userProfile *usermodels.UserProfile) error {
 	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3, hide_email = $4 WHERE id = $5",
 		userProfile.Email, userProfile.Name, userProfile.Bio, userProfile.HideEmail, userId)
 	if err != nil {

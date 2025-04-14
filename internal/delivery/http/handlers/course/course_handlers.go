@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
-	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
+	models "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 	"strconv"
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"skillForce/internal/models"
+	models "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 	"time"
 )

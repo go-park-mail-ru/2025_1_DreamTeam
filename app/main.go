@@ -4,19 +4,19 @@ import (
 	"log"
 	"net/http"
 	"skillForce/config"
-	cookie "skillForce/internal/delivery/http/cookie"
 	"skillForce/internal/delivery/http/middleware"
 	"skillForce/internal/repository/infrastructure"
-	courseUsecase "skillForce/internal/usecase/course"
-	userUsecase "skillForce/internal/usecase/user"
 	"skillForce/pkg/logs"
 
-	_ "skillForce/docs"
-
+	cookie "skillForce/internal/delivery/http/cookie"
 	courseHandler "skillForce/internal/delivery/http/handlers/course"
 	userHandler "skillForce/internal/delivery/http/handlers/user"
+	courseUsecase "skillForce/internal/usecase/course"
+	userUsecase "skillForce/internal/usecase/user"
 
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "skillForce/docs"
 )
 
 func main() {
