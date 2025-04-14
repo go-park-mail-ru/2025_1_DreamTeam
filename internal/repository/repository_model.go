@@ -23,6 +23,7 @@ type Repository interface {
 	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)
 	GetLessonBlocks(ctx context.Context, currentLessonId int) ([]string, error)
+	GetLessonVideo(ctx context.Context, currentLessonId int) ([]string, error)
 	GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error)
 	MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
@@ -43,4 +44,5 @@ type Repository interface {
 	SendWelcomeCourseMail(ctx context.Context, user *models.User, courseId int) error
 	GetUserById(ctx context.Context, userId int) (*models.User, error)
 	IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error)
+	GetLessonById(ctx context.Context, lessonId int) (*models.LessonPoint, error)
 }

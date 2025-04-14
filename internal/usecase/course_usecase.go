@@ -163,11 +163,11 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		return nil, err
 	}
 
-	if lessonType == "text" { //TODO: сделать switch case
-		lessonDto := &dto.LessonDTO{
-			LessonHeader: *lessonHeader,
-		}
+	lessonDto := &dto.LessonDTO{
+		LessonHeader: *lessonHeader,
+	}
 
+	if lessonType == "text" {
 		blocks, err := uc.repo.GetLessonBlocks(ctx, currentLessonId)
 
 		if err != nil {
@@ -221,60 +221,178 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 		return lessonDto, err
 	}
 
+	if lessonType == "video" {
+		blocks, err := uc.repo.GetLessonVideo(ctx, currentLessonId)
+
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		var LessonBody dto.LessonDtoBody
+		for _, block := range blocks {
+			//block = sanitize.Sanitize(block)
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
+			LessonBody.Blocks = append(LessonBody.Blocks, struct {
+				Body string `json:"body"`
+			}{
+				Body: block,
+			})
+		}
+
+		footers, err := uc.repo.GetLessonFooters(ctx, currentLessonId)
+
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if len(footers) != 3 {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("lesson %d has %d footers", currentLessonId, len(footers)))
+			return nil, errors.New("lesson has wrong number of footers")
+		}
+
+		LessonBody.Footer.NextLessonId = footers[2]
+		LessonBody.Footer.CurrentLessonId = footers[1]
+		LessonBody.Footer.PreviousLessonId = footers[0]
+		lessonDto.LessonBody = LessonBody
+
+		if first {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
+			user, err := uc.repo.GetUserById(ctx, userId)
+			if err != nil {
+				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
+				return nil, err
+			}
+
+			if !user.HideEmail {
+				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
+				}
+			}
+		}
+
+		return lessonDto, err
+
+	}
+
 	return nil, nil
 }
 
 func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, lessonId int) (*dto.LessonDTO, error) {
-	blocks, err := uc.repo.GetLessonBlocks(ctx, lessonId)
+	lesson, err := uc.repo.GetLessonById(ctx, lessonId)
 	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetNextLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	var LessonBody dto.LessonDtoBody
-	for _, block := range blocks {
-		block = sanitize.Sanitize(block)
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
-		LessonBody.Blocks = append(LessonBody.Blocks, struct {
-			Body string `json:"body"`
-		}{
-			Body: block,
-		})
+	if lesson.Type == "text" {
+		blocks, err := uc.repo.GetLessonBlocks(ctx, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		var LessonBody dto.LessonDtoBody
+		for _, block := range blocks {
+			block = sanitize.Sanitize(block)
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
+			LessonBody.Blocks = append(LessonBody.Blocks, struct {
+				Body string `json:"body"`
+			}{
+				Body: block,
+			})
+		}
+
+		footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if len(footers) != 3 {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("lesson %d has %d footers", lessonId, len(footers)))
+			return nil, errors.New("lesson has wrong number of footers")
+		}
+
+		LessonBody.Footer.NextLessonId = footers[2]
+		LessonBody.Footer.CurrentLessonId = footers[1]
+		LessonBody.Footer.PreviousLessonId = footers[0]
+
+		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		lessonDto := &dto.LessonDTO{
+			LessonHeader: *lessonHeader,
+			LessonBody:   LessonBody,
+		}
+
+		return lessonDto, err
 	}
 
-	footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
-	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, err
+	if lesson.Type == "video" {
+		blocks, err := uc.repo.GetLessonVideo(ctx, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		var LessonBody dto.LessonDtoBody
+		for _, block := range blocks {
+			block = sanitize.Sanitize(block)
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("block: %+v", block))
+			LessonBody.Blocks = append(LessonBody.Blocks, struct {
+				Body string `json:"body"`
+			}{
+				Body: block,
+			})
+		}
+
+		footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		if len(footers) != 3 {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("lesson %d has %d footers", lessonId, len(footers)))
+			return nil, errors.New("lesson has wrong number of footers")
+		}
+
+		LessonBody.Footer.NextLessonId = footers[2]
+		LessonBody.Footer.CurrentLessonId = footers[1]
+		LessonBody.Footer.PreviousLessonId = footers[0]
+
+		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		lessonDto := &dto.LessonDTO{
+			LessonHeader: *lessonHeader,
+			LessonBody:   LessonBody,
+		}
+
+		return lessonDto, err
 	}
 
-	if len(footers) != 3 {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("lesson %d has %d footers", lessonId, len(footers)))
-		return nil, errors.New("lesson has wrong number of footers")
-	}
-
-	LessonBody.Footer.NextLessonId = footers[2]
-	LessonBody.Footer.CurrentLessonId = footers[1]
-	LessonBody.Footer.PreviousLessonId = footers[0]
-
-	err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, err
-	}
-
-	lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
-	if err != nil {
-		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-		return nil, err
-	}
-
-	lessonDto := &dto.LessonDTO{
-		LessonHeader: *lessonHeader,
-		LessonBody:   LessonBody,
-	}
-
-	return lessonDto, err
+	return nil, errors.New("next lesson has wrong type")
 }
 
 func (uc *Usecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {

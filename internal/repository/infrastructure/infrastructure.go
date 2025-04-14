@@ -183,3 +183,11 @@ func (i *Infrastructure) SendWelcomeCourseMail(ctx context.Context, user *models
 func (i *Infrastructure) IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
 	return i.Database.IsUserPurchasedCourse(ctx, userId, courseId)
 }
+
+func (i *Infrastructure) GetLessonVideo(ctx context.Context, lessonId int) ([]string, error) {
+	return i.Database.GetLessonVideo(ctx, lessonId)
+}
+
+func (i *Infrastructure) GetLessonById(ctx context.Context, lessonId int) (*models.LessonPoint, error) {
+	return i.Database.GetLessonById(ctx, lessonId)
+}

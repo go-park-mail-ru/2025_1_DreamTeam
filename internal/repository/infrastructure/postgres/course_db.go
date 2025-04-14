@@ -525,6 +525,34 @@ func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]
 	return blocks, nil
 }
 
+func (d *Database) GetLessonVideo(ctx context.Context, currentLessonId int) ([]string, error) {
+	var videoSrc string
+	err := d.conn.QueryRow(`
+			SELECT video_src
+			FROM VIDEO_LESSON
+			WHERE lesson_ID = $1
+		`, currentLessonId).Scan(&videoSrc)
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonVideos", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	return []string{videoSrc}, nil
+}
+
+func (d *Database) GetLessonById(ctx context.Context, lessonId int) (*models.LessonPoint, error) {
+	var lesson models.LessonPoint
+	err := d.conn.QueryRow(`
+			SELECT id, title, type
+			FROM LESSON
+			WHERE id = $1
+		`, lessonId).Scan(&lesson.LessonId, &lesson.Title, &lesson.Type)
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonById", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	return &lesson, nil
+}
+
 func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int) (*models.LessonBucket, error) {
 	var bucketId int
 	err := d.conn.QueryRow(`
