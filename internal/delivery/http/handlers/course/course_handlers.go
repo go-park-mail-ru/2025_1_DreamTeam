@@ -1,16 +1,47 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 	"strconv"
+
 	"strings"
 )
+
+type CourseUsecaseInterface interface {
+	GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error)
+	GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error)
+	GetNextLesson(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDTO, error)
+	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
+	GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error)
+	GetCourse(ctx context.Context, courseId int, userProfile *models.UserProfile) (*dto.CourseDTO, error)
+	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
+	GetMeta(ctx context.Context, name string) (dto.VideoMeta, error)
+	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
+}
+
+type CookieManagerInterface interface {
+	CheckCookie(r *http.Request) *models.UserProfile
+}
+
+type Handler struct {
+	courseUsecase CourseUsecaseInterface
+	cookieManager CookieManagerInterface
+}
+
+func NewHandler(courseUsecase CourseUsecaseInterface, cookieManager CookieManagerInterface) *Handler {
+	return &Handler{
+		courseUsecase: courseUsecase,
+		cookieManager: cookieManager,
+	}
+}
 
 // GetCourses godoc
 // @Summary Get list of courses
@@ -29,7 +60,7 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bucketCourses, err := h.useCase.GetBucketCourses(r.Context())
+	bucketCourses, err := h.courseUsecase.GetBucketCourses(r.Context())
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -65,8 +96,8 @@ func (h *Handler) GetCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userProfile := h.checkCookie(r)
-	course, err := h.useCase.GetCourse(r.Context(), courseId, userProfile)
+	userProfile := h.cookieManager.CheckCookie(r)
+	course, err := h.courseUsecase.GetCourse(r.Context(), courseId, userProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -97,7 +128,7 @@ func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "GetCourseLesson", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
@@ -114,7 +145,7 @@ func (h *Handler) GetCourseLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lesson, err := h.useCase.GetCourseLesson(r.Context(), userProfile.Id, courseId)
+	lesson, err := h.courseUsecase.GetCourseLesson(r.Context(), userProfile.Id, courseId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourseLesson", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -146,7 +177,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "GetNextLesson", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
@@ -171,7 +202,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lesson, err := h.useCase.GetNextLesson(r.Context(), userProfile.Id, courseId, lessonId)
+	lesson, err := h.courseUsecase.GetNextLesson(r.Context(), userProfile.Id, courseId, lessonId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -202,7 +233,7 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
@@ -219,7 +250,7 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = h.useCase.MarkLessonAsNotCompleted(r.Context(), userProfile.Id, lessonId.Id)
+	err = h.courseUsecase.MarkLessonAsNotCompleted(r.Context(), userProfile.Id, lessonId.Id)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -248,7 +279,7 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "GetCourseRoadmap", "user not logged in")
 		userProfile = &models.UserProfile{Id: -1}
@@ -264,7 +295,7 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	courseRoadmap, err := h.useCase.GetCourseRoadmap(r.Context(), userProfile.Id, courseId)
+	courseRoadmap, err := h.courseUsecase.GetCourseRoadmap(r.Context(), userProfile.Id, courseId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -291,7 +322,7 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	videoSrc, err := h.useCase.GetVideoUrl(ctx, lesson_id_int)
+	videoSrc, err := h.courseUsecase.GetVideoUrl(ctx, lesson_id_int)
 
 	if err != nil {
 		response.SendErrorResponse("video not found", http.StatusNotFound, w, r)
@@ -300,7 +331,7 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 
 	name := strings.Split(videoSrc, "/")[len(strings.Split(videoSrc, "/"))-1]
 
-	meta, err := h.useCase.GetMeta(ctx, name)
+	meta, err := h.courseUsecase.GetMeta(ctx, name)
 	if err != nil {
 		response.SendErrorResponse("video not found", http.StatusNotFound, w, r)
 		return
@@ -308,7 +339,7 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 
 	rangeHeader := r.Header.Get("Range")
 	if rangeHeader == "" {
-		reader, err := h.useCase.GetFragment(ctx, name, 0, meta.Size-1)
+		reader, err := h.courseUsecase.GetFragment(ctx, name, 0, meta.Size-1)
 		if err != nil {
 			response.SendErrorResponse("video getting error"+err.Error(), http.StatusInternalServerError, w, r)
 			return
@@ -331,7 +362,7 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 		end = meta.Size - 1
 	}
 
-	reader, err := h.useCase.GetFragment(ctx, name, start, end)
+	reader, err := h.courseUsecase.GetFragment(ctx, name, start, end)
 	if err != nil {
 		response.SendErrorResponse("reading frame error"+err.Error(), http.StatusInternalServerError, w, r)
 		return

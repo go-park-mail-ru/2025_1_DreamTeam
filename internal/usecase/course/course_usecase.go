@@ -7,12 +7,20 @@ import (
 	"io"
 	"skillForce/internal/models"
 	"skillForce/internal/models/dto"
+	"skillForce/internal/repository"
 	"skillForce/pkg/logs"
 	"skillForce/pkg/sanitize"
 )
 
-// GetBucketCourses - извлекает список курсов из базы данных
-func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
+type CourseUsecase struct {
+	repo repository.Repository
+}
+
+func NewCourseUsecase(repo repository.Repository) *CourseUsecase {
+	return &CourseUsecase{repo: repo}
+}
+
+func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
 	bucketCourses, err := uc.repo.GetBucketCourses(ctx)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
@@ -75,7 +83,7 @@ func (uc *Usecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, erro
 	return resultBucketCourses, nil
 }
 
-func (uc *Usecase) GetCourse(ctx context.Context, courseId int, userProfile *models.UserProfile) (*dto.CourseDTO, error) {
+func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfile *models.UserProfile) (*dto.CourseDTO, error) {
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
@@ -150,7 +158,7 @@ func (uc *Usecase) GetCourse(ctx context.Context, courseId int, userProfile *mod
 
 }
 
-func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
+func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
 	err := uc.repo.AddUserToCourse(ctx, userId, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -279,7 +287,7 @@ func (uc *Usecase) GetCourseLesson(ctx context.Context, userId int, courseId int
 	return nil, nil
 }
 
-func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, lessonId int) (*dto.LessonDTO, error) {
+func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId int, lessonId int) (*dto.LessonDTO, error) {
 	lesson, err := uc.repo.GetLessonById(ctx, lessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetNextLesson", fmt.Sprintf("%+v", err))
@@ -395,11 +403,11 @@ func (uc *Usecase) GetNextLesson(ctx context.Context, userId int, courseId int, 
 	return nil, errors.New("next lesson has wrong type")
 }
 
-func (uc *Usecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
+func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
 
-func (uc *Usecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {
+func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {
 	var roadmap dto.CourseRoadmapDTO
 
 	var parts []*models.CoursePart
@@ -455,14 +463,14 @@ func (uc *Usecase) GetCourseRoadmap(ctx context.Context, userId int, courseId in
 	return &roadmap, nil
 }
 
-func (uc *Usecase) GetVideoUrl(ctx context.Context, lesson_id int) (string, error) {
+func (uc *CourseUsecase) GetVideoUrl(ctx context.Context, lesson_id int) (string, error) {
 	return uc.repo.GetVideoUrl(ctx, lesson_id)
 }
 
-func (uc *Usecase) GetMeta(ctx context.Context, name string) (dto.VideoMeta, error) {
+func (uc *CourseUsecase) GetMeta(ctx context.Context, name string) (dto.VideoMeta, error) {
 	return uc.repo.Stat(ctx, name)
 }
 
-func (uc *Usecase) GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
+func (uc *CourseUsecase) GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
 	return uc.repo.GetVideoRange(ctx, name, start, end)
 }

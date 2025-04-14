@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"skillForce/internal/delivery/http/response"
 	"skillForce/internal/models"
@@ -12,6 +14,36 @@ import (
 
 	"github.com/badoux/checkmail"
 )
+
+type UserUsecaseInterface interface {
+	RegisterUser(ctx context.Context, token string) (string, error)
+	ValidUser(ctx context.Context, user *models.User) error
+	AuthenticateUser(ctx context.Context, user *models.User) (string, error)
+	GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error)
+	LogoutUser(ctx context.Context, userId int) error
+	UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error
+	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error)
+	DeleteProfilePhoto(ctx context.Context, userId int) error
+}
+
+type CookieManagerInterface interface {
+	CheckCookie(r *http.Request) *models.UserProfile
+	SetCookie(w http.ResponseWriter, cookieValue string)
+	DeleteCookie(w http.ResponseWriter)
+}
+
+type Handler struct {
+	userUsecase   UserUsecaseInterface
+	cookieManager CookieManagerInterface
+}
+
+func NewHandler(userUsecase UserUsecaseInterface, cookieManager CookieManagerInterface) *Handler {
+	return &Handler{
+		userUsecase:   userUsecase,
+		cookieManager: cookieManager,
+	}
+}
 
 // isValidRegistrationFields - валидация полей регистрации
 func isValidRegistrationFields(user *dto.UserDTO) error {
@@ -81,7 +113,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.NewUser(userInput)
-	err = h.useCase.ValidUser(r.Context(), user)
+	err = h.userUsecase.ValidUser(r.Context(), user)
 	if err != nil {
 		if errors.Is(err, errors.New("email exists")) {
 			logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
@@ -125,7 +157,7 @@ func (h *Handler) ConfirmUserEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := h.useCase.RegisterUser(r.Context(), token)
+	cookie, err := h.userUsecase.RegisterUser(r.Context(), token)
 	if err != nil {
 		if errors.Is(err, errors.New("invalid token")) {
 			logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
@@ -142,7 +174,7 @@ func (h *Handler) ConfirmUserEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logs.PrintLog(r.Context(), "ConfirmUserEmail", "register user and send him cookie")
-	setCookie(w, cookie)
+	h.cookieManager.SetCookie(w, cookie)
 	response.SendOKResponse(w, r)
 }
 
@@ -182,7 +214,7 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.NewUser(userInput)
-	cookieValue, err := h.useCase.AuthenticateUser(r.Context(), user)
+	cookieValue, err := h.userUsecase.AuthenticateUser(r.Context(), user)
 	if err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 
@@ -196,7 +228,7 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("user %+v login, send him cookie", user))
 
-	setCookie(w, cookieValue)
+	h.cookieManager.SetCookie(w, cookieValue)
 	response.SendOKResponse(w, r)
 }
 
@@ -210,16 +242,16 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/logout [post]
 func (h *Handler) LogoutUser(w http.ResponseWriter, r *http.Request) {
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile != nil {
 		logs.PrintLog(r.Context(), "LogoutUser", fmt.Sprintf("logout user %+v", userProfile))
-		err := h.useCase.LogoutUser(r.Context(), userProfile.Id)
+		err := h.userUsecase.LogoutUser(r.Context(), userProfile.Id)
 		if err != nil {
 			logs.PrintLog(r.Context(), "LogoutUser", fmt.Sprintf("%+v", err))
 			response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
 			return
 		}
-		deleteCookie(w)
+		h.cookieManager.DeleteCookie(w)
 
 	}
 	response.SendOKResponse(w, r)
@@ -235,7 +267,7 @@ func (h *Handler) LogoutUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} response.ErrorResponse "not authorized"
 // @Router /api/isAuthorized [get]
 func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile != nil {
 		userProfileOut := dto.UserProfileDTO{
 			Name:      userProfile.Name,
@@ -266,7 +298,7 @@ func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
 func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
@@ -283,7 +315,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	newUserProfile := models.NewUserProfile(UserProfileInput)
 	//TODO: добавить тут валидацию
-	err = h.useCase.UpdateProfile(r.Context(), userProfile.Id, newUserProfile)
+	err = h.userUsecase.UpdateProfile(r.Context(), userProfile.Id, newUserProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
@@ -307,7 +339,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
 func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
@@ -329,14 +361,14 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	url, err := h.useCase.UploadFile(r.Context(), file, fileHeader)
+	url, err := h.userUsecase.UploadFile(r.Context(), file, fileHeader)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		http.Error(w, "Ошибка загрузки в MinIO", http.StatusInternalServerError)
 		return
 	}
 
-	newPhotoUrl, err := h.useCase.SaveProfilePhoto(r.Context(), url, userProfile.Id)
+	newPhotoUrl, err := h.userUsecase.SaveProfilePhoto(r.Context(), url, userProfile.Id)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
@@ -360,14 +392,14 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/deleteProfilePhoto [post]
 func (h *Handler) DeleteProfilePhoto(w http.ResponseWriter, r *http.Request) {
-	userProfile := h.checkCookie(r)
+	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "DeleteProfilePhoto", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
 
-	err := h.useCase.DeleteProfilePhoto(r.Context(), userProfile.Id)
+	err := h.userUsecase.DeleteProfilePhoto(r.Context(), userProfile.Id)
 	if err != nil {
 		logs.PrintLog(r.Context(), "DeleteProfilePhoto", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)

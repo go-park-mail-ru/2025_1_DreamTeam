@@ -5,12 +5,20 @@ import (
 	"fmt"
 	"mime/multipart"
 	"skillForce/internal/models"
+	"skillForce/internal/repository"
 	"skillForce/pkg/hash"
 	"skillForce/pkg/logs"
 )
 
-// RegisterUser - регистрация пользователя
-func (uc *Usecase) ValidUser(ctx context.Context, user *models.User) error {
+type UserUsecase struct {
+	repo repository.Repository
+}
+
+func NewUserUsecase(repo repository.Repository) *UserUsecase {
+	return &UserUsecase{repo: repo}
+}
+
+func (uc *UserUsecase) ValidUser(ctx context.Context, user *models.User) error {
 	token, err := uc.repo.ValidUser(ctx, user)
 	if err != nil {
 		logs.PrintLog(ctx, "ValidUser", fmt.Sprintf("%+v", err))
@@ -25,7 +33,7 @@ func (uc *Usecase) ValidUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (uc *Usecase) RegisterUser(ctx context.Context, token string) (string, error) {
+func (uc *UserUsecase) RegisterUser(ctx context.Context, token string) (string, error) {
 	user, err := uc.repo.GetUserByToken(ctx, token)
 	if err != nil {
 		return "", err
@@ -42,31 +50,31 @@ func (uc *Usecase) RegisterUser(ctx context.Context, token string) (string, erro
 }
 
 // AuthenticateUser - авторизация пользователя
-func (uc *Usecase) AuthenticateUser(ctx context.Context, user *models.User) (string, error) {
+func (uc *UserUsecase) AuthenticateUser(ctx context.Context, user *models.User) (string, error) {
 	return uc.repo.AuthenticateUser(ctx, user.Email, user.Password)
 }
 
 // GetUserByCookie - получение пользователя по cookie
-func (uc *Usecase) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
+func (uc *UserUsecase) GetUserByCookie(ctx context.Context, cookieValue string) (*models.UserProfile, error) {
 	return uc.repo.GetUserByCookie(ctx, cookieValue)
 }
 
-func (uc *Usecase) LogoutUser(ctx context.Context, userId int) error {
+func (uc *UserUsecase) LogoutUser(ctx context.Context, userId int) error {
 	return uc.repo.LogoutUser(ctx, userId)
 }
 
-func (uc *Usecase) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
+func (uc *UserUsecase) UpdateProfile(ctx context.Context, userId int, userProfile *models.UserProfile) error {
 	return uc.repo.UpdateProfile(ctx, userId, userProfile)
 }
 
-func (uc *Usecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (uc *UserUsecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return uc.repo.UploadFile(ctx, file, fileHeader)
 }
 
-func (uc *Usecase) SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error) {
+func (uc *UserUsecase) SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error) {
 	return uc.repo.UpdateProfilePhoto(ctx, url, userId)
 }
 
-func (uc *Usecase) DeleteProfilePhoto(ctx context.Context, userId int) error {
+func (uc *UserUsecase) DeleteProfilePhoto(ctx context.Context, userId int) error {
 	return uc.repo.DeleteProfilePhoto(ctx, userId)
 }

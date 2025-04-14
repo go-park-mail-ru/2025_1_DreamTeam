@@ -4,14 +4,17 @@ import (
 	"log"
 	"net/http"
 	"skillForce/config"
+	cookie "skillForce/internal/delivery/http/cookie"
 	"skillForce/internal/delivery/http/middleware"
 	"skillForce/internal/repository/infrastructure"
-	"skillForce/internal/usecase"
+	courseUsecase "skillForce/internal/usecase/course"
+	userUsecase "skillForce/internal/usecase/user"
 	"skillForce/pkg/logs"
 
 	_ "skillForce/docs"
 
-	"skillForce/internal/delivery/http/handlers"
+	courseHandler "skillForce/internal/delivery/http/handlers/course"
+	userHandler "skillForce/internal/delivery/http/handlers/user"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -24,25 +27,29 @@ func main() {
 
 	siteMux := http.NewServeMux()
 
-	useCase := usecase.NewUsecase(infrastructure)
-	handler := handlers.NewHandler(useCase)
+	userUsecase := userUsecase.NewUserUsecase(infrastructure)
+	cookieManager := cookie.NewCookieManager(userUsecase)
+	userHandler := userHandler.NewHandler(userUsecase, cookieManager)
 
-	siteMux.HandleFunc("/api/register", handler.RegisterUser)
-	siteMux.HandleFunc("/api/login", handler.LoginUser)
-	siteMux.HandleFunc("/api/logout", handler.LogoutUser)
-	siteMux.HandleFunc("/api/isAuthorized", handler.IsAuthorized)
-	siteMux.HandleFunc("/api/updateProfile", handler.UpdateProfile)
-	siteMux.HandleFunc("/api/updateProfilePhoto", handler.UpdateProfilePhoto)
-	siteMux.HandleFunc("/api/deleteProfilePhoto", handler.DeleteProfilePhoto)
-	siteMux.HandleFunc("/api/validEmail", handler.ConfirmUserEmail)
+	siteMux.HandleFunc("/api/register", userHandler.RegisterUser)
+	siteMux.HandleFunc("/api/login", userHandler.LoginUser)
+	siteMux.HandleFunc("/api/logout", userHandler.LogoutUser)
+	siteMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
+	siteMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
+	siteMux.HandleFunc("/api/updateProfilePhoto", userHandler.UpdateProfilePhoto)
+	siteMux.HandleFunc("/api/deleteProfilePhoto", userHandler.DeleteProfilePhoto)
+	siteMux.HandleFunc("/api/validEmail", userHandler.ConfirmUserEmail)
 
-	siteMux.HandleFunc("/api/getCourses", handler.GetCourses)
-	siteMux.HandleFunc("/api/getCourse", handler.GetCourse)
-	siteMux.HandleFunc("/api/getCourseLesson", handler.GetCourseLesson)
-	siteMux.HandleFunc("/api/getNextLesson", handler.GetNextLesson)
-	siteMux.HandleFunc("/api/markLessonAsNotCompleted", handler.MarkLessonAsNotCompleted)
-	siteMux.HandleFunc("/api/getCourseRoadmap", handler.GetCourseRoadmap)
-	siteMux.HandleFunc("/api/video", handler.ServeVideo)
+	courseUsecase := courseUsecase.NewCourseUsecase(infrastructure)
+	courseHandler := courseHandler.NewHandler(courseUsecase, cookieManager)
+
+	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+	siteMux.HandleFunc("/api/getCourse", courseHandler.GetCourse)
+	siteMux.HandleFunc("/api/getCourseLesson", courseHandler.GetCourseLesson)
+	siteMux.HandleFunc("/api/getNextLesson", courseHandler.GetNextLesson)
+	siteMux.HandleFunc("/api/markLessonAsNotCompleted", courseHandler.MarkLessonAsNotCompleted)
+	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
+	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
