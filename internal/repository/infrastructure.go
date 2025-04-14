@@ -1,4 +1,4 @@
-package infrastructure
+package repository
 
 import (
 	"context"
@@ -8,9 +8,9 @@ import (
 	"mime/multipart"
 	"skillForce/config"
 	"skillForce/internal/models/dto"
-	"skillForce/internal/repository/infrastructure/mail"
-	"skillForce/internal/repository/infrastructure/minio"
-	"skillForce/internal/repository/infrastructure/postgres"
+	"skillForce/internal/repository/mail"
+	"skillForce/internal/repository/minio"
+	"skillForce/internal/repository/postgres"
 
 	coursemodels "skillForce/internal/models/course"
 	usermodels "skillForce/internal/models/user"

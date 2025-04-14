@@ -39,7 +39,7 @@ func (m *Mail) SendRegMail(ctx context.Context, user *usermodels.User, token str
 
 	subject := "Регистрация на платформе SkillForce"
 
-	templatePath := "./../internal/repository/infrastructure/mail/layouts/confirm_mail.html"
+	templatePath := "./../internal/repository/mail/layouts/confirm_mail.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
 		logs.PrintLog(ctx, "SendRegMail", err.Error())
@@ -79,7 +79,7 @@ func (m *Mail) SendWelcomeMail(ctx context.Context, user *usermodels.User) error
 
 	subject := "Добро пожаловать на платформу SkillForce"
 
-	templatePath := "./../internal/repository/infrastructure/mail/layouts/welcome_mail.html"
+	templatePath := "./../internal/repository/mail/layouts/welcome_mail.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
 		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
@@ -118,7 +118,7 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User,
 
 	subject := "Продолжайте своё обучение!"
 
-	templatePath := "./../internal/repository/infrastructure/mail/layouts/welcome_course_lesson.html"
+	templatePath := "./../internal/repository/mail/layouts/welcome_course_lesson.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
 		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())

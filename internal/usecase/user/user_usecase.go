@@ -9,21 +9,23 @@ import (
 	"skillForce/pkg/logs"
 )
 
+type UserDependencies interface {
+	UserAuthRepository
+	UserProfileRepository
+	UserMailRepository
+}
+
 type UserUsecase struct {
 	authRepo    UserAuthRepository
 	profileRepo UserProfileRepository
 	mailRepo    UserMailRepository
 }
 
-func NewUserUsecase(
-	authRepo UserAuthRepository,
-	profileRepo UserProfileRepository,
-	mailRepo UserMailRepository,
-) *UserUsecase {
+func NewUserUsecase(deps UserDependencies) *UserUsecase {
 	return &UserUsecase{
-		authRepo:    authRepo,
-		profileRepo: profileRepo,
-		mailRepo:    mailRepo,
+		authRepo:    deps,
+		profileRepo: deps,
+		mailRepo:    deps,
 	}
 }
 

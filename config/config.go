@@ -4,51 +4,114 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
 	Database struct {
-		Host     string `yaml:"host"`
-		Port     string `yaml:"port"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
-	} `yaml:"database"`
+		Host     string
+		Port     string
+		User     string
+		Password string
+		Name     string
+	}
 
 	Minio struct {
-		Endpoint        string `yaml:"endpoint"`
-		AccessKey       string `yaml:"access_key"`
-		SecretAccessKey string `yaml:"secret_access_key"`
-		BucketName      string `yaml:"bucket_name"`
-		VideoBucket     string `yaml:"video_bucket_name"`
-		UseSSL          bool   `yaml:"use_ssl"`
-	} `yaml:"minio"`
+		Endpoint        string
+		AccessKey       string
+		SecretAccessKey string
+		BucketName      string
+		VideoBucket     string
+		UseSSL          bool
+	}
 
 	Secrets struct {
-		JwtSessionSecret string `yaml:"jwt_session_secret"`
-	} `yaml:"secrets"`
+		JwtSessionSecret string
+	}
 
 	Mail struct {
-		From     string `yaml:"from"`
-		Password string `yaml:"password"`
-		Host     string `yaml:"host"`
-		Port     string `yaml:"port"`
+		From     string
+		Password string
+		Host     string
+		Port     string
 	}
 }
 
-// LoadConfig загружает конфигурацию из YAML-файла
+type yamlConfig struct {
+	Database struct {
+		Host string `yaml:"host"`
+		Port string `yaml:"port"`
+		Name string `yaml:"name"`
+	} `yaml:"database"`
+
+	Minio struct {
+		Endpoint    string `yaml:"endpoint"`
+		BucketName  string `yaml:"bucket_name"`
+		VideoBucket string `yaml:"video_bucket_name"`
+		UseSSL      bool   `yaml:"use_ssl"`
+	} `yaml:"minio"`
+}
+
 func LoadConfig() *Config {
+	err := godotenv.Load("../config/.env")
+	if err != nil {
+		log.Fatalf("ошибка загрузки .env файла: %v", err)
+	}
+
 	data, err := os.ReadFile("../config/config.yaml")
 	if err != nil {
-		log.Fatalf("не удалось прочитать файл: %w", err)
+		log.Fatalf("не удалось прочитать YAML файл: %v", err)
 	}
 
-	var config Config
-	err = yaml.Unmarshal(data, &config)
+	var ycfg yamlConfig
+	err = yaml.Unmarshal(data, &ycfg)
 	if err != nil {
-		log.Fatalf("ошибка парсинга YAML: %w", err)
+		log.Fatalf("ошибка парсинга YAML: %v", err)
 	}
 
-	return &config
+	return &Config{
+		Database: struct {
+			Host     string
+			Port     string
+			User     string
+			Password string
+			Name     string
+		}{
+			Host:     ycfg.Database.Host,
+			Port:     ycfg.Database.Port,
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Name:     ycfg.Database.Name,
+		},
+		Minio: struct {
+			Endpoint        string
+			AccessKey       string
+			SecretAccessKey string
+			BucketName      string
+			VideoBucket     string
+			UseSSL          bool
+		}{
+			Endpoint:        ycfg.Minio.Endpoint,
+			AccessKey:       os.Getenv("MINIO_ACCESS_KEY"),
+			SecretAccessKey: os.Getenv("MINIO_SECRET_KEY"),
+			BucketName:      ycfg.Minio.BucketName,
+			VideoBucket:     ycfg.Minio.VideoBucket,
+			UseSSL:          ycfg.Minio.UseSSL,
+		},
+		Secrets: struct{ JwtSessionSecret string }{
+			JwtSessionSecret: os.Getenv("JWT_SESSION_SECRET"),
+		},
+		Mail: struct {
+			From     string
+			Password string
+			Host     string
+			Port     string
+		}{
+			From:     os.Getenv("MAIL_FROM"),
+			Password: os.Getenv("MAIL_PASSWORD"),
+			Host:     os.Getenv("MAIL_HOST"),
+			Port:     os.Getenv("MAIL_PORT"),
+		},
+	}
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"skillForce/config"
 	"skillForce/internal/delivery/http/middleware"
-	"skillForce/internal/repository/infrastructure"
+	"skillForce/internal/repository"
 	"skillForce/pkg/logs"
 
 	cookie "skillForce/internal/delivery/http/cookie"
@@ -22,7 +22,7 @@ import (
 func main() {
 	config := config.LoadConfig()
 
-	infrastructure := infrastructure.NewInfrastructure(config)
+	infrastructure := repository.NewInfrastructure(config)
 	defer infrastructure.Close()
 
 	siteMux := http.NewServeMux()

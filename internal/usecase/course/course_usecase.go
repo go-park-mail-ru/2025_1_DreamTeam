@@ -12,6 +12,16 @@ import (
 	"skillForce/pkg/sanitize"
 )
 
+type CourseDependencies interface {
+	CourseContentRepository
+	LessonNavigationRepository
+	LessonProgressRepository
+	CourseStatsRepository
+	VideoRepository
+	CourseMailRepository
+	UserInfoRepository
+}
+
 type CourseUsecase struct {
 	contentRepo    CourseContentRepository
 	navigationRepo LessonNavigationRepository
@@ -22,23 +32,14 @@ type CourseUsecase struct {
 	userRepo       UserInfoRepository
 }
 
-func NewCourseUsecase(
-	contentRepo CourseContentRepository,
-	navigationRepo LessonNavigationRepository,
-	progressRepo LessonProgressRepository,
-	statsRepo CourseStatsRepository,
-	videoRepo VideoRepository,
-	mailRepo CourseMailRepository,
-	userRepo UserInfoRepository,
-) *CourseUsecase {
+func NewCourseUsecase(deps CourseDependencies) *CourseUsecase {
 	return &CourseUsecase{
-		contentRepo:    contentRepo,
-		navigationRepo: navigationRepo,
-		progressRepo:   progressRepo,
-		statsRepo:      statsRepo,
-		videoRepo:      videoRepo,
-		mailRepo:       mailRepo,
-		userRepo:       userRepo,
+		contentRepo:    deps,
+		navigationRepo: deps,
+		progressRepo:   deps,
+		statsRepo:      deps,
+		videoRepo:      deps,
+		mailRepo:       deps,
 	}
 }
 
