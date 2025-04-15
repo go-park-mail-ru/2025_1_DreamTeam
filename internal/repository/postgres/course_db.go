@@ -11,7 +11,6 @@ import (
 	"skillForce/pkg/logs"
 )
 
-// GetBucketCourses - извлекает список курсов из базы данных
 func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error) {
 	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
 	var bucketCourses []*coursemodels.Course
