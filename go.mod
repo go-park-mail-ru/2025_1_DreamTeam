@@ -7,6 +7,7 @@ toolchain go1.23.6
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/badoux/checkmail v1.2.4
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0

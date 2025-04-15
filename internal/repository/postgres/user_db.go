@@ -31,7 +31,6 @@ func (d *Database) saveSession(ctx context.Context, userId int) (string, error) 
 	return secretToken, nil
 }
 
-// userExists - проверяет, существует ли пользователь с указанным email
 func (d *Database) userExists(email string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS(SELECT 1 FROM usertable WHERE email = $1)"
@@ -77,7 +76,6 @@ func (d *Database) parseToken(ctx context.Context, token string) (map[string]int
 	return nil, errors.New("invalid token")
 }
 
-// RegisterUser - сохраняет нового пользователя в базе данных и создает сессию, тоже сохраняя её в базе
 func (d *Database) RegisterUser(ctx context.Context, user *usermodels.User) (string, error) {
 	emailExists, err := d.userExists(user.Email)
 	if err != nil {
@@ -155,7 +153,6 @@ func (d *Database) GetUserByToken(ctx context.Context, token string) (*usermodel
 	return &user, nil
 }
 
-// GetUserByCookie - получение пользователя по cookie
 func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*usermodels.UserProfile, error) {
 	var userProfile usermodels.UserProfile
 	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, COALESCE(u.bio, ''), u.avatar_src, u.hide_email FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expire > NOW();",
@@ -167,7 +164,6 @@ func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*us
 	return &userProfile, err
 }
 
-// AuthenticateUser - проверяет есть ли пользователь с указанным email и паролем в базе данных, елси есть - возвращает его id и сохраняет сессию в базе
 func (d *Database) AuthenticateUser(ctx context.Context, email string, password string) (string, error) {
 	var id int
 	emailExists, err := d.userExists(email)
@@ -203,7 +199,6 @@ func (d *Database) AuthenticateUser(ctx context.Context, email string, password 
 	return cookieValue, nil
 }
 
-// LogoutUser - удаляет сессию пользователя из базы данных
 func (d *Database) LogoutUser(ctx context.Context, userId int) error {
 	_, err := d.conn.Exec("DELETE FROM sessions WHERE user_id = $1", userId)
 	if err != nil {
