@@ -303,6 +303,10 @@ func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
 func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		response.SendOKResponse(w, r)
+		return
+	}
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", "user not logged in")
@@ -321,6 +325,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	newUserProfile := &models.UserProfile{
 		Name:      UserProfileInput.Name,
 		Bio:       UserProfileInput.Bio,
+		Email:     UserProfileInput.Email,
 		AvatarSrc: UserProfileInput.AvatarSrc,
 		HideEmail: UserProfileInput.HideEmail,
 	}
@@ -349,6 +354,10 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/updateProfile [post]
 func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		response.SendOKResponse(w, r)
+		return
+	}
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "UpdateProfilePhoto", "user not logged in")
@@ -402,6 +411,10 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} response.ErrorResponse "server error"
 // @Router /api/deleteProfilePhoto [post]
 func (h *Handler) DeleteProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		response.SendOKResponse(w, r)
+		return
+	}
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
 		logs.PrintLog(r.Context(), "DeleteProfilePhoto", "user not logged in")
