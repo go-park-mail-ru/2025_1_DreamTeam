@@ -12,7 +12,8 @@ func CorsOptionsMiddleware(next http.Handler) http.Handler {
 		// w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8001")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, POST")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Credentials")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Credentials, X-CSRF-Token")
+		w.Header().Set("Access-Control-Expose-Headers", "X-CSRF-Token")
 
 		if r.Method != http.MethodOptions {
 			next.ServeHTTP(w, r)

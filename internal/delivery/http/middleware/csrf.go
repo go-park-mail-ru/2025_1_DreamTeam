@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"skillForce/config"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,18 +31,9 @@ func GenerateCSRFToken() (string, error) {
 
 func CSRFMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return jwtSecret, nil
-		})
-		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+		sessionCookie, err := r.Cookie("session_id")
+		if err != nil || sessionCookie == nil {
+			http.Error(w, "Unauthorized: Missing session cookie", http.StatusUnauthorized)
 			return
 		}
 
