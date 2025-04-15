@@ -45,7 +45,6 @@ func NewHandler(userUsecase UserUsecaseInterface, cookieManager CookieManagerInt
 	}
 }
 
-// isValidRegistrationFields - валидация полей регистрации
 func isValidRegistrationFields(user *dto.UserDTO) error {
 	if user.Name == "" {
 		return errors.New("missing required fields") //TODO: сделать другую ошибку, но пока так, чтобы не поломать фронт
@@ -63,7 +62,6 @@ func isValidRegistrationFields(user *dto.UserDTO) error {
 	return nil
 }
 
-// isValidLoginFields - валидация полей авторизации
 func isValidLoginFields(user *dto.UserDTO) error {
 	if len(user.Password) < 5 {
 		return errors.New("password too short")
