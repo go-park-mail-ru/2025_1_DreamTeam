@@ -14,6 +14,9 @@ import (
 	courseUsecase "skillForce/internal/usecase/course"
 	userUsecase "skillForce/internal/usecase/user"
 
+	courseInfrastructure "skillForce/internal/repository/course_infrastructure"
+	userInfrastructure "skillForce/internal/repository/user_infrastructure"
+
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	_ "skillForce/docs"
@@ -27,7 +30,8 @@ func main() {
 
 	siteMux := http.NewServeMux()
 
-	userUsecase := userUsecase.NewUserUsecase(infrastructure)
+	userIfrustructure := userInfrastructure.NewUserInfrastructure(infrastructure.Database, infrastructure.Mail, infrastructure.Minio)
+	userUsecase := userUsecase.NewUserUsecase(userIfrustructure)
 	cookieManager := cookie.NewCookieManager(userUsecase)
 	userHandler := userHandler.NewHandler(userUsecase, cookieManager)
 
@@ -40,7 +44,8 @@ func main() {
 	siteMux.HandleFunc("/api/deleteProfilePhoto", userHandler.DeleteProfilePhoto)
 	siteMux.HandleFunc("/api/validEmail", userHandler.ConfirmUserEmail)
 
-	courseUsecase := courseUsecase.NewCourseUsecase(infrastructure)
+	courseInfrastructure := courseInfrastructure.NewCourseInfrastructure(infrastructure.Database, infrastructure.Mail, infrastructure.Minio)
+	courseUsecase := courseUsecase.NewCourseUsecase(courseInfrastructure)
 	courseHandler := courseHandler.NewHandler(courseUsecase, cookieManager)
 
 	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
