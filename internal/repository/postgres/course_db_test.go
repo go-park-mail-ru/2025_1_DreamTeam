@@ -796,3 +796,401 @@ func TestGetLessonFooters_NoLessonsInBucket(t *testing.T) {
 	require.Nil(t, footers)
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGetCourseParts_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	courseID := 1
+	expectedParts := []*coursemodels.CoursePart{
+		{Id: 1, Title: "Part 1"},
+		{Id: 2, Title: "Part 2"},
+	}
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title
+		FROM PART
+		WHERE course_id = $1
+		ORDER BY part_order ASC
+	`)).
+		WithArgs(courseID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title"}).
+			AddRow(1, "Part 1").
+			AddRow(2, "Part 2"))
+
+	parts, err := database.GetCourseParts(ctx, courseID)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedParts, parts)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetCourseParts_QueryError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	courseID := 1
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title
+		FROM PART
+		WHERE course_id = $1
+		ORDER BY part_order ASC
+	`)).
+		WithArgs(courseID).
+		WillReturnError(errors.New("query failed"))
+
+	parts, err := database.GetCourseParts(ctx, courseID)
+
+	require.Error(t, err)
+	require.Nil(t, parts)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetCourseParts_NoParts(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	courseID := 1
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title
+		FROM PART
+		WHERE course_id = $1
+		ORDER BY part_order ASC
+	`)).
+		WithArgs(courseID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title"}))
+
+	parts, err := database.GetCourseParts(ctx, courseID)
+
+	require.NoError(t, err)
+	require.Empty(t, parts)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetPartBuckets_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	partID := 1
+	expectedBuckets := []*coursemodels.LessonBucket{
+		{Id: 1, Title: "Bucket 1"},
+		{Id: 2, Title: "Bucket 2"},
+	}
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title
+		FROM LESSON_BUCKET
+		WHERE part_id = $1
+		ORDER BY lesson_bucket_order ASC
+	`)).
+		WithArgs(partID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title"}).
+			AddRow(1, "Bucket 1").
+			AddRow(2, "Bucket 2"))
+
+	buckets, err := database.GetPartBuckets(ctx, partID)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedBuckets, buckets)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetPartBuckets_QueryError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	partID := 1
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title
+		FROM LESSON_BUCKET
+		WHERE part_id = $1
+		ORDER BY lesson_bucket_order ASC
+	`)).
+		WithArgs(partID).
+		WillReturnError(errors.New("query failed"))
+
+	buckets, err := database.GetPartBuckets(ctx, partID)
+
+	require.Error(t, err)
+	require.Nil(t, buckets)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetBucketLessons_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	userId := 1
+	courseId := 1
+	bucketId := 10
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT lesson_id
+		FROM LESSON_CHECKPOINT
+		WHERE user_id = $1 AND course_id = $2
+	`)).
+		WithArgs(userId, courseId).
+		WillReturnRows(sqlmock.NewRows([]string{"lesson_id"}).
+			AddRow(101))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT id, title, type
+		FROM LESSON
+		WHERE lesson_bucket_id = $1
+		ORDER BY lesson_order ASC
+	`)).
+		WithArgs(bucketId).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "type"}).
+			AddRow(101, "Lesson 1", "text").
+			AddRow(102, "Lesson 2", "video"))
+
+	lessons, err := database.GetBucketLessons(ctx, userId, courseId, bucketId)
+	require.NoError(t, err)
+	require.Len(t, lessons, 2)
+
+	require.True(t, lessons[0].IsDone)
+	require.Equal(t, "Lesson 1", lessons[0].Title)
+
+	require.False(t, lessons[1].IsDone)
+	require.Equal(t, "Lesson 2", lessons[1].Title)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetBucketLessons_ErrorOnCompletedLessonsQuery(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT lesson_id FROM LESSON_CHECKPOINT").
+		WithArgs(1, 1).
+		WillReturnError(errors.New("db error"))
+
+	lessons, err := database.GetBucketLessons(ctx, 1, 1, 1)
+	require.Error(t, err)
+	require.Nil(t, lessons)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetBucketLessons_ErrorOnLessonQuery(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT lesson_id FROM LESSON_CHECKPOINT").
+		WithArgs(1, 1).
+		WillReturnRows(sqlmock.NewRows([]string{"lesson_id"}))
+
+	mock.ExpectQuery("SELECT id, title, type FROM LESSON").
+		WithArgs(1).
+		WillReturnError(errors.New("query failed"))
+
+	lessons, err := database.GetBucketLessons(ctx, 1, 1, 1)
+	require.Error(t, err)
+	require.Nil(t, lessons)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestAddUserToCourse_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	userId := 1
+	courseId := 10
+
+	mock.ExpectQuery(regexp.QuoteMeta(`
+		SELECT EXISTS (SELECT 1 FROM SIGNUPS WHERE user_id = $1 AND course_id = $2)
+	`)).
+		WithArgs(userId, courseId).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
+
+	mock.ExpectExec(regexp.QuoteMeta(`
+		INSERT INTO SIGNUPS (user_id, course_id) VALUES ($1, $2)
+	`)).
+		WithArgs(userId, courseId).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err = database.AddUserToCourse(ctx, userId, courseId)
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestAddUserToCourse_AlreadyExists(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(1, 10).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+
+	err = database.AddUserToCourse(ctx, 1, 10)
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestAddUserToCourse_QueryRowError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(1, 10).
+		WillReturnError(errors.New("db error"))
+
+	mock.ExpectExec("INSERT INTO SIGNUPS").
+		WithArgs(1, 10).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err = database.AddUserToCourse(ctx, 1, 10)
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetVideoUrl_Success(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+	lessonId := 1
+	expectedURL := "https://example.com/video.mp4"
+
+	mock.ExpectQuery("SELECT video_src FROM video_lesson WHERE lesson_id = \\$1").
+		WithArgs(lessonId).
+		WillReturnRows(sqlmock.NewRows([]string{"video_src"}).AddRow(expectedURL))
+
+	url, err := database.GetVideoUrl(ctx, lessonId)
+	require.NoError(t, err)
+	require.Equal(t, expectedURL, url)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetVideoUrl_QueryError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT video_src FROM video_lesson WHERE lesson_id = \\$1").
+		WithArgs(1).
+		WillReturnError(errors.New(("query failed")))
+
+	url, err := database.GetVideoUrl(ctx, 1)
+	require.Error(t, err)
+	require.Empty(t, url)
+	require.EqualError(t, err, "query failed")
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestIsUserPurchasedCourse_ExistsTrue(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.Background()
+
+	mock.ExpectQuery("SELECT EXISTS \\(SELECT 1 FROM SIGNUPS WHERE user_id = \\$1 AND course_id = \\$2\\)").
+		WithArgs(1, 10).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
+
+	ok, err := database.IsUserPurchasedCourse(ctx, 1, 10)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestIsUserPurchasedCourse_ExistsFalse(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.Background()
+
+	mock.ExpectQuery("SELECT EXISTS \\(SELECT 1 FROM SIGNUPS WHERE user_id = \\$1 AND course_id = \\$2\\)").
+		WithArgs(1, 10).
+		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
+
+	ok, err := database.IsUserPurchasedCourse(ctx, 1, 10)
+	require.NoError(t, err)
+	require.False(t, ok)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestIsUserPurchasedCourse_ErrNoRows(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT EXISTS \\(SELECT 1 FROM SIGNUPS WHERE user_id = \\$1 AND course_id = \\$2\\)").
+		WithArgs(1, 10).
+		WillReturnError(sql.ErrNoRows)
+
+	ok, err := database.IsUserPurchasedCourse(ctx, 1, 10)
+	require.NoError(t, err)
+	require.False(t, ok)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestIsUserPurchasedCourse_QueryError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+
+	database := &Database{conn: db}
+	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+
+	mock.ExpectQuery("SELECT EXISTS \\(SELECT 1 FROM SIGNUPS WHERE user_id = \\$1 AND course_id = \\$2\\)").
+		WithArgs(1, 10).
+		WillReturnError(errors.New("query error"))
+
+	ok, err := database.IsUserPurchasedCourse(ctx, 1, 10)
+	require.Error(t, err)
+	require.False(t, ok)
+	require.EqualError(t, err, "query error")
+	require.NoError(t, mock.ExpectationsWereMet())
+}
