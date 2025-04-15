@@ -1,5 +1,7 @@
 go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
-cat cover.out.tmp | grep -v "env.go" > cover.out
+cat cover.out.tmp | grep -v "mock" > cover.out
 go tool cover -func=cover.out
+
+mockgen -source=internal/usecase/user_repository.go -destination=mocks/mock_user_repository.go -package=mocks
 
 swag init -g ./app/main.go

@@ -12,57 +12,36 @@ import (
 	"skillForce/pkg/sanitize"
 )
 
-type CourseDependencies interface {
-	CourseContentRepository
-	LessonNavigationRepository
-	LessonProgressRepository
-	CourseStatsRepository
-	VideoRepository
-	CourseMailRepository
-	UserInfoRepository
-}
-
 type CourseUsecase struct {
-	contentRepo    CourseContentRepository
-	navigationRepo LessonNavigationRepository
-	progressRepo   LessonProgressRepository
-	statsRepo      CourseStatsRepository
-	videoRepo      VideoRepository
-	mailRepo       CourseMailRepository
-	userRepo       UserInfoRepository
+	repo CourseRepository
 }
 
-func NewCourseUsecase(deps CourseDependencies) *CourseUsecase {
+func NewCourseUsecase(repo CourseRepository) *CourseUsecase {
 	return &CourseUsecase{
-		contentRepo:    deps,
-		navigationRepo: deps,
-		progressRepo:   deps,
-		statsRepo:      deps,
-		videoRepo:      deps,
-		mailRepo:       deps,
+		repo: repo,
 	}
 }
 
 func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error) {
-	bucketCourses, err := uc.contentRepo.GetBucketCourses(ctx)
+	bucketCourses, err := uc.repo.GetBucketCourses(ctx)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	coursesRatings, err := uc.statsRepo.GetCoursesRaitings(ctx, bucketCourses)
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	courseTags, err := uc.statsRepo.GetCoursesTags(ctx, bucketCourses)
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	coursePurchases, err := uc.statsRepo.GetCoursesPurchases(ctx, bucketCourses)
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -107,7 +86,7 @@ func (uc *CourseUsecase) GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO
 }
 
 func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfile *usermodels.UserProfile) (*dto.CourseDTO, error) {
-	course, err := uc.contentRepo.GetCourseById(ctx, courseId)
+	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -116,19 +95,19 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 
 	bucketCourses := []*coursemodels.Course{course}
 
-	coursesRatings, err := uc.statsRepo.GetCoursesRaitings(ctx, bucketCourses)
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	courseTags, err := uc.statsRepo.GetCoursesTags(ctx, bucketCourses)
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	coursePurchases, err := uc.statsRepo.GetCoursesPurchases(ctx, bucketCourses)
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -168,7 +147,7 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 	}
 
 	if userProfile != nil {
-		resultBucketCourses[0].IsPurchased, err = uc.progressRepo.IsUserPurchasedCourse(ctx, userProfile.Id, course.Id)
+		resultBucketCourses[0].IsPurchased, err = uc.repo.IsUserPurchasedCourse(ctx, userProfile.Id, course.Id)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user purchased course: %+v", err))
 			return nil, err
@@ -182,13 +161,13 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 }
 
 func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error) {
-	err := uc.progressRepo.AddUserToCourse(ctx, userId, courseId)
+	err := uc.repo.AddUserToCourse(ctx, userId, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
-	lessonHeader, currentLessonId, lessonType, first, err := uc.navigationRepo.GetLastLessonHeader(ctx, userId, courseId)
+	lessonHeader, currentLessonId, lessonType, first, err := uc.repo.GetLastLessonHeader(ctx, userId, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -199,7 +178,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 	}
 
 	if lessonType == "text" {
-		blocks, err := uc.contentRepo.GetLessonBlocks(ctx, currentLessonId)
+		blocks, err := uc.repo.GetLessonBlocks(ctx, currentLessonId)
 
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -216,7 +195,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 			})
 		}
 
-		footers, err := uc.navigationRepo.GetLessonFooters(ctx, currentLessonId)
+		footers, err := uc.repo.GetLessonFooters(ctx, currentLessonId)
 
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -235,14 +214,14 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 
 		if first {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
-			user, err := uc.userRepo.GetUserById(ctx, userId)
+			user, err := uc.repo.GetUserById(ctx, userId)
 			if err != nil {
 				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
 				return nil, err
 			}
 
 			if !user.HideEmail {
-				err = uc.mailRepo.SendWelcomeCourseMail(ctx, user, courseId)
+				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
 				if err != nil {
 					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
 				}
@@ -253,7 +232,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 	}
 
 	if lessonType == "video" {
-		blocks, err := uc.contentRepo.GetLessonVideo(ctx, currentLessonId)
+		blocks, err := uc.repo.GetLessonVideo(ctx, currentLessonId)
 
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -270,7 +249,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 			})
 		}
 
-		footers, err := uc.navigationRepo.GetLessonFooters(ctx, currentLessonId)
+		footers, err := uc.repo.GetLessonFooters(ctx, currentLessonId)
 
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -289,14 +268,14 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 
 		if first {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
-			user, err := uc.userRepo.GetUserById(ctx, userId)
+			user, err := uc.repo.GetUserById(ctx, userId)
 			if err != nil {
 				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
 				return nil, err
 			}
 
 			if !user.HideEmail {
-				err = uc.mailRepo.SendWelcomeCourseMail(ctx, user, courseId)
+				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
 				if err != nil {
 					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
 				}
@@ -311,14 +290,14 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 }
 
 func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId int, lessonId int) (*dto.LessonDTO, error) {
-	lesson, err := uc.contentRepo.GetLessonById(ctx, lessonId)
+	lesson, err := uc.repo.GetLessonById(ctx, lessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetNextLesson", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	if lesson.Type == "text" {
-		blocks, err := uc.contentRepo.GetLessonBlocks(ctx, lessonId)
+		blocks, err := uc.repo.GetLessonBlocks(ctx, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -335,7 +314,7 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			})
 		}
 
-		footers, err := uc.navigationRepo.GetLessonFooters(ctx, lessonId)
+		footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -350,13 +329,13 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 
-		err = uc.progressRepo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
 
-		lessonHeader, err := uc.navigationRepo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
+		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -371,7 +350,7 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 	}
 
 	if lesson.Type == "video" {
-		blocks, err := uc.contentRepo.GetLessonVideo(ctx, lessonId)
+		blocks, err := uc.repo.GetLessonVideo(ctx, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -388,7 +367,7 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			})
 		}
 
-		footers, err := uc.navigationRepo.GetLessonFooters(ctx, lessonId)
+		footers, err := uc.repo.GetLessonFooters(ctx, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -403,13 +382,13 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 
-		err = uc.progressRepo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
 
-		lessonHeader, err := uc.navigationRepo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
+		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -427,21 +406,21 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 }
 
 func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
-	return uc.progressRepo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
+	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
 
 func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {
 	var roadmap dto.CourseRoadmapDTO
 
 	var parts []*coursemodels.CoursePart
-	parts, err := uc.contentRepo.GetCourseParts(ctx, courseId)
+	parts, err := uc.repo.GetCourseParts(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	for _, part := range parts {
-		buckets, err := uc.contentRepo.GetPartBuckets(ctx, part.Id)
+		buckets, err := uc.repo.GetPartBuckets(ctx, part.Id)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 			return nil, err
@@ -450,7 +429,7 @@ func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, cours
 
 		var bucketsDto []*dto.LessonBucketDTO
 		for _, bucket := range buckets {
-			lessonPoints, err := uc.contentRepo.GetBucketLessons(ctx, userId, courseId, bucket.Id)
+			lessonPoints, err := uc.repo.GetBucketLessons(ctx, userId, courseId, bucket.Id)
 			if err != nil {
 				logs.PrintLog(ctx, "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 				return nil, err
@@ -487,13 +466,13 @@ func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, cours
 }
 
 func (uc *CourseUsecase) GetVideoUrl(ctx context.Context, lesson_id int) (string, error) {
-	return uc.videoRepo.GetVideoUrl(ctx, lesson_id)
+	return uc.repo.GetVideoUrl(ctx, lesson_id)
 }
 
 func (uc *CourseUsecase) GetMeta(ctx context.Context, name string) (dto.VideoMeta, error) {
-	return uc.videoRepo.Stat(ctx, name)
+	return uc.repo.Stat(ctx, name)
 }
 
 func (uc *CourseUsecase) GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
-	return uc.videoRepo.GetVideoRange(ctx, name, start, end)
+	return uc.repo.GetVideoRange(ctx, name, start, end)
 }

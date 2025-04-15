@@ -9,34 +9,24 @@ import (
 	"skillForce/pkg/logs"
 )
 
-type UserDependencies interface {
-	UserAuthRepository
-	UserProfileRepository
-	UserMailRepository
-}
-
 type UserUsecase struct {
-	authRepo    UserAuthRepository
-	profileRepo UserProfileRepository
-	mailRepo    UserMailRepository
+	repo UserRepository
 }
 
-func NewUserUsecase(deps UserDependencies) *UserUsecase {
+func NewUserUsecase(repo UserRepository) *UserUsecase {
 	return &UserUsecase{
-		authRepo:    deps,
-		profileRepo: deps,
-		mailRepo:    deps,
+		repo: repo,
 	}
 }
 
 func (uc *UserUsecase) ValidUser(ctx context.Context, user *usermodels.User) error {
-	token, err := uc.authRepo.ValidUser(ctx, user)
+	token, err := uc.repo.ValidUser(ctx, user)
 	if err != nil {
 		logs.PrintLog(ctx, "ValidUser", fmt.Sprintf("%+v", err))
 		return err
 	}
 
-	err = uc.mailRepo.SendRegMail(ctx, user, token)
+	err = uc.repo.SendRegMail(ctx, user, token)
 	if err != nil {
 		logs.PrintLog(ctx, "SendMail", fmt.Sprintf("%+v", err))
 		return err
@@ -45,7 +35,7 @@ func (uc *UserUsecase) ValidUser(ctx context.Context, user *usermodels.User) err
 }
 
 func (uc *UserUsecase) RegisterUser(ctx context.Context, token string) (string, error) {
-	user, err := uc.authRepo.GetUserByToken(ctx, token)
+	user, err := uc.repo.GetUserByToken(ctx, token)
 	if err != nil {
 		return "", err
 	}
@@ -55,35 +45,35 @@ func (uc *UserUsecase) RegisterUser(ctx context.Context, token string) (string, 
 		return "", err
 	}
 
-	_ = uc.mailRepo.SendWelcomeMail(ctx, user)
+	_ = uc.repo.SendWelcomeMail(ctx, user)
 
-	return uc.authRepo.RegisterUser(ctx, user)
+	return uc.repo.RegisterUser(ctx, user)
 }
 
 func (uc *UserUsecase) AuthenticateUser(ctx context.Context, user *usermodels.User) (string, error) {
-	return uc.authRepo.AuthenticateUser(ctx, user.Email, user.Password)
+	return uc.repo.AuthenticateUser(ctx, user.Email, user.Password)
 }
 
 func (uc *UserUsecase) GetUserByCookie(ctx context.Context, cookieValue string) (*usermodels.UserProfile, error) {
-	return uc.authRepo.GetUserByCookie(ctx, cookieValue)
+	return uc.repo.GetUserByCookie(ctx, cookieValue)
 }
 
 func (uc *UserUsecase) LogoutUser(ctx context.Context, userId int) error {
-	return uc.authRepo.LogoutUser(ctx, userId)
+	return uc.repo.LogoutUser(ctx, userId)
 }
 
 func (uc *UserUsecase) UpdateProfile(ctx context.Context, userId int, userProfile *usermodels.UserProfile) error {
-	return uc.profileRepo.UpdateProfile(ctx, userId, userProfile)
+	return uc.repo.UpdateProfile(ctx, userId, userProfile)
 }
 
 func (uc *UserUsecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
-	return uc.profileRepo.UploadFile(ctx, file, fileHeader)
+	return uc.repo.UploadFile(ctx, file, fileHeader)
 }
 
 func (uc *UserUsecase) SaveProfilePhoto(ctx context.Context, url string, userId int) (string, error) {
-	return uc.profileRepo.UpdateProfilePhoto(ctx, url, userId)
+	return uc.repo.UpdateProfilePhoto(ctx, url, userId)
 }
 
 func (uc *UserUsecase) DeleteProfilePhoto(ctx context.Context, userId int) error {
-	return uc.profileRepo.DeleteProfilePhoto(ctx, userId)
+	return uc.repo.DeleteProfilePhoto(ctx, userId)
 }
