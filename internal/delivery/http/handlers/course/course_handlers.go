@@ -307,6 +307,21 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ServeVideo godoc
+// @Summary Serve video content
+// @Description Streams video content for a lesson based on the lesson ID provided in the query parameters.
+//
+//	If a "Range" header is present, it streams the requested byte range; otherwise, it streams the entire video.
+//
+// @Tags videos
+// @Accept */*
+// @Produce video/mp4
+// @Param lesson_id query int true "Lesson ID"
+// @Success 206 {file} video/mp4 "Partial Content"
+// @Failure 400 {object} response.ErrorResponse "Invalid lesson ID parameter"
+// @Failure 404 {object} response.ErrorResponse "Video not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/serveVideo [get]
 func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	lesson_id := r.URL.Query().Get("lesson_id")

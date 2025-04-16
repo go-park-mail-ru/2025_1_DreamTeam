@@ -16,7 +16,6 @@ import (
 
 	// "skillForce/internal/logs"
 	"skillForce/internal/models/dto"
-	user "skillForce/internal/models/user"
 	usermodels "skillForce/internal/models/user"
 
 	"github.com/golang/mock/gomock"
@@ -114,7 +113,7 @@ func TestGetCourseLesson(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseLesson?courseId=5", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 42}
+	profile := &usermodels.UserProfile{Id: 42}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetCourseLesson(gomock.Any(), 42, 5).Return(&dto.LessonDTO{}, nil)
 
@@ -142,7 +141,7 @@ func TestGetNextLesson(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getNextLesson?courseId=1&lessonId=2", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 10}
+	profile := &usermodels.UserProfile{Id: 10}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetNextLesson(gomock.Any(), 10, 1, 2).Return(&dto.LessonDTO{}, nil)
 
@@ -173,7 +172,7 @@ func TestMarkLessonAsNotCompleted(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/markLessonAsNotCompleted", bytes.NewReader(bodyBytes)).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 123}
+	profile := &usermodels.UserProfile{Id: 123}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().MarkLessonAsNotCompleted(gomock.Any(), 123, 7).Return(nil)
 
@@ -201,7 +200,7 @@ func TestGetCourseRoadmap(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseRoadmap?courseId=99", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 999}
+	profile := &usermodels.UserProfile{Id: 999}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetCourseRoadmap(gomock.Any(), 999, 99).Return(&dto.CourseRoadmapDTO{}, nil)
 
@@ -339,7 +338,7 @@ func TestGetCourseLesson_InvalidCourseID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseLesson?courseId=invalid", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 42}
+	profile := &usermodels.UserProfile{Id: 42}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 
 	handler.GetCourseLesson(w, req)
@@ -366,7 +365,7 @@ func TestGetCourseLesson_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseLesson?courseId=5", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 42}
+	profile := &usermodels.UserProfile{Id: 42}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetCourseLesson(gomock.Any(), 42, 5).Return(nil, fmt.Errorf("lesson not found"))
 
@@ -420,7 +419,7 @@ func TestGetNextLesson_InvalidCourseID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getNextLesson?courseId=invalid&lessonId=2", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 10}
+	profile := &usermodels.UserProfile{Id: 10}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 
 	handler.GetNextLesson(w, req)
@@ -447,7 +446,7 @@ func TestGetNextLesson_InvalidLessonID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getNextLesson?courseId=1&lessonId=invalid", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 10}
+	profile := &usermodels.UserProfile{Id: 10}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 
 	handler.GetNextLesson(w, req)
@@ -521,7 +520,7 @@ func TestGetCourseRoadmap_InvalidCourseID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseRoadmap?courseId=invalid", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 999}
+	profile := &usermodels.UserProfile{Id: 999}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 
 	handler.GetCourseRoadmap(w, req)
@@ -669,7 +668,7 @@ func TestMarkLessonAsNotCompleted_Error(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/markLessonAsNotCompleted", bytes.NewReader(bodyBytes)).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 123}
+	profile := &usermodels.UserProfile{Id: 123}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().MarkLessonAsNotCompleted(gomock.Any(), 123, 7).Return(fmt.Errorf("some error"))
 
@@ -697,7 +696,7 @@ func TestGetCourseRoadmap_Error(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getCourseRoadmap?courseId=99", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 999}
+	profile := &usermodels.UserProfile{Id: 999}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetCourseRoadmap(gomock.Any(), 999, 99).Return(nil, fmt.Errorf("roadmap error"))
 
@@ -725,7 +724,7 @@ func TestGetNextLesson_Error(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/getNextLesson?courseId=1&lessonId=2", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 10}
+	profile := &usermodels.UserProfile{Id: 10}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 	mockUsecase.EXPECT().GetNextLesson(gomock.Any(), 10, 1, 2).Return(nil, fmt.Errorf("next lesson error"))
 
@@ -926,7 +925,7 @@ func TestMarkLessonAsNotCompleted_InvalidJSON(t *testing.T) {
 		strings.NewReader("invalid json")).WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	profile := &user.UserProfile{Id: 123}
+	profile := &usermodels.UserProfile{Id: 123}
 	mockCookie.EXPECT().CheckCookie(req).Return(profile)
 
 	handler.MarkLessonAsNotCompleted(w, req)

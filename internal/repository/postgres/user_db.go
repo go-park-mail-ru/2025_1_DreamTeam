@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"html"
 	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/hash"
 	"skillForce/pkg/logs"
@@ -161,6 +162,10 @@ func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*us
 		logs.PrintLog(ctx, "GetUserByCookie", fmt.Sprintf("error in GetUserByCookie %+v", err))
 		return nil, err
 	}
+	userProfile.Email = html.EscapeString(userProfile.Email)
+	userProfile.Name = html.EscapeString(userProfile.Name)
+	userProfile.Bio = html.EscapeString(userProfile.Bio)
+	userProfile.AvatarSrc = html.EscapeString(userProfile.AvatarSrc)
 	return &userProfile, err
 }
 
