@@ -214,12 +214,13 @@ func (d *Database) LogoutUser(ctx context.Context, userId int) error {
 }
 
 func (d *Database) UpdateProfile(ctx context.Context, userId int, userProfile *usermodels.UserProfile) error {
+	logs.PrintLog(ctx, "UpdateProfile", fmt.Sprintf("update profile %+v of user with id %+v in db", userProfile, userId))
 	_, err := d.conn.Exec("UPDATE usertable SET email = $1, name = $2, bio = $3, hide_email = $4 WHERE id = $5",
 		userProfile.Email, userProfile.Name, userProfile.Bio, userProfile.HideEmail, userId)
 	if err != nil {
 		return err
 	}
-	logs.PrintLog(ctx, "UpdateProfile", fmt.Sprintf("update profile %+v of user with id %+v in db", userProfile, userId))
+	logs.PrintLog(ctx, "UpdateProfile", "sucess in updating profile in db")
 	return err
 }
 

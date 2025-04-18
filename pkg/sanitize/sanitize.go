@@ -1,6 +1,10 @@
 package sanitize
 
-import "github.com/microcosm-cc/bluemonday"
+import (
+	"regexp"
+
+	"github.com/microcosm-cc/bluemonday"
+)
 
 func Sanitize(input string) string {
 	p := bluemonday.NewPolicy()
@@ -10,5 +14,7 @@ func Sanitize(input string) string {
 	p.AllowElements("ul", "ol", "li")
 	p.AllowElements("strong")
 	p.AllowElements("table", "tr", "td", "th")
+	p.AllowElements("pre", "code")
+	p.AllowAttrs("class").Matching(regexp.MustCompile(`^language-go$`)).OnElements("code")
 	return p.Sanitize(input)
 }

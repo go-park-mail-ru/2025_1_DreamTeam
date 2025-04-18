@@ -21,6 +21,7 @@ type LessonBucket struct {
 	Id      int
 	Order   int
 	Title   string
+	PartId  int
 	Lessons []*LessonPoint
 }
 
