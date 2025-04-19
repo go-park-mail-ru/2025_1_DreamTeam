@@ -22,6 +22,7 @@ type CourseRepository interface {
 	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)
 	GetLessonFooters(ctx context.Context, currentLessonId int) ([]int, error)
+	IsMiddle(ctx context.Context, userId int, courseId int) (bool, error)
 
 	MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
@@ -37,6 +38,7 @@ type CourseRepository interface {
 	Stat(ctx context.Context, name string) (dto.VideoMeta, error)
 
 	SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error
+	SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error
 
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
 }

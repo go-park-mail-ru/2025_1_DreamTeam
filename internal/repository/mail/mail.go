@@ -121,20 +121,20 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User,
 	templatePath := "./../internal/repository/mail/layouts/welcome_course_lesson.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(string(tmplBytes))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{CourseId: courseId, UserName: user.Name})
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
@@ -144,10 +144,49 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User,
 
 	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
-	logs.PrintLog(ctx, "SendWelcomeMail", fmt.Sprintf("mail sent to %s", user.Email))
+	logs.PrintLog(ctx, "SendWelcomeCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
+	return nil
+}
+
+func (m *Mail) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
+	auth := smtp.PlainAuth("", m.from, m.password, m.host)
+
+	subject := "Ты прям огонь, продолжай!"
+
+	templatePath := "./../internal/repository/mail/layouts/middle_course_lesson.html"
+	tmplBytes, err := os.ReadFile(templatePath)
+	if err != nil {
+		logs.PrintLog(ctx, "SenMiddleCourseMail", err.Error())
+		return err
+	}
+
+	tmpl, err := template.New("email").Parse(string(tmplBytes))
+	if err != nil {
+		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		return err
+	}
+
+	var body bytes.Buffer
+	err = tmpl.Execute(&body, EmailData{CourseId: courseId, UserName: user.Name})
+	if err != nil {
+		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		return err
+	}
+
+	msg := fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: %s\r\n", user.Email, m.from, subject)
+	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
+	msg += body.String()
+
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
+	if err != nil {
+		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		return err
+	}
+
+	logs.PrintLog(ctx, "SendMiddleCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
 	return nil
 }

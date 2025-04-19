@@ -246,7 +246,7 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 		&part.Title, &part.Order, &part.Id, &bucket.Title, &bucket.Order, &bucket.Id, &course.Id, &course.Title)
 
 	if err != nil {
-		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
@@ -265,7 +265,7 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 	`, course.Id, userId)
 
 	if err != nil {
-		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 	defer rows1.Close()
@@ -274,13 +274,24 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 	for rows1.Next() {
 		var visitedLessonPointId int
 		if err := rows1.Scan(&visitedLessonPointId); err != nil {
-			logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+			logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
 		visitedLessonPointsIds[visitedLessonPointId] = true
 	}
 
-	logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("visitedLessonPointsIds %+v", visitedLessonPointsIds))
+	logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("visitedLessonPointsIds %+v", visitedLessonPointsIds))
+
+	rows1, err = d.conn.Query(`
+		SELECT lesson_id
+		FROM LESSON_CHECKPOINT
+		WHERE course_id = $1 and user_id = $2
+	`, course.Id, userId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
 
 	rows2, err := d.conn.Query(`
 		SELECT id, type
@@ -289,7 +300,7 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 	`, bucket.Id)
 
 	if err != nil {
-		logs.PrintLog(ctx, "FillLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 	defer rows1.Close()
@@ -425,4 +436,63 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("footers: %+v", footers))
 
 	return footers, nil
+}
+
+func (d *Database) IsMiddle(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow(`
+			SELECT EXISTS (
+			SELECT 1 FROM SENDED_MAILS 
+			WHERE User_ID = $1 AND Course_ID = $2
+		)
+		`, userId, courseId).Scan(&exists)
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsMiddle", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+
+	if exists {
+		return false, nil
+	}
+
+	var countMarkedLessons int
+	err = d.conn.QueryRow(`
+			SELECT COUNT(Lesson_ID)
+			FROM LESSON_CHECKPOINT
+			WHERE User_ID = $1 AND Course_ID = $2
+		`, userId, courseId).Scan(&countMarkedLessons)
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsMiddle", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+
+	var countLessons int
+	err = d.conn.QueryRow(`
+			SELECT COUNT(l.ID)
+			FROM LESSON l
+			JOIN LESSON_BUCKET lb ON l.LESSON_BUCKET_ID = lb.ID
+			JOIN PART p ON lb.PART_ID = p.ID
+			WHERE p.Course_ID = $1
+		`, courseId).Scan(&countLessons)
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsMiddle", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+
+	if countLessons*2 > countMarkedLessons {
+		_, err = d.conn.Exec(
+			"INSERT INTO SENDED_MAILS (User_ID, Course_ID) VALUES ($1, $2)",
+			userId, courseId)
+		if err != nil {
+			logs.PrintLog(ctx, "IsMiddle", fmt.Sprintf("%+v", err))
+			return false, err
+		}
+		logs.PrintLog(ctx, "IsMiddle", "marked that sended mail")
+		return true, nil
+	}
+
+	return false, nil
 }

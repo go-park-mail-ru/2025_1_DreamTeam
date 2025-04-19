@@ -120,3 +120,11 @@ func (i *CourseInfrastructure) GetLessonVideo(ctx context.Context, lessonId int)
 func (i *CourseInfrastructure) GetLessonById(ctx context.Context, lessonId int) (*coursemodels.LessonPoint, error) {
 	return i.Database.GetLessonById(ctx, lessonId)
 }
+
+func (i *CourseInfrastructure) IsMiddle(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsMiddle(ctx, userId, courseId)
+}
+
+func (i *CourseInfrastructure) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
+	return i.Mail.SendMiddleCourseMail(ctx, user, courseId)
+}

@@ -221,10 +221,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 			}
 
 			if !user.HideEmail {
-				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
-				if err != nil {
-					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
-				}
+				go uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
 			}
 		}
 
@@ -275,10 +272,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 			}
 
 			if !user.HideEmail {
-				err = uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
-				if err != nil {
-					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't send welcome course mail: %+v", err))
-				}
+				go uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
 			}
 		}
 
@@ -346,6 +340,15 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			LessonBody:   LessonBody,
 		}
 
+		user, _ := uc.repo.GetUserById(ctx, userId)
+		if !user.HideEmail {
+			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+			user, _ := uc.repo.GetUserById(ctx, userId)
+			if isMiddle {
+				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			}
+		}
+
 		return lessonDto, err
 	}
 
@@ -397,6 +400,15 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		lessonDto := &dto.LessonDTO{
 			LessonHeader: *lessonHeader,
 			LessonBody:   LessonBody,
+		}
+
+		user, _ := uc.repo.GetUserById(ctx, userId)
+		if !user.HideEmail {
+			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+			user, _ := uc.repo.GetUserById(ctx, userId)
+			if isMiddle {
+				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			}
 		}
 
 		return lessonDto, err

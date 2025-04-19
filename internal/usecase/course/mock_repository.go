@@ -325,6 +325,21 @@ func (mr *MockCourseRepositoryMockRecorder) GetVideoUrl(ctx, lessonId interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVideoUrl", reflect.TypeOf((*MockCourseRepository)(nil).GetVideoUrl), ctx, lessonId)
 }
 
+// IsMiddle mocks base method.
+func (m *MockCourseRepository) IsMiddle(ctx context.Context, userId, courseId int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsMiddle", ctx, userId, courseId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsMiddle indicates an expected call of IsMiddle.
+func (mr *MockCourseRepositoryMockRecorder) IsMiddle(ctx, userId, courseId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsMiddle", reflect.TypeOf((*MockCourseRepository)(nil).IsMiddle), ctx, userId, courseId)
+}
+
 // IsUserPurchasedCourse mocks base method.
 func (m *MockCourseRepository) IsUserPurchasedCourse(ctx context.Context, userId, courseId int) (bool, error) {
 	m.ctrl.T.Helper()
@@ -366,6 +381,20 @@ func (m *MockCourseRepository) MarkLessonCompleted(ctx context.Context, userId, 
 func (mr *MockCourseRepositoryMockRecorder) MarkLessonCompleted(ctx, userId, courseId, lessonId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkLessonCompleted", reflect.TypeOf((*MockCourseRepository)(nil).MarkLessonCompleted), ctx, userId, courseId, lessonId)
+}
+
+// SendMiddleCourseMail mocks base method.
+func (m *MockCourseRepository) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendMiddleCourseMail", ctx, user, courseId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendMiddleCourseMail indicates an expected call of SendMiddleCourseMail.
+func (mr *MockCourseRepositoryMockRecorder) SendMiddleCourseMail(ctx, user, courseId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMiddleCourseMail", reflect.TypeOf((*MockCourseRepository)(nil).SendMiddleCourseMail), ctx, user, courseId)
 }
 
 // SendWelcomeCourseMail mocks base method.
