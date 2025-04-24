@@ -128,3 +128,23 @@ func (i *CourseInfrastructure) IsMiddle(ctx context.Context, userId int, courseI
 func (i *CourseInfrastructure) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
 	return i.Mail.SendMiddleCourseMail(ctx, user, courseId)
 }
+
+func (i *CourseInfrastructure) CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error) {
+	return i.Database.CreateCourse(ctx, course, userProfile)
+}
+
+func (i *CourseInfrastructure) CreatePart(ctx context.Context, coursePart *coursemodels.CoursePart, courseId int) (int, error) {
+	return i.Database.CreatePart(ctx, coursePart, courseId)
+}
+
+func (i *CourseInfrastructure) CreateBucket(ctx context.Context, bucket *coursemodels.LessonBucket, partId int) (int, error) {
+	return i.Database.CreateBucket(ctx, bucket, partId)
+}
+
+func (i *CourseInfrastructure) CreateTextLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error {
+	return i.Database.CreateTextLesson(ctx, lesson, bucketId)
+}
+
+func (i *CourseInfrastructure) CreateVideoLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error {
+	return i.Database.CreateVideoLesson(ctx, lesson, bucketId)
+}

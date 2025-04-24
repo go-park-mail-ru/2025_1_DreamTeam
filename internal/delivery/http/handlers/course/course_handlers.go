@@ -25,6 +25,7 @@ type CourseUsecaseInterface interface {
 	GetVideoUrl(ctx context.Context, lesson_id int) (string, error)
 	GetMeta(ctx context.Context, name string) (dto.VideoMeta, error)
 	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
+	CreateCourse(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
 }
 
 type CookieManagerInterface interface {
@@ -385,4 +386,36 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 	defer reader.Close()
 
 	response.SendVideoRange(start, end, meta.Size, reader, w, r)
+}
+
+func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "CreateCourse", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "CreateCourse", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var CourseInput dto.CourseDTO
+	err := json.NewDecoder(r.Body).Decode(&CourseInput)
+	if err != nil {
+		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	err = h.courseUsecase.CreateCourse(r.Context(), &CourseInput, userProfile)
+	if err != nil {
+		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
 }

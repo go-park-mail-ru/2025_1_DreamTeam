@@ -52,6 +52,79 @@ func (mr *MockCourseRepositoryMockRecorder) AddUserToCourse(ctx, userId, courseI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserToCourse", reflect.TypeOf((*MockCourseRepository)(nil).AddUserToCourse), ctx, userId, courseId)
 }
 
+// CreateBucket mocks base method.
+func (m *MockCourseRepository) CreateBucket(ctx context.Context, bucket *coursemodels.LessonBucket, partId int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateBucket", ctx, bucket, partId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateBucket indicates an expected call of CreateBucket.
+func (mr *MockCourseRepositoryMockRecorder) CreateBucket(ctx, bucket, partId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBucket", reflect.TypeOf((*MockCourseRepository)(nil).CreateBucket), ctx, bucket, partId)
+}
+
+// CreateCourse mocks base method.
+func (m *MockCourseRepository) CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCourse", ctx, course, userProfile)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCourse indicates an expected call of CreateCourse.
+func (mr *MockCourseRepositoryMockRecorder) CreateCourse(ctx, course, userProfile interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCourse", reflect.TypeOf((*MockCourseRepository)(nil).CreateCourse), ctx, course, userProfile)
+}
+
+// CreatePart mocks base method.
+func (m *MockCourseRepository) CreatePart(ctx context.Context, part *coursemodels.CoursePart, courseId int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePart", ctx, part, courseId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePart indicates an expected call of CreatePart.
+func (mr *MockCourseRepositoryMockRecorder) CreatePart(ctx, part, courseId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePart", reflect.TypeOf((*MockCourseRepository)(nil).CreatePart), ctx, part, courseId)
+}
+
+// CreateTextLesson mocks base method.
+func (m *MockCourseRepository) CreateTextLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTextLesson", ctx, lesson, bucketId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateTextLesson indicates an expected call of CreateTextLesson.
+func (mr *MockCourseRepositoryMockRecorder) CreateTextLesson(ctx, lesson, bucketId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTextLesson", reflect.TypeOf((*MockCourseRepository)(nil).CreateTextLesson), ctx, lesson, bucketId)
+}
+
+// CreateVideoLesson mocks base method.
+func (m *MockCourseRepository) CreateVideoLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateVideoLesson", ctx, lesson, bucketId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateVideoLesson indicates an expected call of CreateVideoLesson.
+func (mr *MockCourseRepositoryMockRecorder) CreateVideoLesson(ctx, lesson, bucketId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVideoLesson", reflect.TypeOf((*MockCourseRepository)(nil).CreateVideoLesson), ctx, lesson, bucketId)
+}
+
 // GetBucketByLessonId mocks base method.
 func (m *MockCourseRepository) GetBucketByLessonId(ctx context.Context, lessonId int) (*coursemodels.LessonBucket, error) {
 	m.ctrl.T.Helper()

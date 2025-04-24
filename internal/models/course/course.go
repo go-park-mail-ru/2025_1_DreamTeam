@@ -8,6 +8,7 @@ type Course struct {
 	Title       string
 	Description string
 	ScrImage    string
+	Parts       []*CoursePart
 }
 
 type CoursePart struct {
@@ -29,5 +30,9 @@ type LessonPoint struct {
 	LessonId int
 	Title    string
 	Type     string
+	Value    string
 	IsDone   bool
+	IsImage  bool
+	BucketId int
+	Order    int
 }

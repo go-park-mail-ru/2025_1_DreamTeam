@@ -39,9 +39,6 @@ func main() {
 	siteMux.HandleFunc("/api/login", userHandler.LoginUser)
 	siteMux.HandleFunc("/api/logout", userHandler.LogoutUser)
 	siteMux.HandleFunc("/api/isAuthorized", userHandler.IsAuthorized)
-	// siteMux.HandleFunc("/api/updateProfile", userHandler.UpdateProfile)
-	// siteMux.HandleFunc("/api/updateProfilePhoto", userHandler.UpdateProfilePhoto)
-	// siteMux.HandleFunc("/api/deleteProfilePhoto", userHandler.DeleteProfilePhoto)
 	siteMux.Handle("/api/updateProfile", middleware.CSRFMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
 	siteMux.Handle("/api/updateProfilePhoto", middleware.CSRFMiddleware(http.HandlerFunc(userHandler.UpdateProfilePhoto)))
 	siteMux.Handle("/api/deleteProfilePhoto", middleware.CSRFMiddleware(http.HandlerFunc(userHandler.DeleteProfilePhoto)))
@@ -58,6 +55,7 @@ func main() {
 	siteMux.HandleFunc("/api/markLessonAsNotCompleted", courseHandler.MarkLessonAsNotCompleted)
 	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
 	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
+	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 

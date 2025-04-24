@@ -41,4 +41,10 @@ type CourseRepository interface {
 	SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error
 
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
+
+	CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error)
+	CreatePart(ctx context.Context, part *coursemodels.CoursePart, courseId int) (int, error)
+	CreateBucket(ctx context.Context, bucket *coursemodels.LessonBucket, partId int) (int, error)
+	CreateTextLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error
+	CreateVideoLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error
 }

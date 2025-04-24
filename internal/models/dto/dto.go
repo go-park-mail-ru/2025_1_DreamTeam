@@ -15,17 +15,18 @@ type UserProfileDTO struct {
 }
 
 type CourseDTO struct {
-	Id              int      `json:"id"`
-	Price           int      `json:"price"`
-	PurchasesAmount int      `json:"purchases_amount"`
-	CreatorId       int      `json:"creator_id"`
-	TimeToPass      int      `json:"time_to_pass"`
-	Rating          float32  `json:"rating"`
-	Tags            []string `json:"tags"`
-	Title           string   `json:"title"`
-	Description     string   `json:"description"`
-	ScrImage        string   `json:"src_image"`
-	IsPurchased     bool     `json:"is_purchased"`
+	Id              int              `json:"id"`
+	Price           int              `json:"price"`
+	PurchasesAmount int              `json:"purchases_amount"`
+	CreatorId       int              `json:"creator_id"`
+	TimeToPass      int              `json:"time_to_pass"`
+	Rating          float32          `json:"rating"`
+	Tags            []string         `json:"tags"`
+	Title           string           `json:"title"`
+	Description     string           `json:"description"`
+	ScrImage        string           `json:"src_image"`
+	IsPurchased     bool             `json:"is_purchased"`
+	Parts           []*CoursePartDTO `json:"parts"`
 }
 
 type LessonDTO struct {
@@ -70,6 +71,7 @@ type LessonPointDTO struct {
 	LessonId int    `json:"lesson_id"`
 	Type     string `json:"lesson_type"`
 	Title    string `json:"lesson_title"`
+	Value    string `json:"lesson_value"`
 	IsDone   bool   `json:"is_done"`
 }
 

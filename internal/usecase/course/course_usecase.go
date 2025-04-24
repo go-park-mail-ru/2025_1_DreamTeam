@@ -488,3 +488,77 @@ func (uc *CourseUsecase) GetMeta(ctx context.Context, name string) (dto.VideoMet
 func (uc *CourseUsecase) GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
 	return uc.repo.GetVideoRange(ctx, name, start, end)
 }
+
+func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {
+	course := coursemodels.Course{
+		CreatorId:   userProfile.Id,
+		Description: courseDto.Description,
+		Title:       courseDto.Title,
+		Price:       courseDto.Price,
+		TimeToPass:  courseDto.TimeToPass,
+	}
+	for _, part := range courseDto.Parts {
+		coursePart := coursemodels.CoursePart{
+			Title: part.Title,
+		}
+		course.Parts = append(course.Parts, &coursePart)
+		for _, bucket := range part.Buckets {
+			courseBucket := coursemodels.LessonBucket{
+				Title: bucket.Title,
+			}
+			coursePart.Buckets = append(coursePart.Buckets, &courseBucket)
+			for _, lesson := range bucket.Lessons {
+				courseLesson := coursemodels.LessonPoint{
+					Value: lesson.Value,
+					Type:  lesson.Type,
+					Title: lesson.Title,
+				}
+				courseBucket.Lessons = append(courseBucket.Lessons, &courseLesson)
+			}
+		}
+	}
+	courseId, err := uc.repo.CreateCourse(ctx, &course, userProfile)
+	if err != nil {
+		logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
+		return err
+	}
+	course.Id = courseId
+	for partOrder, part := range course.Parts {
+		part.Order = partOrder + 1
+		partId, err := uc.repo.CreatePart(ctx, part, course.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
+			return err
+		}
+		for bucketOrder, bucket := range part.Buckets {
+			bucket.Order = bucketOrder + 1
+			bucket.PartId = partId
+			bucketId, err := uc.repo.CreateBucket(ctx, bucket, partId)
+			if err != nil {
+				logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
+				return err
+			}
+			for lessonOrder, lesson := range bucket.Lessons {
+				lesson.Order = lessonOrder + 1
+				lesson.BucketId = bucketId
+
+				if lesson.Type == "video" {
+					err = uc.repo.CreateVideoLesson(ctx, lesson, bucketId)
+					if err != nil {
+						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
+						return err
+					}
+
+				} else if lesson.Type == "text" {
+					err = uc.repo.CreateTextLesson(ctx, lesson, bucketId)
+					if err != nil {
+						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
