@@ -362,7 +362,8 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 	}
 
 	footers[1] = currentLessonId
-	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current order: %d", currentLessonOrder))
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current lesson order: %d", currentLessonOrder))
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current bucket order: %d", currentBucket.Order))
 
 	rows, err := d.conn.Query(`
 			SELECT id, lesson_order
@@ -414,7 +415,7 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 		footers[0] = prevLessonId
 	}
 
-	if footers[2] == -1 && currentBucket.Order < 2 {
+	if footers[2] == -1 {
 		nextLessonId := -1
 		err := d.conn.QueryRow(`
 				SELECT l.id
