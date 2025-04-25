@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/smtp"
 	"os"
-	"skillForce/pkg/logs"
 	"text/template"
 
 	usermodels "skillForce/internal/models/user"
@@ -23,6 +22,7 @@ type Mail struct {
 	password string
 	host     string
 	port     string
+	auth     smtp.Auth
 }
 
 func NewMail(from string, password string, host string, port string) *Mail {
@@ -31,24 +31,23 @@ func NewMail(from string, password string, host string, port string) *Mail {
 		password: password,
 		host:     host,
 		port:     port,
+		auth:     smtp.PlainAuth("", from, password, host),
 	}
 }
 
 func (m *Mail) SendRegMail(ctx context.Context, user *usermodels.User, token string) error {
-	auth := smtp.PlainAuth("", m.from, m.password, m.host)
-
 	subject := "Регистрация на платформе SkillForce"
 
 	templatePath := "./../internal/repository/mail/layouts/confirm_mail.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		logs.PrintLog(ctx, "SendRegMail", err.Error())
+		fmt.Println("SendRegMail", err.Error())
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(string(tmplBytes))
 	if err != nil {
-		logs.PrintLog(ctx, "SendRegMail", err.Error())
+		fmt.Println("SendRegMail", err.Error())
 		return err
 	}
 
@@ -56,7 +55,7 @@ func (m *Mail) SendRegMail(ctx context.Context, user *usermodels.User, token str
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{UserName: user.Name, Url: url})
 	if err != nil {
-		logs.PrintLog(ctx, "SendRegMail", err.Error())
+		fmt.Println("SendRegMail", err.Error())
 		return err
 	}
 
@@ -64,38 +63,36 @@ func (m *Mail) SendRegMail(ctx context.Context, user *usermodels.User, token str
 	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
 	msg += body.String()
 
-	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), m.auth, m.from, []string{user.Email}, []byte(msg))
 	if err != nil {
-		logs.PrintLog(ctx, "SendRegMail", err.Error())
+		fmt.Println("SendRegMail", err.Error())
 		return err
 	}
 
-	logs.PrintLog(ctx, "SendRegMail", fmt.Sprintf("mail sent to %s", user.Email))
+	fmt.Println("SendRegMail", fmt.Sprintf("mail sent to %s", user.Email))
 	return nil
 }
 
 func (m *Mail) SendWelcomeMail(ctx context.Context, user *usermodels.User) error {
-	auth := smtp.PlainAuth("", m.from, m.password, m.host)
-
 	subject := "Добро пожаловать на платформу SkillForce"
 
 	templatePath := "./../internal/repository/mail/layouts/welcome_mail.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		fmt.Println("SendWelcomeMail", err.Error())
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(string(tmplBytes))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		fmt.Println("SendWelcomeMail", err.Error())
 		return err
 	}
 
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{UserName: user.Name})
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		fmt.Println("SendWelcomeMail", err.Error())
 		return err
 	}
 
@@ -103,38 +100,36 @@ func (m *Mail) SendWelcomeMail(ctx context.Context, user *usermodels.User) error
 	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
 	msg += body.String()
 
-	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), m.auth, m.from, []string{user.Email}, []byte(msg))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeMail", err.Error())
+		fmt.Println("SendWelcomeMail", err.Error())
 		return err
 	}
 
-	logs.PrintLog(ctx, "SendWelcomeMail", fmt.Sprintf("mail sent to %s", user.Email))
+	fmt.Println("SendWelcomeMail", fmt.Sprintf("mail sent to %s", user.Email))
 	return nil
 }
 
 func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
-	auth := smtp.PlainAuth("", m.from, m.password, m.host)
-
 	subject := "Продолжайте своё обучение!"
 
 	templatePath := "./../internal/repository/mail/layouts/welcome_course_lesson.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
+		fmt.Println("SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(string(tmplBytes))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
+		fmt.Println("SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{CourseId: courseId, UserName: user.Name})
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
+		fmt.Println("SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
@@ -142,38 +137,36 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User,
 	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
 	msg += body.String()
 
-	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), m.auth, m.from, []string{user.Email}, []byte(msg))
 	if err != nil {
-		logs.PrintLog(ctx, "SendWelcomeCourseMail", err.Error())
+		fmt.Println("SendWelcomeCourseMail", err.Error())
 		return err
 	}
 
-	logs.PrintLog(ctx, "SendWelcomeCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
+	fmt.Println("SendWelcomeCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
 	return nil
 }
 
 func (m *Mail) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
-	auth := smtp.PlainAuth("", m.from, m.password, m.host)
-
 	subject := "Ты прям огонь, продолжай!"
 
 	templatePath := "./../internal/repository/mail/layouts/middle_course_lesson.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
-		logs.PrintLog(ctx, "SenMiddleCourseMail", err.Error())
+		fmt.Println("SenMiddleCourseMail", err.Error())
 		return err
 	}
 
 	tmpl, err := template.New("email").Parse(string(tmplBytes))
 	if err != nil {
-		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		fmt.Println("SendMiddleCourseMail", err.Error())
 		return err
 	}
 
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{CourseId: courseId, UserName: user.Name})
 	if err != nil {
-		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		fmt.Println("SendMiddleCourseMail", err.Error())
 		return err
 	}
 
@@ -181,12 +174,12 @@ func (m *Mail) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, 
 	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
 	msg += body.String()
 
-	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{user.Email}, []byte(msg))
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), m.auth, m.from, []string{user.Email}, []byte(msg))
 	if err != nil {
-		logs.PrintLog(ctx, "SendMiddleCourseMail", err.Error())
+		fmt.Println("SendMiddleCourseMail", err.Error())
 		return err
 	}
 
-	logs.PrintLog(ctx, "SendMiddleCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
+	fmt.Println("SendMiddleCourseMail", fmt.Sprintf("mail sent to %s", user.Email))
 	return nil
 }

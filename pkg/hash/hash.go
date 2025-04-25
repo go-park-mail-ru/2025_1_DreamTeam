@@ -13,7 +13,7 @@ import (
 
 // Хэширование пароля
 func hashPassword(password string, salt []byte) string {
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
+	hash := argon2.IDKey([]byte(password), salt, 1, 16*1024, 2, 16)
 	hashedPassword := fmt.Sprintf("%s$___$%s", base64.StdEncoding.EncodeToString(salt), base64.StdEncoding.EncodeToString(hash))
 	return hashedPassword
 }
