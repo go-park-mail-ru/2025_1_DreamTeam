@@ -350,12 +350,16 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 
 	var currentLessonOrder int
 	var currentBucket coursemodels.LessonBucket
+	var currentPart coursemodels.CoursePart
+	var currentCourse coursemodels.Course
 	err := d.conn.QueryRow(`
-			SELECT l.lesson_order, lb.id, lb.lesson_bucket_order, lb.part_id
+			SELECT l.lesson_order, lb.id, lb.lesson_bucket_order, lb.part_id, p.part_order, c.id
 			FROM LESSON l
 			JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+			JOIN PART p ON lb.part_id = p.id
+			JOIN COURSE c ON p.course_id = c.id
 			WHERE l.id = $1
-		`, currentLessonId).Scan(&currentLessonOrder, &currentBucket.Id, &currentBucket.Order, &currentBucket.PartId)
+		`, currentLessonId).Scan(&currentLessonOrder, &currentBucket.Id, &currentBucket.Order, &currentBucket.PartId, &currentPart.Order, &currentCourse.Id)
 	if err != nil {
 		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -364,6 +368,8 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 	footers[1] = currentLessonId
 	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current lesson order: %d", currentLessonOrder))
 	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current bucket order: %d", currentBucket.Order))
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current part order: %d", currentPart.Order))
+	logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("current course id: %d", currentCourse.Id))
 
 	rows, err := d.conn.Query(`
 			SELECT id, lesson_order
@@ -396,7 +402,7 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 		}
 	}
 
-	if footers[0] == -1 && currentBucket.Order > 1 {
+	if footers[0] == -1 {
 		prevLessonId := -1
 		err := d.conn.QueryRow(`
 				SELECT l.id
@@ -412,6 +418,26 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 				return nil, err
 			}
 		}
+
+		if prevLessonId == -1 && currentPart.Order > 1 {
+			err := d.conn.QueryRow(`
+					SELECT l.id
+					FROM LESSON_BUCKET lb
+					JOIN LESSON l ON l.lesson_bucket_id = lb.id
+					JOIN PART p ON p.id = lb.part_id
+					JOIN COURSE c ON p.course_id = c.id
+					WHERE p.part_order = $1 AND c.id = $2
+					ORDER BY lb.lesson_bucket_order DESC, l.Lesson_Order DESC
+					LIMIT 1
+				`, currentPart.Order-1, currentCourse.Id).Scan(&prevLessonId)
+			if err != nil {
+				if !errors.Is(err, sql.ErrNoRows) {
+					logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+					return nil, err
+				}
+			}
+		}
+
 		footers[0] = prevLessonId
 	}
 
@@ -431,6 +457,26 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 				return nil, err
 			}
 		}
+
+		if nextLessonId == -1 {
+			err := d.conn.QueryRow(`
+					SELECT l.id
+					FROM LESSON_BUCKET lb
+					JOIN LESSON l ON l.lesson_bucket_id = lb.id
+					JOIN PART p ON p.id = lb.part_id
+					JOIN COURSE c ON p.course_id = c.id
+					WHERE p.part_order = $1 AND c.id = $2
+					ORDER BY lb.lesson_bucket_order ASC, l.Lesson_Order ASC
+					LIMIT 1
+				`, currentPart.Order+1, currentCourse.Id).Scan(&nextLessonId)
+			if err != nil {
+				if !errors.Is(err, sql.ErrNoRows) {
+					logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
+					return nil, err
+				}
+			}
+		}
+
 		footers[2] = nextLessonId
 	}
 
