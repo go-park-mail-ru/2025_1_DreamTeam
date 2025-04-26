@@ -156,11 +156,15 @@ func (d *Database) GetUserByToken(ctx context.Context, token string) (*usermodel
 
 func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*usermodels.UserProfile, error) {
 	var userProfile usermodels.UserProfile
-	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, COALESCE(u.bio, ''), u.avatar_src, u.hide_email FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expire > NOW();",
-		cookieValue).Scan(&userProfile.Id, &userProfile.Email, &userProfile.Name, &userProfile.Bio, &userProfile.AvatarSrc, &userProfile.HideEmail)
+	var role string
+	err := d.conn.QueryRow("SELECT u.id, u.email, u.name, COALESCE(u.bio, ''), u.avatar_src, u.hide_email, u.role FROM usertable u JOIN sessions s ON u.id = s.user_id WHERE s.token = $1 AND s.expire > NOW();",
+		cookieValue).Scan(&userProfile.Id, &userProfile.Email, &userProfile.Name, &userProfile.Bio, &userProfile.AvatarSrc, &userProfile.HideEmail, &role)
 	if err != nil {
 		logs.PrintLog(ctx, "GetUserByCookie", fmt.Sprintf("error in GetUserByCookie %+v", err))
 		return nil, err
+	}
+	if role == "admin" {
+		userProfile.IsAdmin = true
 	}
 	userProfile.Email = html.EscapeString(userProfile.Email)
 	userProfile.Name = html.EscapeString(userProfile.Name)

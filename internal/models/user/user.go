@@ -16,4 +16,5 @@ type UserProfile struct {
 	Bio       string
 	AvatarSrc string
 	HideEmail bool
+	IsAdmin   bool
 }

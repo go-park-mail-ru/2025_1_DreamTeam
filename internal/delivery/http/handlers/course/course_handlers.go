@@ -426,15 +426,21 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		logs.PrintLog(r.Context(), "UpdateCourse", "method not allowed")
+		logs.PrintLog(r.Context(), "CreateSurvey", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
-		logs.PrintLog(r.Context(), "UpdateCourse", "user not logged in")
+		logs.PrintLog(r.Context(), "CreateSurvey", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	if !userProfile.IsAdmin {
+		logs.PrintLog(r.Context(), "CreateSurvey", "user not logged in")
+		response.SendErrorResponse("not authorized as admin", http.StatusUnauthorized, w, r)
 		return
 	}
 
