@@ -27,11 +27,8 @@ type CourseUsecaseInterface interface {
 	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 	CreateCourse(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
 	CreateSurvey(ctx context.Context, survey *dto.SurveyDTO, userProfile *models.UserProfile) error
-<<<<<<< HEAD
 	SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *dto.SurveyAnswerDTO, userProfile *models.UserProfile) error
-=======
 	GetSurvey(ctx context.Context) (*dto.SurveyDTO, error)
->>>>>>> 65391f6135089e4d662c157ad619ea23b409cdd1
 }
 
 type CookieManagerInterface interface {
@@ -487,17 +484,17 @@ func (h *Handler) SendSurveyQuestionAnswer(w http.ResponseWriter, r *http.Reques
 
 func (h *Handler) GetSurvey(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-	  logs.PrintLog(r.Context(), "GetSurvey", "method not allowed")
-	  response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
-	  return
+		logs.PrintLog(r.Context(), "GetSurvey", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
 	}
-  
+
 	survey, err := h.courseUsecase.GetSurvey(r.Context())
 	if err != nil {
-	  logs.PrintLog(r.Context(), "GetSurvey", fmt.Sprintf("%+v", err))
-	  response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
-	  return
+		logs.PrintLog(r.Context(), "GetSurvey", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
 	}
-  
+
 	response.SendSurveyResponse(survey, w, r)
-  }
+}

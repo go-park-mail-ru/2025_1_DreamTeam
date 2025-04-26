@@ -188,14 +188,15 @@ func (d *Database) CreateVideoLesson(ctx context.Context, lesson *coursemodels.L
 
 func (d *Database) SendSurveyQuestionAnswer(ctx context.Context, surveyQuestionAnswer *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
 	query := `
-		INSERT INTO survey_answer (question_id, answer)
-		VALUES ($1, $2)	
+		INSERT INTO survey_answer (question_id, answer, user_id)
+		VALUES ($1, $2, $3)	
 	`
 
 	_, err := d.conn.Exec(
 		query,
 		surveyQuestionAnswer.QuestionId,
 		surveyQuestionAnswer.Answer,
+		userProfile.Id,
 	)
 
 	if err != nil {
