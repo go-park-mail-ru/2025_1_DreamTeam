@@ -581,15 +581,26 @@ func (uc *CourseUsecase) CreateSurvey(ctx context.Context, surveyDto *dto.Survey
 }
 
 func (uc *CourseUsecase) SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *dto.SurveyAnswerDTO, userProfile *usermodels.UserProfile) error {
-	// survey := coursemodels.Survey{}
-	// for _, question := range surveyDto.Questions {
-	// 	survey.Questions = append(survey.Questions, coursemodels.Question{
-	// 		Question:   question.Question,
-	// 		LeftLebal:  question.LeftLebal,
-	// 		RightLebal: question.RightLebal,
-	// 		Metric:     question.Metric,
-	// 	})
-	// }
-	// return uc.repo.CreateSurvey(ctx, &survey, userProfile)
-	return nil
+	surveyQuestionAnswer := coursemodels.SurveyAnswer{}
+	surveyQuestionAnswer.QuestionId = surveyAnswerDto.QuestionId
+	surveyQuestionAnswer.Answer = surveyAnswerDto.Answer
+	return uc.repo.SendSurveyQuestionAnswer(ctx, &surveyQuestionAnswer, userProfile)
+}
+func (uc *CourseUsecase) GetSurvey(ctx context.Context) (*dto.SurveyDTO, error) {
+	survey, err := uc.repo.GetSurvey(ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurvey", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyDto := dto.SurveyDTO{}
+	for _, question := range survey.Questions {
+		surveyDto.Questions = append(surveyDto.Questions, dto.QuestionDTO{
+			QuestionId: question.QuestionId,
+			Question:   question.Question,
+			LeftLebal:  question.LeftLebal,
+			RightLebal: question.RightLebal,
+			Metric:     question.Metric,
+		})
+	}
+	return &surveyDto, nil
 }

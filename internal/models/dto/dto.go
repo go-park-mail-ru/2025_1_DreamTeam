@@ -106,6 +106,7 @@ type SurveyDTO struct {
 }
 
 type QuestionDTO struct {
+	QuestionId int    `json:"question_id"`
 	Question   string `json:"question"`
 	LeftLebal  string `json:"left_lebal"`
 	RightLebal string `json:"right_lebal"`

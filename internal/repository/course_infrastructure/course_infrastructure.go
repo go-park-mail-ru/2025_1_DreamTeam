@@ -156,3 +156,6 @@ func (i *CourseInfrastructure) CreateSurvey(ctx context.Context, survey *coursem
 func (i *CourseInfrastructure) SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
 	return i.Database.SendSurveyQuestionAnswer(ctx, surveyAnswerDto, userProfile)
 }
+func (i *CourseInfrastructure) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) {
+	return i.Database.GetSurvey(ctx)
+}
