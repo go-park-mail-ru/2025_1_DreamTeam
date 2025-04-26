@@ -27,6 +27,7 @@ type CourseUsecaseInterface interface {
 	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 	CreateCourse(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
 	CreateSurvey(ctx context.Context, survey *dto.SurveyDTO, userProfile *models.UserProfile) error
+	GetSurvey(ctx context.Context) (*dto.SurveyDTO, error)
 }
 
 type CookieManagerInterface interface {
@@ -451,4 +452,21 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendOKResponse(w, r)
+}
+
+func (h *Handler) GetSurvey(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSurvey", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	survey, err := h.courseUsecase.GetSurvey(r.Context())
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSurvey", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendSurveyResponse(survey, w, r)
 }

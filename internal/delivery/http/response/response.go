@@ -40,6 +40,10 @@ type CourseRoadmapResponse struct {
 	CourseRoadmap *dto.CourseRoadmapDTO `json:"course_roadmap"`
 }
 
+type SurveyResponse struct {
+	Survey *dto.SurveyDTO `json:"survey"`
+}
+
 // SendErrorResponse - отправка ошибки в JSON-формате
 func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter, r *http.Request) {
 	response := ErrorResponse{ErrorStr: textError}
@@ -126,4 +130,11 @@ func SendVideoRange(start, end, total int64, reader io.Reader, w http.ResponseWr
 			break
 		}
 	}
+}
+
+func SendSurveyResponse(survey *dto.SurveyDTO, w http.ResponseWriter, r *http.Request) {
+	response := SurveyResponse{Survey: survey}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

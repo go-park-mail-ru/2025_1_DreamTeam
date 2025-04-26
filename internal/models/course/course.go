@@ -43,6 +43,7 @@ type Survey struct {
 }
 
 type Question struct {
+	QuestionId int
 	Question   string
 	LeftLebal  string
 	RightLebal string

@@ -579,3 +579,22 @@ func (uc *CourseUsecase) CreateSurvey(ctx context.Context, surveyDto *dto.Survey
 	}
 	return uc.repo.CreateSurvey(ctx, &survey, userProfile)
 }
+
+func (uc *CourseUsecase) GetSurvey(ctx context.Context) (*dto.SurveyDTO, error) {
+	survey, err := uc.repo.GetSurvey(ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurvey", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyDto := dto.SurveyDTO{}
+	for _, question := range survey.Questions {
+		surveyDto.Questions = append(surveyDto.Questions, dto.QuestionDTO{
+			QuestionId: question.QuestionId,
+			Question:   question.Question,
+			LeftLebal:  question.LeftLebal,
+			RightLebal: question.RightLebal,
+			Metric:     question.Metric,
+		})
+	}
+	return &surveyDto, nil
+}
