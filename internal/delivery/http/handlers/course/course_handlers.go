@@ -27,6 +27,7 @@ type CourseUsecaseInterface interface {
 	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 	CreateCourse(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
 	CreateSurvey(ctx context.Context, survey *dto.SurveyDTO, userProfile *models.UserProfile) error
+	SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *dto.SurveyAnswerDTO, userProfile *models.UserProfile) error
 }
 
 type CookieManagerInterface interface {
@@ -446,6 +447,38 @@ func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
 	err = h.courseUsecase.CreateSurvey(r.Context(), &SurveyInput, userProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+func (h *Handler) SendSurveyQuestionAnswer(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "SendSurveyQuestionAnswer", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "SendSurveyQuestionAnswer", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var SurveyOuptut dto.SurveyAnswerDTO
+	err := json.NewDecoder(r.Body).Decode(&SurveyOuptut)
+	if err != nil {
+		logs.PrintLog(r.Context(), "SendSurveyQuestionAnswer", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	err = h.courseUsecase.SendSurveyQuestionAnswer(r.Context(), &SurveyOuptut, userProfile)
+	if err != nil {
+		logs.PrintLog(r.Context(), "SendSurveyQuestionAnswer", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}

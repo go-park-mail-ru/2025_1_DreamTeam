@@ -152,3 +152,7 @@ func (i *CourseInfrastructure) CreateVideoLesson(ctx context.Context, lesson *co
 func (i *CourseInfrastructure) CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error {
 	return i.Database.CreateSurvey(ctx, survey, userProfile)
 }
+
+func (i *CourseInfrastructure) SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
+	return i.Database.SendSurveyQuestionAnswer(ctx, surveyAnswerDto, userProfile)
+}

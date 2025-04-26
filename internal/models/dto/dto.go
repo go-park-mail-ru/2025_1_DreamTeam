@@ -111,3 +111,8 @@ type QuestionDTO struct {
 	RightLebal string `json:"right_lebal"`
 	Metric     string `json:"metric"`
 }
+
+type SurveyAnswerDTO struct {
+	QuestionId int `json:"question_id"`
+	Answer     int `json:"answer"`
+}

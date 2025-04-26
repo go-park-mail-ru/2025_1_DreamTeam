@@ -216,3 +216,23 @@ func (d *Database) CreateSurvey(ctx context.Context, survey *coursemodels.Survey
 
 	return nil
 }
+
+func (d *Database) SendSurveyQuestionAnswer(ctx context.Context, surveyQuestionAnswer *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
+	query := `
+		INSERT INTO survey_answer (question_id, answer)
+		VALUES ($1, $2)	
+	`
+
+	_, err := d.conn.Exec(
+		query,
+		surveyQuestionAnswer.QuestionId,
+		surveyQuestionAnswer.Answer,
+	)
+
+	if err != nil {
+		logs.PrintLog(ctx, "SendSurveyQuestionAnswer", fmt.Sprintf("%+v", err))
+		return err
+	}
+
+	return nil
+}

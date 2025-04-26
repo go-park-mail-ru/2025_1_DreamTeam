@@ -48,3 +48,9 @@ type Question struct {
 	RightLebal string
 	Metric     string
 }
+
+type SurveyAnswer struct {
+	Id         int
+	QuestionId int
+	Answer     int
+}

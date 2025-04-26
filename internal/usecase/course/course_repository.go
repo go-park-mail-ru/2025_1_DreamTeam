@@ -48,4 +48,5 @@ type CourseRepository interface {
 	CreateTextLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error
 	CreateVideoLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error
 	CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error
+	SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error
 }
