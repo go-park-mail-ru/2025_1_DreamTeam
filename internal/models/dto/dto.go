@@ -12,6 +12,7 @@ type UserProfileDTO struct {
 	Bio       string `json:"bio"`
 	AvatarSrc string `json:"avatar_src"`
 	HideEmail bool   `json:"hide_email"`
+	IsAdmin   bool   `json:"is_admin"`
 }
 
 type CourseDTO struct {

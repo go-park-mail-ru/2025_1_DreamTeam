@@ -280,6 +280,7 @@ func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 			Bio:       userProfile.Bio,
 			AvatarSrc: userProfile.AvatarSrc,
 			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
 		}
 
 		logs.PrintLog(r.Context(), "IsAuthorized", fmt.Sprintf("user %+v is authorized", userProfile))
