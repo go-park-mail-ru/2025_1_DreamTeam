@@ -71,3 +71,34 @@ func (d *Database) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) 
 
 	return &survey, nil
 }
+
+func (d *Database) GetMetricCount(ctx context.Context, surveyId int, metric string) (int, error) {
+	var count int
+	err := d.conn.QueryRow("SELECT COUNT(*) FROM survey_question WHERE survey_id = $1 AND metric_type = $2", surveyId, metric).Scan(&count)
+	if err != nil {
+		logs.PrintLog(ctx, "GetMetricCount", fmt.Sprintf("%+v", err))
+		return 0, err
+	}
+	return count, nil
+}
+
+func (d *Database) GetCSATMetrics(ctx context.Context, surveyId int, metric string) (*coursemodels.SurveyMetric, error) {
+	survey := coursemodels.Survey{}
+	err := d.conn.QueryRow("SELECT id FROM survey ORDER BY id DESC LIMIT 1").Scan(&survey.Id)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurvey", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	surveyMetric := coursemodels.SurveyMetric{}
+
+	count, err := d.GetMetricCount(ctx, survey.Id, metric)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCSATMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyMetric.Type = metric
+	surveyMetric.Count = count
+
+	return &surveyMetric, nil
+}

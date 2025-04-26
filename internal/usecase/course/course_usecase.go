@@ -614,7 +614,7 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 	}
 
 	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
-		Type:         "csat",
+		Type:         "CSAT",
 		Avg:          csatMetrics.Avg,
 		Count:        csatMetrics.Count,
 		Distribution: csatMetrics.Distribution,
@@ -627,7 +627,7 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 	}
 
 	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
-		Type:         "nps",
+		Type:         "NPS",
 		Avg:          npsMetrics.Avg,
 		Count:        npsMetrics.Count,
 		Distribution: npsMetrics.Distribution,
@@ -640,7 +640,7 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 	}
 
 	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
-		Type:         "csi",
+		Type:         "SCI",
 		Avg:          csiMetrics.Avg,
 		Count:        csiMetrics.Count,
 		Distribution: csiMetrics.Distribution,
