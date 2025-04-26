@@ -56,6 +56,7 @@ func main() {
 	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
 	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
 	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
+	siteMux.HandleFunc("/api/createSurvey", courseHandler.CreateSurvey)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 

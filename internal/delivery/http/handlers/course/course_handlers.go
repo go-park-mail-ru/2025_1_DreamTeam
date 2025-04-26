@@ -26,6 +26,7 @@ type CourseUsecaseInterface interface {
 	GetMeta(ctx context.Context, name string) (dto.VideoMeta, error)
 	GetFragment(ctx context.Context, name string, start, end int64) (io.ReadCloser, error)
 	CreateCourse(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
+	CreateSurvey(ctx context.Context, survey *dto.SurveyDTO, userProfile *models.UserProfile) error
 }
 
 type CookieManagerInterface interface {
@@ -413,6 +414,38 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	err = h.courseUsecase.CreateCourse(r.Context(), &CourseInput, userProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+func (h *Handler) CreateSurvey(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "UpdateCourse", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "UpdateCourse", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var SurveyInput dto.SurveyDTO
+	err := json.NewDecoder(r.Body).Decode(&SurveyInput)
+	if err != nil {
+		logs.PrintLog(r.Context(), "UpdateCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	err = h.courseUsecase.CreateSurvey(r.Context(), &SurveyInput, userProfile)
+	if err != nil {
+		logs.PrintLog(r.Context(), "UpdateCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}

@@ -100,3 +100,14 @@ type VideoMeta struct {
 	Name string
 	Size int64
 }
+
+type SurveyDTO struct {
+	Questions []QuestionDTO `json:"questions"`
+}
+
+type QuestionDTO struct {
+	Question   string `json:"question"`
+	LeftLebal  string `json:"left_lebal"`
+	RightLebal string `json:"right_lebal"`
+	Metric     string `json:"metric"`
+}

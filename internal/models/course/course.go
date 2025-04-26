@@ -36,3 +36,15 @@ type LessonPoint struct {
 	BucketId int
 	Order    int
 }
+
+type Survey struct {
+	Id        int
+	Questions []Question
+}
+
+type Question struct {
+	Question   string
+	LeftLebal  string
+	RightLebal string
+	Metric     string
+}

@@ -148,3 +148,7 @@ func (i *CourseInfrastructure) CreateTextLesson(ctx context.Context, lesson *cou
 func (i *CourseInfrastructure) CreateVideoLesson(ctx context.Context, lesson *coursemodels.LessonPoint, bucketId int) error {
 	return i.Database.CreateVideoLesson(ctx, lesson, bucketId)
 }
+
+func (i *CourseInfrastructure) CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error {
+	return i.Database.CreateSurvey(ctx, survey, userProfile)
+}
