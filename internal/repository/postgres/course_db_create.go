@@ -195,7 +195,7 @@ func (d *Database) CreateSurvey(ctx context.Context, survey *coursemodels.Survey
 
 	for _, question := range survey.Questions {
 		query := `
-		INSERT INTO survey_question (survey_id, question, left_desc, right_desc, metric_type))
+		INSERT INTO survey_question (survey_id, question, left_desc, right_desc, metric_type)
 		VALUES ($1, $2, $3, $4, $5)	
 	`
 
