@@ -55,3 +55,14 @@ type SurveyAnswer struct {
 	QuestionId int
 	Answer     int
 }
+
+type SurveyMetrics struct {
+	Metrics []SurveyMetrics
+}
+
+type SurveyMetric struct {
+	Type         string
+	Count        int
+	Avg          int
+	Distribution []int
+}

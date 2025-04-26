@@ -604,3 +604,47 @@ func (uc *CourseUsecase) GetSurvey(ctx context.Context) (*dto.SurveyDTO, error) 
 	}
 	return &surveyDto, nil
 }
+
+func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetricsDTO, error) {
+	var metrics dto.SurveyMetricsDTO
+	csatMetrics, err := uc.repo.GetCSATMetrics(ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
+		Type:         "csat",
+		Avg:          csatMetrics.Avg,
+		Count:        csatMetrics.Count,
+		Distribution: csatMetrics.Distribution,
+	})
+
+	npsMetrics, err := uc.repo.GetNPSMetrics(ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
+		Type:         "nps",
+		Avg:          npsMetrics.Avg,
+		Count:        npsMetrics.Count,
+		Distribution: npsMetrics.Distribution,
+	})
+
+	csiMetrics, err := uc.repo.GetCSIMetrics(ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	metrics.Metrics = append(metrics.Metrics, dto.SurveyMetricDTO{
+		Type:         "csi",
+		Avg:          csiMetrics.Avg,
+		Count:        csiMetrics.Count,
+		Distribution: csiMetrics.Distribution,
+	})
+
+	return &metrics, nil
+}

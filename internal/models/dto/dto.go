@@ -119,7 +119,7 @@ type SurveyAnswerDTO struct {
 }
 
 type SurveyMetricsDTO struct {
-	Metrics []SurveyMetricsDTO `json:"metrics"`
+	Metrics []SurveyMetricDTO `json:"metrics"`
 }
 
 type SurveyMetricDTO struct {
