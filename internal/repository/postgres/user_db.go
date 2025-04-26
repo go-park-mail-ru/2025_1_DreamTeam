@@ -163,6 +163,7 @@ func (d *Database) GetUserByCookie(ctx context.Context, cookieValue string) (*us
 		logs.PrintLog(ctx, "GetUserByCookie", fmt.Sprintf("error in GetUserByCookie %+v", err))
 		return nil, err
 	}
+	logs.PrintLog(ctx, "GetUserByCookie", fmt.Sprintf("role: %+v", role))
 	if role == "admin" {
 		userProfile.IsAdmin = true
 	}
