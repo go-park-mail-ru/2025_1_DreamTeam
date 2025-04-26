@@ -117,3 +117,14 @@ type SurveyAnswerDTO struct {
 	QuestionId int `json:"question_id"`
 	Answer     int `json:"answer"`
 }
+
+type SurveyMetricsDTO struct {
+	Metrics []SurveyMetricsDTO `json:"metrics"`
+}
+
+type SurveyMetricDTO struct {
+	Type         string `json:"type"`
+	Count        int    `json:"count"`
+	Avg          int    `json:"avg"`
+	Distribution []int  `json:"distribution"`
+}
