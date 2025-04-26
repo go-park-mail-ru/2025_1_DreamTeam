@@ -65,4 +65,10 @@ type SurveyMetric struct {
 	Count        int
 	Avg          float64
 	Distribution []int
+	Answers      []UserAnswer
+}
+
+type UserAnswer struct {
+	Username string
+	Answer   int
 }

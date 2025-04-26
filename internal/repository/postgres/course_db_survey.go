@@ -141,6 +141,34 @@ func (d *Database) GetMetricDistribution(ctx context.Context, surveyId int, metr
 	return distribution, nil
 }
 
+func (d *Database) GetMetricAnswers(ctx context.Context, surveyId int, metric string) ([]coursemodels.UserAnswer, error) {
+	var answers []coursemodels.UserAnswer
+
+	rows, err := d.conn.Query(`
+		SELECT sa.answer, u.name
+		FROM survey_question sq
+		JOIN survey s ON sq.survey_id = s.id
+		JOIN survey_answer sa ON sq.id = sa.question_id
+		JOIN usertable u ON sa.user_id = u.id
+		WHERE s.id = $1 AND sq.metric_type = $2
+			`, surveyId, metric)
+	if err != nil {
+		logs.PrintLog(ctx, "GetMetricAnswers", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var answer coursemodels.UserAnswer
+		if err := rows.Scan(&answer.Answer, &answer.Username); err != nil {
+			logs.PrintLog(ctx, "GetMetricAnswers", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		answers = append(answers, answer)
+	}
+	return answers, nil
+}
+
 func (d *Database) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
 	survey := coursemodels.Survey{}
 	err := d.conn.QueryRow("SELECT id FROM survey ORDER BY id DESC LIMIT 1").Scan(&survey.Id)
@@ -176,6 +204,13 @@ func (d *Database) GetMetrics(ctx context.Context, metric string) (*coursemodels
 		return nil, err
 	}
 	surveyMetric.Distribution = distribution
+
+	answers, err := d.GetMetricAnswers(ctx, survey.Id, metric)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCSATMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyMetric.Answers = answers
 
 	return &surveyMetric, nil
 }

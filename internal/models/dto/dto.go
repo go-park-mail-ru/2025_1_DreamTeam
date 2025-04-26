@@ -123,8 +123,14 @@ type SurveyMetricsDTO struct {
 }
 
 type SurveyMetricDTO struct {
-	Type         string  `json:"type"`
-	Count        int     `json:"count"`
-	Avg          float64 `json:"avg"`
-	Distribution []int   `json:"distribution"`
+	Type         string          `json:"type"`
+	Count        int             `json:"count"`
+	Avg          float64         `json:"avg"`
+	Distribution []int           `json:"distribution"`
+	Answers      []UserAnswerDTO `json:"answers"`
+}
+
+type UserAnswerDTO struct {
+	Username string `json:"username"`
+	Answer   int    `json:"answer"`
 }

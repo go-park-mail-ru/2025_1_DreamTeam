@@ -620,6 +620,13 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 		Distribution: csatMetrics.Distribution,
 	})
 
+	for _, answer := range csatMetrics.Answers {
+		metrics.Metrics[0].Answers = append(metrics.Metrics[0].Answers, dto.UserAnswerDTO{
+			Answer:   answer.Answer,
+			Username: answer.Username,
+		})
+	}
+
 	npsMetrics, err := uc.repo.GetMetrics(ctx, "NPS")
 	if err != nil {
 		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
@@ -633,6 +640,13 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 		Distribution: npsMetrics.Distribution,
 	})
 
+	for _, answer := range npsMetrics.Answers {
+		metrics.Metrics[1].Answers = append(metrics.Metrics[1].Answers, dto.UserAnswerDTO{
+			Answer:   answer.Answer,
+			Username: answer.Username,
+		})
+	}
+
 	csiMetrics, err := uc.repo.GetMetrics(ctx, "CSI")
 	if err != nil {
 		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
@@ -645,6 +659,13 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 		Count:        csiMetrics.Count,
 		Distribution: csiMetrics.Distribution,
 	})
+
+	for _, answer := range csiMetrics.Answers {
+		metrics.Metrics[2].Answers = append(metrics.Metrics[2].Answers, dto.UserAnswerDTO{
+			Answer:   answer.Answer,
+			Username: answer.Username,
+		})
+	}
 
 	return &metrics, nil
 }
