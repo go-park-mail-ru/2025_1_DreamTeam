@@ -51,9 +51,6 @@ type CourseRepository interface {
 	CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error
 	SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error
 	GetSurvey(ctx context.Context) (*coursemodels.Survey, error)
-	GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetricsDTO, error)
 
-	GetCSATMetrics(ctx context.Context) (*coursemodels.SurveyMetric, error)
-	GetNPSMetrics(ctx context.Context) (*coursemodels.SurveyMetric, error)
-	GetCSIMetrics(ctx context.Context) (*coursemodels.SurveyMetric, error)
+	GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error)
 }

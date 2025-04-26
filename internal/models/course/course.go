@@ -63,6 +63,6 @@ type SurveyMetrics struct {
 type SurveyMetric struct {
 	Type         string
 	Count        int
-	Avg          int
+	Avg          float64
 	Distribution []int
 }

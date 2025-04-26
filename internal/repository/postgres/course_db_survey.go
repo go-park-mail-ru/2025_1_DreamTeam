@@ -74,7 +74,13 @@ func (d *Database) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) 
 
 func (d *Database) GetMetricCount(ctx context.Context, surveyId int, metric string) (int, error) {
 	var count int
-	err := d.conn.QueryRow("SELECT COUNT(*) FROM survey_question WHERE survey_id = $1 AND metric_type = $2", surveyId, metric).Scan(&count)
+	err := d.conn.QueryRow(`
+		SELECT COUNT(sq.id) 
+		FROM survey_question sq
+		JOIN survey s ON sq.survey_id = s.id
+		JOIN survey_answer sa ON sq.id = sa.question_id
+		WHERE s.id = $1 AND sq.metric_type = $2
+		`, surveyId, metric).Scan(&count)
 	if err != nil {
 		logs.PrintLog(ctx, "GetMetricCount", fmt.Sprintf("%+v", err))
 		return 0, err
@@ -82,7 +88,60 @@ func (d *Database) GetMetricCount(ctx context.Context, surveyId int, metric stri
 	return count, nil
 }
 
-func (d *Database) GetCSATMetrics(ctx context.Context, surveyId int, metric string) (*coursemodels.SurveyMetric, error) {
+func (d *Database) GetMetricAvg(ctx context.Context, surveyId int, metric string) (float64, error) {
+	var avg float64
+	err := d.conn.QueryRow(`
+		SELECT COALESCE(AVG(sa.answer), 0.0) AS avg
+		FROM survey_question sq
+		JOIN survey s ON sq.survey_id = s.id
+		JOIN survey_answer sa ON sq.id = sa.question_id
+		WHERE s.id = $1 AND sq.metric_type = $2
+		`, surveyId, metric).Scan(&avg)
+	if err != nil {
+		logs.PrintLog(ctx, "GetMetricAvg", fmt.Sprintf("%+v", err))
+		return 0, err
+	}
+	return avg, nil
+}
+
+func (d *Database) GetMetricDistribution(ctx context.Context, surveyId int, metric string) ([]int, error) {
+	var distribution []int
+
+	logs.PrintLog(ctx, "GetMetricDistribution", fmt.Sprintf("metric: %+v", metric))
+	logs.PrintLog(ctx, "GetMetricDistribution", fmt.Sprintf("surveyId: %+v", surveyId))
+
+	var countAnswers int
+	err := d.conn.QueryRow(`
+		SELECT COUNT(sa.answer) 
+		FROM survey_question sq
+		JOIN survey s ON sq.survey_id = s.id
+		JOIN survey_answer sa ON sq.id = sa.question_id
+		WHERE s.id = $1 AND sq.metric_type = $2
+		`, surveyId, metric).Scan(&countAnswers)
+	if err != nil {
+		logs.PrintLog(ctx, "GetMetricDistribution", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	for i := 0; i < 11; i++ {
+		var countAnswer int
+		err := d.conn.QueryRow(`
+			SELECT COUNT(sa.answer) 
+			FROM survey_question sq
+			JOIN survey s ON sq.survey_id = s.id
+			JOIN survey_answer sa ON sq.id = sa.question_id
+			WHERE s.id = $1 AND sq.metric_type = $2 AND sa.answer = $3
+			`, surveyId, metric, i).Scan(&countAnswer)
+		if err != nil {
+			logs.PrintLog(ctx, "GetMetricDistribution", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		distribution = append(distribution, (countAnswer*100)/countAnswers)
+	}
+	return distribution, nil
+}
+
+func (d *Database) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
 	survey := coursemodels.Survey{}
 	err := d.conn.QueryRow("SELECT id FROM survey ORDER BY id DESC LIMIT 1").Scan(&survey.Id)
 	if err != nil {
@@ -99,6 +158,24 @@ func (d *Database) GetCSATMetrics(ctx context.Context, surveyId int, metric stri
 	}
 	surveyMetric.Type = metric
 	surveyMetric.Count = count
+
+	if count == 0 {
+		return &surveyMetric, nil
+	}
+
+	avg, err := d.GetMetricAvg(ctx, survey.Id, metric)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCSATMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyMetric.Avg = avg
+
+	distribution, err := d.GetMetricDistribution(ctx, survey.Id, metric)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCSATMetrics", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	surveyMetric.Distribution = distribution
 
 	return &surveyMetric, nil
 }

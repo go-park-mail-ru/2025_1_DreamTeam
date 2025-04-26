@@ -159,3 +159,7 @@ func (i *CourseInfrastructure) SendSurveyQuestionAnswer(ctx context.Context, sur
 func (i *CourseInfrastructure) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) {
 	return i.Database.GetSurvey(ctx)
 }
+
+func (i *CourseInfrastructure) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
+	return i.Database.GetMetrics(ctx, metric)
+}

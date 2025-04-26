@@ -607,7 +607,7 @@ func (uc *CourseUsecase) GetSurvey(ctx context.Context) (*dto.SurveyDTO, error) 
 
 func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetricsDTO, error) {
 	var metrics dto.SurveyMetricsDTO
-	csatMetrics, err := uc.repo.GetCSATMetrics(ctx)
+	csatMetrics, err := uc.repo.GetMetrics(ctx, "CSAT")
 	if err != nil {
 		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -620,7 +620,7 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 		Distribution: csatMetrics.Distribution,
 	})
 
-	npsMetrics, err := uc.repo.GetNPSMetrics(ctx)
+	npsMetrics, err := uc.repo.GetMetrics(ctx, "NPS")
 	if err != nil {
 		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
 		return nil, err
@@ -633,7 +633,7 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 		Distribution: npsMetrics.Distribution,
 	})
 
-	csiMetrics, err := uc.repo.GetCSIMetrics(ctx)
+	csiMetrics, err := uc.repo.GetMetrics(ctx, "CSI")
 	if err != nil {
 		logs.PrintLog(ctx, "GetSurveyMetrics", fmt.Sprintf("%+v", err))
 		return nil, err

@@ -514,6 +514,8 @@ func (h *Handler) GetSurveyMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("GetSurveyMetrics handler")
+
 	metrics, err := h.courseUsecase.GetSurveyMetrics(r.Context())
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetSurveyMetrics", fmt.Sprintf("%+v", err))

@@ -123,8 +123,8 @@ type SurveyMetricsDTO struct {
 }
 
 type SurveyMetricDTO struct {
-	Type         string `json:"type"`
-	Count        int    `json:"count"`
-	Avg          int    `json:"avg"`
-	Distribution []int  `json:"distribution"`
+	Type         string  `json:"type"`
+	Count        int     `json:"count"`
+	Avg          float64 `json:"avg"`
+	Distribution []int   `json:"distribution"`
 }
