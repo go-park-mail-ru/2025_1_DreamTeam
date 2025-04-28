@@ -175,3 +175,7 @@ func (i *CourseInfrastructure) DeleteCourseFromFavourites(ctx context.Context, c
 func (i *CourseInfrastructure) GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
 	return i.Database.GetFavouriteCourses(ctx, userId)
 }
+
+func (i *CourseInfrastructure) GetCoursesFavouriteStatus(ctx context.Context, bucketCourses []*coursemodels.Course, userId int) (map[int]bool, error) {
+	return i.Database.GetCoursesFavouriteStatus(ctx, bucketCourses, userId)
+}

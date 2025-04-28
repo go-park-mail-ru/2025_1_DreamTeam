@@ -16,7 +16,7 @@ import (
 )
 
 type CourseUsecaseInterface interface {
-	GetBucketCourses(ctx context.Context) ([]*dto.CourseDTO, error)
+	GetBucketCourses(ctx context.Context, userProfile *models.UserProfile) ([]*dto.CourseDTO, error)
 	GetCourseLesson(ctx context.Context, userId int, courseId int) (*dto.LessonDTO, error)
 	GetNextLesson(ctx context.Context, userId int, cousreId int, lessonId int) (*dto.LessonDTO, error)
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
@@ -68,7 +68,8 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bucketCourses, err := h.courseUsecase.GetBucketCourses(r.Context())
+	userProfile := h.cookieManager.CheckCookie(r)
+	bucketCourses, err := h.courseUsecase.GetBucketCourses(r.Context(), userProfile)
 	if err != nil {
 		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)

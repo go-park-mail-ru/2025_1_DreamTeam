@@ -56,4 +56,5 @@ type CourseRepository interface {
 	AddCourseToFavourites(ctx context.Context, courseId int, userId int) error
 	DeleteCourseFromFavourites(ctx context.Context, courseId int, userId int) error
 	GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error)
+	GetCoursesFavouriteStatus(ctx context.Context, bucketCourses []*coursemodels.Course, userId int) (map[int]bool, error)
 }

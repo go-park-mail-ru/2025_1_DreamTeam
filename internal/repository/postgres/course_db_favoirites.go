@@ -65,3 +65,31 @@ func (d *Database) GetFavouriteCourses(ctx context.Context, userId int) ([]*cour
 
 	return bucketCourses, nil
 }
+
+func (d *Database) GetCoursesFavouriteStatus(ctx context.Context, bucketCourses []*coursemodels.Course, userId int) (map[int]bool, error) {
+	result := make(map[int]bool, len(bucketCourses))
+	for _, course := range bucketCourses {
+		result[course.Id] = false
+	}
+
+	rows, err := d.conn.Query(`
+		SELECT course_id FROM FAVOURITE_COURSES WHERE user_id = $1
+	`, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCoursesFavouriteStatus", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var courseId int
+		if err := rows.Scan(&courseId); err != nil {
+			logs.PrintLog(ctx, "GetCoursesFavouriteStatus", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		if _, ok := result[courseId]; ok {
+			result[courseId] = true
+		}
+	}
+	return result, nil
+}
