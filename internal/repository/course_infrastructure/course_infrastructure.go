@@ -163,3 +163,7 @@ func (i *CourseInfrastructure) GetSurvey(ctx context.Context) (*coursemodels.Sur
 func (i *CourseInfrastructure) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
 	return i.Database.GetMetrics(ctx, metric)
 }
+
+func (i *CourseInfrastructure) AddCourseToFavourites(ctx context.Context, courseId int, userId int) error {
+	return i.Database.AddCourseToFavourites(ctx, courseId, userId)
+}

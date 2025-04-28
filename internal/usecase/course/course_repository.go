@@ -51,6 +51,7 @@ type CourseRepository interface {
 	CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error
 	SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error
 	GetSurvey(ctx context.Context) (*coursemodels.Survey, error)
-
 	GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error)
+
+	AddCourseToFavourites(ctx context.Context, courseId int, userId int) error
 }

@@ -669,3 +669,8 @@ func (uc *CourseUsecase) GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetri
 
 	return &metrics, nil
 }
+
+func (uc *CourseUsecase) AddCourseToFavourites(ctx context.Context, course *dto.CourseDTO, userProfile *usermodels.UserProfile) error {
+	logs.PrintLog(ctx, "AddCourseToFavourites", fmt.Sprintf("add course with id: %v to favourites of user with id: %v", course.Id, userProfile.Id))
+	return uc.repo.AddCourseToFavourites(ctx, course.Id, userProfile.Id)
+}
