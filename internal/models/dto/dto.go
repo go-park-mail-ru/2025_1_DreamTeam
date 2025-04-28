@@ -28,6 +28,7 @@ type CourseDTO struct {
 	ScrImage        string           `json:"src_image"`
 	IsPurchased     bool             `json:"is_purchased"`
 	Parts           []*CoursePartDTO `json:"parts"`
+	IsFavorite      bool             `json:"is_favorite"`
 }
 
 type LessonDTO struct {

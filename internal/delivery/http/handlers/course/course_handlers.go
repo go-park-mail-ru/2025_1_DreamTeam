@@ -31,6 +31,8 @@ type CourseUsecaseInterface interface {
 	GetSurvey(ctx context.Context) (*dto.SurveyDTO, error)
 	GetSurveyMetrics(ctx context.Context) (*dto.SurveyMetricsDTO, error)
 	AddCourseToFavourites(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
+	DeleteCourseFromFavourites(ctx context.Context, course *dto.CourseDTO, userProfile *models.UserProfile) error
+	GetFavouriteCourses(ctx context.Context, userProfile *models.UserProfile) ([]*dto.CourseDTO, error)
 }
 
 type CookieManagerInterface interface {
@@ -563,4 +565,60 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 	}
 
 	response.SendOKResponse(w, r)
+}
+
+func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var CourseInput dto.CourseDTO
+	err := json.NewDecoder(r.Body).Decode(&CourseInput)
+	if err != nil {
+		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	err = h.courseUsecase.DeleteCourseFromFavourites(r.Context(), &CourseInput, userProfile)
+	if err != nil {
+		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+func (h *Handler) GetFavouriteCourses(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetFavouriteCourses", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetFavouriteCourses", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	courses, err := h.courseUsecase.GetFavouriteCourses(r.Context(), userProfile)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetFavouriteCourses", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendBucketCoursesResponse(courses, w, r)
 }

@@ -54,4 +54,6 @@ type CourseRepository interface {
 	GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error)
 
 	AddCourseToFavourites(ctx context.Context, courseId int, userId int) error
+	DeleteCourseFromFavourites(ctx context.Context, courseId int, userId int) error
+	GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error)
 }

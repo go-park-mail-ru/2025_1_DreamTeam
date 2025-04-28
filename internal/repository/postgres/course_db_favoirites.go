@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	coursemodels "skillForce/internal/models/course"
 	"skillForce/pkg/logs"
 )
 
@@ -24,4 +25,43 @@ func (d *Database) AddCourseToFavourites(ctx context.Context, courseId int, user
 	}
 
 	return nil
+}
+
+func (d *Database) DeleteCourseFromFavourites(ctx context.Context, courseId int, userId int) error {
+	_, err := d.conn.Exec("DELETE FROM FAVOURITE_COURSES WHERE course_id = $1 AND user_id = $2", courseId, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
+		return err
+	}
+	return nil
+}
+
+func (d *Database) GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	var bucketCourses []*coursemodels.Course
+	rows, err := d.conn.Query(`
+			SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
+			FROM course c
+			JOIN FAVOURITE_COURSES fc ON c.id = fc.course_id
+			WHERE fc.user_id = $1
+		`, userId)
+
+	if err != nil {
+		logs.PrintLog(ctx, "GetFavouriteCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "GetFavouriteCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetFavouriteCourses", fmt.Sprintf("get course %+v from db", course))
+		bucketCourses = append(bucketCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "GetFavouriteCourses", "get bucket ourses from db")
+
+	return bucketCourses, nil
 }

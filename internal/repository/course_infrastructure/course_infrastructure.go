@@ -167,3 +167,11 @@ func (i *CourseInfrastructure) GetMetrics(ctx context.Context, metric string) (*
 func (i *CourseInfrastructure) AddCourseToFavourites(ctx context.Context, courseId int, userId int) error {
 	return i.Database.AddCourseToFavourites(ctx, courseId, userId)
 }
+
+func (i *CourseInfrastructure) DeleteCourseFromFavourites(ctx context.Context, courseId int, userId int) error {
+	return i.Database.DeleteCourseFromFavourites(ctx, courseId, userId)
+}
+
+func (i *CourseInfrastructure) GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	return i.Database.GetFavouriteCourses(ctx, userId)
+}
