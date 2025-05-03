@@ -1,5 +1,0 @@
-go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
-cat cover.out.tmp | grep -v "mock" > cover.out
-go tool cover -func=cover.out
-
-swag init -g ./app/main.go

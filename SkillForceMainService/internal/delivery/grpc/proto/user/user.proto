@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "skillForce/internal/delivery/grpc/proto/user;userpb";
+
+import "google/protobuf/empty.proto";
+
+message User {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message UserProfile {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  string bio = 4;
+  string avatar_src = 5;
+  bool hide_email = 6;
+  bool is_admin = 7;
+}
+
+message RegisterRequest {
+  string token = 1;
+}
+
+message RegisterResponse {
+  string cookieVal = 1;
+}
+
+message UpdateProfileRequest {
+  int32 user_id = 1;
+  UserProfile profile = 2;
+}
+
+message AuthenticateResponse {
+  string cookieVal = 1;
+}
+
+message UploadFileRequest {
+  bytes file_data = 1;          // Содержимое файла
+  string file_name = 2;         // Имя файла
+  string content_type = 3;      // MIME-тип (например, image/png)
+}
+
+message UploadFileResponse {
+  string url = 1;
+}
+
+message SaveProfilePhotoRequest {
+  string url = 1;
+  int32 userId = 2;
+}
+
+message SaveProfilePhotoResponse {
+  string newPhtotoUrl = 1;
+}
+
+message DeleteProfilePhotoRequest {
+  int32 userId = 1;
+}
+
+// User service
+service UserService {
+  rpc RegisterUser(RegisterRequest) returns (RegisterResponse);
+  rpc ValidUser(User) returns (google.protobuf.Empty);
+  rpc AuthenticateUser(User) returns (AuthenticateResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (google.protobuf.Empty);
+  rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
+  rpc SaveProfilePhoto(SaveProfilePhotoRequest) returns (SaveProfilePhotoResponse);
+  rpc DeleteProfilePhoto(DeleteProfilePhotoRequest) returns (google.protobuf.Empty);
+}

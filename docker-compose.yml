@@ -1,0 +1,89 @@
+services:
+  main-service:
+    build:
+      context: ./SkillForceMainService
+      dockerfile: Dockerfile
+    container_name: main-service
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring
+    depends_on:
+      - user-service
+      - course-service
+      - postgres
+
+  user-service:
+    build:
+      context: ./SkillForceUserService
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    networks:
+      - monitoring
+    depends_on:
+      - postgres
+
+  course-service:
+    build:
+      context: ./SkillForceCourseService
+      dockerfile: Dockerfile
+    container_name: course-service
+    ports:
+      - "8082:8082"
+    networks:
+      - monitoring
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4Vd59Ab4dt
+      POSTGRES_DB: postgres
+    ports:
+      - "8005:5432"
+    volumes:
+      - 57f28f08b1adc8f7c78630a685afec955fb15085773744d6402e4f0a3769aea6:/var/lib/postgresql/data
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "8050:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "8051:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    ports:
+      - "8052:9100"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  57f28f08b1adc8f7c78630a685afec955fb15085773744d6402e4f0a3769aea6:
+    external: true
+
