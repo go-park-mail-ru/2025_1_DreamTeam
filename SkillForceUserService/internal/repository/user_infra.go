@@ -7,15 +7,15 @@ import (
 	"mime/multipart"
 	"skillForce/config"
 	usermodels "skillForce/internal/models/user"
-	"skillForce/internal/repository/mail"
+	"skillForce/internal/repository/kafka"
 	"skillForce/internal/repository/minio"
 	"skillForce/internal/repository/postgres"
 )
 
 type UserInfrastructure struct {
-	Database *postgres.Database
-	Minio    *minio.Minio
-	Mail     *mail.Mail
+	Database      *postgres.Database
+	Minio         *minio.Minio
+	KafkaProducer *kafka.Producer
 }
 
 func NewUserInfrastructure(conf *config.Config) *UserInfrastructure {
@@ -30,19 +30,17 @@ func NewUserInfrastructure(conf *config.Config) *UserInfrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	mail := mail.NewMail(conf.Mail.From, conf.Mail.Password, conf.Mail.Host, conf.Mail.Port)
-	if err != nil {
-		log.Fatalf("Failed to connect to mail: %v", err)
-	}
+	kafkaProducer := kafka.NewKafkaProducer()
 	return &UserInfrastructure{
-		Database: database,
-		Minio:    mn,
-		Mail:     mail,
+		Database:      database,
+		Minio:         mn,
+		KafkaProducer: kafkaProducer,
 	}
 }
 
 func (u *UserInfrastructure) Close() {
 	u.Database.Close()
+	u.KafkaProducer.Close()
 }
 
 func (u *UserInfrastructure) RegisterUser(ctx context.Context, user *usermodels.User) (string, error) {
@@ -86,9 +84,9 @@ func (i *UserInfrastructure) GetUserByToken(ctx context.Context, token string) (
 }
 
 func (i *UserInfrastructure) SendRegMail(ctx context.Context, user *usermodels.User, token string) error {
-	return i.Mail.SendRegMail(ctx, user, token)
+	return i.KafkaProducer.SendRegMail(ctx, user, token)
 }
 
 func (i *UserInfrastructure) SendWelcomeMail(ctx context.Context, user *usermodels.User) error {
-	return i.Mail.SendWelcomeMail(ctx, user)
+	return i.KafkaProducer.SendWelcomeMail(ctx, user)
 }

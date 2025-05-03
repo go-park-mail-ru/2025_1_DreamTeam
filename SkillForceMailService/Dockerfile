@@ -34,5 +34,6 @@ WORKDIR /app
 COPY --from=builder /app/main .
 COPY config/.env ./config/.env
 COPY config/config.yaml ./config/config.yaml
+COPY mail/layouts ./mail/layouts
 
 CMD ["./main"]
