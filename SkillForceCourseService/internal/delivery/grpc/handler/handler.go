@@ -130,3 +130,11 @@ func (h *CourseHandler) AnswerQuestion(ctx context.Context, req *coursepb.Answer
 	}
 	return &emptypb.Empty{}, nil
 }
+
+func (h *CourseHandler) SearchCoursesByTitle(ctx context.Context, req *coursepb.SearchCoursesByTitleRequest) (*coursepb.GetBucketCoursesResponse, error) {
+	courses, err := h.usecase.SearchCoursesByTitle(ctx, mapToGetUserProfile(req.UserProfile), req.Keywords)
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetBucketCoursesResponse(courses), nil
+}

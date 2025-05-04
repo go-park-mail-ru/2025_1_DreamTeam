@@ -51,6 +51,7 @@ func main() {
 	siteMux.HandleFunc("/api/validEmail", userHandler.ConfirmUserEmail)
 
 	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+	siteMux.HandleFunc("/api/searchCourses", courseHandler.SearchCourses)
 	siteMux.HandleFunc("/api/getCourse", courseHandler.GetCourse)
 	siteMux.HandleFunc("/api/getCourseLesson", courseHandler.GetCourseLesson)
 	siteMux.HandleFunc("/api/getNextLesson", courseHandler.GetNextLesson)

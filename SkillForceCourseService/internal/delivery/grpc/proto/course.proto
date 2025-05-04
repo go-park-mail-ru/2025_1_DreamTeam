@@ -301,6 +301,11 @@ message AnswerQuestionRequest {
   string answer = 3;
 }
 
+message SearchCoursesByTitleRequest {
+  UserProfile user_profile = 1;
+  string keywords = 2;
+}
+
 
 // Service Definition
 service CourseService {
@@ -318,4 +323,5 @@ service CourseService {
   rpc AnswerQuiz(AnswerQuizRequest) returns (AnswerQuizResponse);
   rpc GetQuestionTestLesson(GetQuestionTestLessonRequest) returns (GetQuestionTestLessonResponse);
   rpc AnswerQuestion(AnswerQuestionRequest) returns (google.protobuf.Empty);
+  rpc SearchCoursesByTitle(SearchCoursesByTitleRequest) returns (GetBucketCoursesResponse);
 }

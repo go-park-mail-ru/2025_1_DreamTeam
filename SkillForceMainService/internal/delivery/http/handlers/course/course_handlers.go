@@ -112,6 +112,64 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
+func (h *Handler) SearchCourses(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetCourses", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
+	keywords := r.URL.Query().Get("keywords")
+
+	grpcSearchCourses := coursepb.SearchCoursesByTitleRequest{
+		UserProfile: grpcUserProfile,
+		Keywords:    keywords,
+	}
+
+	grpcSearchCoursesResponse, err := h.courseClient.SearchCoursesByTitle(r.Context(), &grpcSearchCourses)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	bucketCourses := make([]*dto.CourseDTO, len(grpcSearchCoursesResponse.Courses))
+	for i, grpcBucketCourse := range grpcSearchCoursesResponse.Courses {
+		bucketCourses[i] = &dto.CourseDTO{
+			Id:              int(grpcBucketCourse.Id),
+			Title:           grpcBucketCourse.Title,
+			ScrImage:        grpcBucketCourse.ScrImage,
+			Tags:            grpcBucketCourse.Tags,
+			Rating:          float32(grpcBucketCourse.Rating),
+			TimeToPass:      int(grpcBucketCourse.TimeToPass),
+			PurchasesAmount: int(grpcBucketCourse.PurchasesAmount),
+			IsPurchased:     grpcBucketCourse.IsPurchased,
+			IsFavorite:      grpcBucketCourse.IsFavorite,
+			CreatorId:       int(grpcBucketCourse.CreatorId),
+			Description:     grpcBucketCourse.Description,
+			Price:           int(grpcBucketCourse.Price),
+		}
+	}
+
+	logs.PrintLog(r.Context(), "GetCourses", "send bucket courses")
+	response.SendBucketCoursesResponse(bucketCourses, w, r)
+}
+
 // GetCourse godoc
 // @Summary Get course
 // @Description Retrieves a course by ID

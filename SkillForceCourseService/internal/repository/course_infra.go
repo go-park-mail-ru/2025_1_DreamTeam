@@ -196,3 +196,7 @@ func (i *CourseInfrastructure) GetQuestionTestLesson(ctx context.Context, curren
 func (i *CourseInfrastructure) AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error {
 	return i.Database.AnswerQuestion(ctx, question_id, user_id, answer)
 }
+
+func (i *CourseInfrastructure) SearchCoursesByTitle(ctx context.Context, keyword string) ([]*coursemodels.Course, error) {
+	return i.Database.SearchCoursesByTitle(ctx, keyword)
+}

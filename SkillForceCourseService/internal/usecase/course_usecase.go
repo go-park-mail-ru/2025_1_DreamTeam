@@ -850,3 +850,76 @@ func (uc *CourseUsecase) AnswerQuestion(ctx context.Context, question_id int, us
 
 	return nil
 }
+
+func (uc *CourseUsecase) SearchCoursesByTitle(ctx context.Context, userProfile *usermodels.UserProfile, keywords string) ([]*dto.CourseDTO, error) {
+	bucketCourses, err := uc.repo.SearchCoursesByTitle(ctx, keywords)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseFavourites := make(map[int]bool, 0)
+	if userProfile != nil {
+		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+			IsFavorite:      courseFavourites[course.Id],
+		})
+	}
+
+	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses, nil
+}

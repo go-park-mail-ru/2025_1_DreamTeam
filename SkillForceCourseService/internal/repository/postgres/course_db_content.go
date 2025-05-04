@@ -10,6 +10,38 @@ import (
 	"skillForce/pkg/logs"
 )
 
+func (d *Database) SearchCoursesByTitle(ctx context.Context, keyword string) ([]*coursemodels.Course, error) {
+	var matchedCourses []*coursemodels.Course
+
+	query := `
+		SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass
+		FROM course
+		WHERE title ILIKE '%' || $1 || '%'
+		LIMIT 16
+	`
+
+	rows, err := d.conn.Query(query, keyword)
+	if err != nil {
+		logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("found course %+v", course))
+		matchedCourses = append(matchedCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("total matched: %d", len(matchedCourses)))
+
+	return matchedCourses, nil
+}
+
 func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error) {
 	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
 	var bucketCourses []*coursemodels.Course
@@ -337,6 +369,7 @@ func (d *Database) AnswerQuestion(ctx context.Context, question_id int, user_id 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
