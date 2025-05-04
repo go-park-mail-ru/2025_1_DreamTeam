@@ -1027,3 +1027,89 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 
 	response.SendQuizResult(result, w, r)
 }
+
+func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	lessonIdStr := r.URL.Query().Get("lessonId")
+	lessonId, err := strconv.Atoi(lessonIdStr)
+
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "not found")
+		response.SendErrorResponse("not found", http.StatusNotFound, w, r)
+		return
+	}
+
+	grpcGetQuestionTestLesson := &coursepb.GetQuestionTestLessonRequest{
+		LessonId: int32(lessonId),
+		UserId:   int32(userProfile.Id),
+	}
+
+	grpcGetQuestionTestLessonResponse, err := h.courseClient.GetQuestionTestLesson(r.Context(), grpcGetQuestionTestLesson)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetQuestionTestLesson", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	question := &dto.QuestionTest{
+		QuestionID: int64(grpcGetQuestionTestLessonResponse.QuestionId),
+		Question:   grpcGetQuestionTestLessonResponse.Question,
+		UserAnswer: dto.UserQuestionAnswer{
+			Status: grpcGetQuestionTestLessonResponse.UserAnswer.Status,
+			Answer: grpcGetQuestionTestLessonResponse.UserAnswer.Answer,
+		},
+	}
+
+	response.SendQuestionTestLessonResponse(question, w, r)
+}
+
+func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "AnswerQuestion", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "AnswerQuestion", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var AnswerInput dto.AnswerQuestion
+	err := json.NewDecoder(r.Body).Decode(&AnswerInput)
+
+	if err != nil {
+		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	grpcAnswerQuestion := &coursepb.AnswerQuestionRequest{
+		QuestionId: int32(AnswerInput.QuestionID),
+		UserId:     int32(userProfile.Id),
+		Answer:     AnswerInput.Answer,
+	}
+
+	_, err = h.courseClient.AnswerQuestion(r.Context(), grpcAnswerQuestion)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}

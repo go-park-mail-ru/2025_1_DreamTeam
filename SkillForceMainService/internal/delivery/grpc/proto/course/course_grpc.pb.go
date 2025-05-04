@@ -31,6 +31,8 @@ type CourseServiceClient interface {
 	GetFavouriteCourses(ctx context.Context, in *GetFavouritesRequest, opts ...grpc.CallOption) (*GetFavouritesResponse, error)
 	GetTestLesson(ctx context.Context, in *GetTestLessonRequest, opts ...grpc.CallOption) (*GetTestLessonResponse, error)
 	AnswerQuiz(ctx context.Context, in *AnswerQuizRequest, opts ...grpc.CallOption) (*AnswerQuizResponse, error)
+	GetQuestionTestLesson(ctx context.Context, in *GetQuestionTestLessonRequest, opts ...grpc.CallOption) (*GetQuestionTestLessonResponse, error)
+	AnswerQuestion(ctx context.Context, in *AnswerQuestionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type courseServiceClient struct {
@@ -149,6 +151,24 @@ func (c *courseServiceClient) AnswerQuiz(ctx context.Context, in *AnswerQuizRequ
 	return out, nil
 }
 
+func (c *courseServiceClient) GetQuestionTestLesson(ctx context.Context, in *GetQuestionTestLessonRequest, opts ...grpc.CallOption) (*GetQuestionTestLessonResponse, error) {
+	out := new(GetQuestionTestLessonResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/GetQuestionTestLesson", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *courseServiceClient) AnswerQuestion(ctx context.Context, in *AnswerQuestionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/course.CourseService/AnswerQuestion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CourseServiceServer is the server API for CourseService service.
 // All implementations must embed UnimplementedCourseServiceServer
 // for forward compatibility
@@ -165,6 +185,8 @@ type CourseServiceServer interface {
 	GetFavouriteCourses(context.Context, *GetFavouritesRequest) (*GetFavouritesResponse, error)
 	GetTestLesson(context.Context, *GetTestLessonRequest) (*GetTestLessonResponse, error)
 	AnswerQuiz(context.Context, *AnswerQuizRequest) (*AnswerQuizResponse, error)
+	GetQuestionTestLesson(context.Context, *GetQuestionTestLessonRequest) (*GetQuestionTestLessonResponse, error)
+	AnswerQuestion(context.Context, *AnswerQuestionRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCourseServiceServer()
 }
 
@@ -207,6 +229,12 @@ func (UnimplementedCourseServiceServer) GetTestLesson(context.Context, *GetTestL
 }
 func (UnimplementedCourseServiceServer) AnswerQuiz(context.Context, *AnswerQuizRequest) (*AnswerQuizResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AnswerQuiz not implemented")
+}
+func (UnimplementedCourseServiceServer) GetQuestionTestLesson(context.Context, *GetQuestionTestLessonRequest) (*GetQuestionTestLessonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetQuestionTestLesson not implemented")
+}
+func (UnimplementedCourseServiceServer) AnswerQuestion(context.Context, *AnswerQuestionRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AnswerQuestion not implemented")
 }
 func (UnimplementedCourseServiceServer) mustEmbedUnimplementedCourseServiceServer() {}
 
@@ -437,6 +465,42 @@ func _CourseService_AnswerQuiz_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CourseService_GetQuestionTestLesson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetQuestionTestLessonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetQuestionTestLesson(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/GetQuestionTestLesson",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetQuestionTestLesson(ctx, req.(*GetQuestionTestLessonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_AnswerQuestion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AnswerQuestionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).AnswerQuestion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/AnswerQuestion",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).AnswerQuestion(ctx, req.(*AnswerQuestionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CourseService_ServiceDesc is the grpc.ServiceDesc for CourseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -491,6 +555,14 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AnswerQuiz",
 			Handler:    _CourseService_AnswerQuiz_Handler,
+		},
+		{
+			MethodName: "GetQuestionTestLesson",
+			Handler:    _CourseService_GetQuestionTestLesson_Handler,
+		},
+		{
+			MethodName: "AnswerQuestion",
+			Handler:    _CourseService_AnswerQuestion_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

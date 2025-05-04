@@ -236,6 +236,51 @@ func (d *Database) GetLessonTest(ctx context.Context, currentLessonId int, user_
 	return q, nil
 }
 
+func (d *Database) GetQuestionTestLesson(ctx context.Context, currentLessonId int, user_id int) (*dto.QuestionTest, error) {
+	query := `
+        SELECT qt.ID, qt.Question
+        FROM Question_task qt
+        WHERE qt.Lesson_test_id = $1
+        LIMIT 1
+    `
+
+	var qt *dto.QuestionTest
+	var QuestionID int64
+	var Question string
+	err := d.conn.QueryRow(query, currentLessonId).Scan(&QuestionID, &Question)
+	qt = &dto.QuestionTest{
+		QuestionID: QuestionID,
+		Question:   Question,
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	query = `
+	SELECT qta.answer, qta.status
+	FROM question_task_answers qta
+	JOIN question_task qt ON qt.id = qta.question_test_id
+	WHERE qta.user_id = $1 AND qt.lesson_test_id = $2
+	LIMIT 1;
+`
+
+	var Answer dto.UserQuestionAnswer
+	err = d.conn.QueryRow(query, user_id, currentLessonId).Scan(&Answer.Answer, &Answer.Status)
+	if err == sql.ErrNoRows {
+		Answer.Status = "not passed"
+		Answer.Answer = ""
+		qt.UserAnswer = Answer
+		logs.PrintLog(ctx, "GetQuestionTestLesson", fmt.Sprintf("%+v", qt))
+		return qt, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	qt.UserAnswer = Answer
+
+	return qt, nil
+}
+
 func (d *Database) AnswerQuiz(ctx context.Context, question_id int, answer_id int, user_id int, course_id int) (*dto.QuizResult, error) {
 	var isTrue bool
 	err := d.conn.QueryRow(`
@@ -281,6 +326,18 @@ func (d *Database) GetLessonById(ctx context.Context, lessonId int) (*coursemode
 		return nil, err
 	}
 	return &lesson, nil
+}
+
+func (d *Database) AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error {
+	query := `
+	INSERT INTO Question_task_answers (User_id, Question_test_id, Answer)
+	VALUES ($1, $2, $3)
+`
+	_, err := d.conn.Exec(query, user_id, question_id, answer)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*coursemodels.CoursePart, error) {

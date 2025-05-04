@@ -56,6 +56,10 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
+type QuestionTestResponse struct {
+	Question *dto.QuestionTest `json:"question"`
+}
+
 // SendErrorResponse - отправка ошибки в JSON-формате
 func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter, r *http.Request) {
 	response := ErrorResponse{ErrorStr: textError}
@@ -87,6 +91,13 @@ func SendTestLessonResponse(test *dto.Test, w http.ResponseWriter, r *http.Reque
 
 func SendQuizResult(result bool, w http.ResponseWriter, r *http.Request) {
 	response := Result{Result: result}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func SendQuestionTestLessonResponse(question *dto.QuestionTest, w http.ResponseWriter, r *http.Request) {
+	response := QuestionTestResponse{Question: question}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

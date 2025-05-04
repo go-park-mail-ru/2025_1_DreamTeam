@@ -114,3 +114,19 @@ func (h *CourseHandler) AnswerQuiz(ctx context.Context, req *coursepb.AnswerQuiz
 	}
 	return mapToAnswerQuizResponse(res), nil
 }
+
+func (h *CourseHandler) GetQuestionTestLesson(ctx context.Context, req *coursepb.GetQuestionTestLessonRequest) (*coursepb.GetQuestionTestLessonResponse, error) {
+	question, err := h.usecase.GetQuestionTestLesson(ctx, int(req.LessonId), int(req.UserId))
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetQuestionTestLessonResponse(question), nil
+}
+
+func (h *CourseHandler) AnswerQuestion(ctx context.Context, req *coursepb.AnswerQuestionRequest) (*emptypb.Empty, error) {
+	err := h.usecase.AnswerQuestion(ctx, int(req.QuestionId), int(req.UserId), req.Answer)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

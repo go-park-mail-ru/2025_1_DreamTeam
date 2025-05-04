@@ -161,3 +161,19 @@ type Answer struct {
 	Answer_ID  int `json:"answer_id"`
 	Course_ID  int `json:"course_id"`
 }
+
+type UserQuestionAnswer struct {
+	Status string `json:"status"`
+	Answer string `json:"answer"`
+}
+
+type QuestionTest struct {
+	QuestionID int64              `json:"question_id"`
+	Question   string             `json:"question"`
+	UserAnswer UserQuestionAnswer `json:"user_answer"`
+}
+
+type AnswerQuestion struct {
+	QuestionID int    `json:"question_id"`
+	Answer     string `json:"answer"`
+}

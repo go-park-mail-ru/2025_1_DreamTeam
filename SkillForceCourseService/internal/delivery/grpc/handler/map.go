@@ -266,6 +266,24 @@ func mapToGetTestLessonResponse(test *dto.Test) *coursepb.GetTestLessonResponse 
 	}
 }
 
+func mapToUserQuestionAnswerDTO(test *dto.QuestionTest) *coursepb.UserAnswerQuestion {
+	if test == nil {
+		return nil
+	}
+	return &coursepb.UserAnswerQuestion{
+		Status: test.UserAnswer.Status,
+		Answer: test.UserAnswer.Answer,
+	}
+}
+
+func mapToGetQuestionTestLessonResponse(test *dto.QuestionTest) *coursepb.GetQuestionTestLessonResponse {
+	return &coursepb.GetQuestionTestLessonResponse{
+		QuestionId: int32(test.QuestionID),
+		Question:   test.Question,
+		UserAnswer: mapToUserQuestionAnswerDTO(test),
+	}
+}
+
 func mapToAnswerQuizResponse(test *dto.QuizResult) *coursepb.AnswerQuizResponse {
 	return &coursepb.AnswerQuizResponse{
 		IsRight: test.Result,

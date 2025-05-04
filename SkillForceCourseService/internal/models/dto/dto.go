@@ -159,3 +159,14 @@ type Test struct {
 type QuizResult struct {
 	Result bool `json:"result"`
 }
+
+type UserQuestionAnswer struct {
+	Status string `json:"status"`
+	Answer string `json:"answer"`
+}
+
+type QuestionTest struct {
+	QuestionID int64              `json:"question_id"`
+	Question   string             `json:"question"`
+	UserAnswer UserQuestionAnswer `json:"user_answer"`
+}

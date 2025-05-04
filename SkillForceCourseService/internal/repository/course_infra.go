@@ -188,3 +188,11 @@ func (i *CourseInfrastructure) GetLessonTest(ctx context.Context, currentLessonI
 func (i *CourseInfrastructure) AnswerQuiz(ctx context.Context, question_id int, answer_id int, user_id int, course_id int) (*dto.QuizResult, error) {
 	return i.Database.AnswerQuiz(ctx, question_id, answer_id, user_id, course_id)
 }
+
+func (i *CourseInfrastructure) GetQuestionTestLesson(ctx context.Context, currentLessonId int, user_id int) (*dto.QuestionTest, error) {
+	return i.Database.GetQuestionTestLesson(ctx, currentLessonId, user_id)
+}
+
+func (i *CourseInfrastructure) AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error {
+	return i.Database.AnswerQuestion(ctx, question_id, user_id, answer)
+}
