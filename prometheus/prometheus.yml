@@ -8,7 +8,7 @@ scrape_configs:
 
   - job_name: 'user-service'
     static_configs:
-      - targets: ['user-service:8081']
+      - targets: ['user-service:9081']
 
   - job_name: 'course-service'
     static_configs:
