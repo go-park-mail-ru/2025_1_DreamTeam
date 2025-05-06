@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 
 	"skillForce/config"
 	"skillForce/mail"
+	"skillForce/metrics"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -22,8 +25,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
 	}
-
 	defer consumer.Close()
+
+	metrics.Init()
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("Prometheus metrics available at :9083/metrics")
+		if err := http.ListenAndServe(":9083", nil); err != nil {
+			log.Fatalf("failed to start metrics HTTP server: %v", err)
+		}
+	}()
 
 	topic := "mail"
 	err = consumer.SubscribeTopics([]string{topic}, nil)

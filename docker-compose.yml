@@ -45,6 +45,8 @@ services:
       context: ./SkillForceMailService
       dockerfile: Dockerfile
     container_name: mail-service
+    ports:
+      - "9083:9083"
     networks:
       - monitoring
     depends_on:
