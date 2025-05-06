@@ -8,13 +8,11 @@ import (
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
-	"skillForce/internal/repository/mail"
 	"skillForce/internal/repository/postgres"
 )
 
 type CourseInfrastructure struct {
 	Database *postgres.Database
-	Mail     *mail.Mail
 }
 
 func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
@@ -24,13 +22,8 @@ func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	mail := mail.NewMail(conf.Mail.From, conf.Mail.Password, conf.Mail.Host, conf.Mail.Port)
-	if err != nil {
-		log.Fatalf("Failed to connect to mail: %v", err)
-	}
 	return &CourseInfrastructure{
 		Database: database,
-		Mail:     mail,
 	}
 }
 
@@ -106,10 +99,6 @@ func (i *CourseInfrastructure) GetUserById(ctx context.Context, userId int) (*us
 	return i.Database.GetUserById(ctx, userId)
 }
 
-func (i *CourseInfrastructure) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
-	return i.Mail.SendWelcomeCourseMail(ctx, user, courseId)
-}
-
 func (i *CourseInfrastructure) IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
 	return i.Database.IsUserPurchasedCourse(ctx, userId, courseId)
 }
@@ -124,10 +113,6 @@ func (i *CourseInfrastructure) GetLessonById(ctx context.Context, lessonId int) 
 
 func (i *CourseInfrastructure) IsMiddle(ctx context.Context, userId int, courseId int) (bool, error) {
 	return i.Database.IsMiddle(ctx, userId, courseId)
-}
-
-func (i *CourseInfrastructure) SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error {
-	return i.Mail.SendMiddleCourseMail(ctx, user, courseId)
 }
 
 func (i *CourseInfrastructure) CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error) {

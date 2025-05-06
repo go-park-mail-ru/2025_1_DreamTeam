@@ -37,9 +37,6 @@ type CourseRepository interface {
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error)
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*coursemodels.Course) (map[int]int, error)
 
-	SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, courseId int) error
-	SendMiddleCourseMail(ctx context.Context, user *usermodels.User, courseId int) error
-
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
 
 	CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error)

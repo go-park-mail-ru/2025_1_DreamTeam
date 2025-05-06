@@ -408,16 +408,16 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			LessonHeader: *lessonHeader,
 			LessonBody:   LessonBody,
 		}
-
-		user, _ := uc.repo.GetUserById(ctx, userId)
-		if user.HideEmail {
-			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+		/*
 			user, _ := uc.repo.GetUserById(ctx, userId)
-			if isMiddle {
-				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			if user.HideEmail {
+				isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+				user, _ := uc.repo.GetUserById(ctx, userId)
+				if isMiddle {
+					go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+				}
 			}
-		}
-
+		*/
 		return lessonDto, err
 	}
 
@@ -470,16 +470,16 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			LessonHeader: *lessonHeader,
 			LessonBody:   LessonBody,
 		}
-
-		user, _ := uc.repo.GetUserById(ctx, userId)
-		if user.HideEmail {
-			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+		/*
 			user, _ := uc.repo.GetUserById(ctx, userId)
-			if isMiddle {
-				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			if user.HideEmail {
+				isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+				user, _ := uc.repo.GetUserById(ctx, userId)
+				if isMiddle {
+					go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+				}
 			}
-		}
-
+		*/
 		return lessonDto, err
 	}
 
@@ -523,16 +523,16 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			LessonHeader: *lessonHeader,
 			LessonBody:   LessonBody,
 		}
-
-		user, _ := uc.repo.GetUserById(ctx, userId)
-		if user.HideEmail {
-			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+		/*
 			user, _ := uc.repo.GetUserById(ctx, userId)
-			if isMiddle {
-				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			if user.HideEmail {
+				isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+				user, _ := uc.repo.GetUserById(ctx, userId)
+				if isMiddle {
+					go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+				}
 			}
-		}
-
+		*/
 		return lessonDto, err
 	}
 
@@ -576,16 +576,16 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 			LessonHeader: *lessonHeader,
 			LessonBody:   LessonBody,
 		}
-
-		user, _ := uc.repo.GetUserById(ctx, userId)
-		if user.HideEmail {
-			isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+		/*
 			user, _ := uc.repo.GetUserById(ctx, userId)
-			if isMiddle {
-				go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+			if user.HideEmail {
+				isMiddle, _ := uc.repo.IsMiddle(ctx, userId, courseId)
+				user, _ := uc.repo.GetUserById(ctx, userId)
+				if isMiddle {
+					go uc.repo.SendMiddleCourseMail(ctx, user, courseId)
+				}
 			}
-		}
-
+		*/
 		return lessonDto, err
 	}
 

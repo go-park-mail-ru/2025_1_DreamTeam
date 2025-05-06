@@ -741,6 +741,7 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 			Parts:           parts,
 		},
 		UserProfile: &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
 			Name:      userProfile.Name,
 			Email:     userProfile.Email,
 			Bio:       userProfile.Bio,
@@ -827,6 +828,7 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 			Parts:           parts,
 		},
 		UserProfile: &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
 			Name:      userProfile.Name,
 			Email:     userProfile.Email,
 			Bio:       userProfile.Bio,
@@ -913,6 +915,7 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 			Parts:           parts,
 		},
 		UserProfile: &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
 			Name:      userProfile.Name,
 			Email:     userProfile.Email,
 			Bio:       userProfile.Bio,

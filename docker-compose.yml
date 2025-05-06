@@ -37,7 +37,6 @@ services:
       - monitoring
     depends_on:
       - postgres
-      - kafka
     
   mail-service:
     build:
