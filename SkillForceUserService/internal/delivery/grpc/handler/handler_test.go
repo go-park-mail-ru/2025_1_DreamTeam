@@ -123,3 +123,82 @@ func TestConvertToMultipart(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "test data", buf.String())
 }
+
+// Тест для UpdateProfile
+func TestUpdateProfile(t *testing.T) {
+	mockUsecase := new(MockUserUsecase)
+	handler := NewUserHandler(mockUsecase)
+
+	userProfile := &models.UserProfile{Id: 1, Email: "john@example.com", Name: "John", Bio: "Hello", HideEmail: false}
+	mockUsecase.On("UpdateProfile", mock.Anything, 1, userProfile).Return(nil)
+
+	req := &userpb.UpdateProfileRequest{
+		UserId: 1,
+		Profile: &userpb.UserProfile{
+			Email:     "john@example.com",
+			Name:      "John",
+			Bio:       "Hello",
+			HideEmail: false,
+		},
+	}
+	resp, err := handler.UpdateProfile(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	mockUsecase.AssertExpectations(t)
+}
+
+// Тест для UploadFile
+func TestUploadFile(t *testing.T) {
+	mockUsecase := new(MockUserUsecase)
+	handler := NewUserHandler(mockUsecase)
+
+	fileData := []byte("test data")
+	fileName := "test.txt"
+	contentType := "text/plain"
+	mockUsecase.On("UploadFile", mock.Anything, mock.Anything, mock.Anything).Return("http://example.com/test.txt", nil)
+
+	req := &userpb.UploadFileRequest{
+		FileData:    fileData,
+		FileName:    fileName,
+		ContentType: contentType,
+	}
+	resp, err := handler.UploadFile(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "http://example.com/test.txt", resp.Url)
+	mockUsecase.AssertExpectations(t)
+}
+
+// Тест для SaveProfilePhoto
+func TestSaveProfilePhoto(t *testing.T) {
+	mockUsecase := new(MockUserUsecase)
+	handler := NewUserHandler(mockUsecase)
+
+	mockUsecase.On("SaveProfilePhoto", mock.Anything, "http://example.com/photo.jpg", 1).Return("http://example.com/photo.jpg", nil)
+
+	req := &userpb.SaveProfilePhotoRequest{
+		Url:    "http://example.com/photo.jpg",
+		UserId: 1,
+	}
+	resp, err := handler.SaveProfilePhoto(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "http://example.com/photo.jpg", resp.NewPhtotoUrl)
+	mockUsecase.AssertExpectations(t)
+}
+
+// Тест для DeleteProfilePhoto
+func TestDeleteProfilePhoto(t *testing.T) {
+	mockUsecase := new(MockUserUsecase)
+	handler := NewUserHandler(mockUsecase)
+
+	mockUsecase.On("DeleteProfilePhoto", mock.Anything, 1).Return(nil)
+
+	req := &userpb.DeleteProfilePhotoRequest{UserId: 1}
+	resp, err := handler.DeleteProfilePhoto(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	mockUsecase.AssertExpectations(t)
+}
