@@ -1,0 +1,327 @@
+syntax = "proto3";
+
+package course;
+option go_package = "skillForce/internal/delivery/grpc/proto/course;coursepb";
+
+import "google/protobuf/empty.proto";
+
+// Course Structure
+message Course {
+  int32 id = 1;
+  int32 price = 2;
+  int32 creator_id = 3;
+  int32 time_to_pass = 4;
+  string title = 5;
+  string description = 6;
+  string scr_image = 7;
+  repeated CoursePart parts = 8;
+}
+
+message CoursePart {
+  int32 id = 1;
+  int32 order = 2;
+  string title = 3;
+  repeated LessonBucket buckets = 4;
+}
+
+message LessonBucket {
+  int32 id = 1;
+  int32 order = 2;
+  string title = 3;
+  int32 part_id = 4;
+  repeated LessonPoint lessons = 5;
+}
+
+message LessonPoint {
+  int32 lesson_id = 1;
+  string title = 2;
+  string type = 3;
+  string value = 4;
+  bool is_done = 5;
+  bool is_image = 6;
+  int32 bucket_id = 7;
+  int32 order = 8;
+}
+
+// Requests/Responses
+message GetBucketCoursesRequest {
+  UserProfile user_profile = 1;
+}
+
+message GetBucketCoursesResponse {
+  repeated CourseDTO courses = 1;
+}
+
+message GetCourseLessonRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
+message GetCourseLessonResponse {
+  LessonDTO lesson = 1;
+}
+
+message GetNextLessonRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+  int32 lesson_id = 3;
+}
+
+message GetNextLessonResponse {
+  LessonDTO lesson = 1;
+}
+
+message MarkLessonAsNotCompletedRequest {
+  int32 user_id = 1;
+  int32 lesson_id = 2;
+}
+
+message GetCourseRoadmapRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
+message GetCourseRoadmapResponse {
+  CourseRoadmapDTO roadmap = 1;
+}
+
+message GetCourseRequest {
+  int32 course_id = 1;
+  UserProfile user_profile = 2;
+}
+
+message GetCourseResponse {
+  CourseDTO course = 1;
+
+}
+
+message CreateCourseRequest {
+  CourseDTO course = 1;
+  UserProfile user_profile = 2;
+}
+
+message AddToFavouritesRequest {
+  CourseDTO course = 1;
+  UserProfile user_profile = 2;
+}
+
+message DeleteCourseFromFavouritesRequest {
+  CourseDTO course = 1;
+  UserProfile user_profile = 2;
+}
+
+message GetFavouritesRequest {
+  UserProfile user_profile = 1;
+}
+
+message GetFavouritesResponse {
+  repeated CourseDTO courses = 1;
+}
+
+// DTOs
+message CourseDTO {
+  int32 id = 1;
+  int32 price = 2;
+  int32 purchases_amount = 3;
+  int32 creator_id = 4;
+  int32 time_to_pass = 5;
+  float rating = 6;
+  repeated string tags = 7;
+  string title = 8;
+  string description = 9;
+  string scr_image = 10;
+  bool is_purchased = 11;
+  repeated CoursePartDTO parts = 12;
+  bool is_favorite = 13;
+}
+
+message CourseRoadmapDTO {
+  repeated CoursePartDTO parts = 1;
+}
+
+message CoursePartDTO {
+  int32 id = 1;
+  string title = 2;
+  repeated LessonBucketDTO buckets = 3;
+}
+
+message LessonBucketDTO {
+  int32 id = 1;
+  string title = 2;
+  repeated LessonPointDTO lessons = 3;
+}
+
+message LessonPointDTO {
+  int32 lesson_id = 1;
+  string type = 2;
+  string title = 3;
+  string value = 4;
+  bool is_done = 5;
+}
+
+message LessonDTO {
+  LessonDtoHeader header = 1;
+  LessonDtoBody body = 2;
+}
+
+message LessonDtoHeader {
+  string course_title = 1;
+  int32 course_id = 2;
+  Part part = 3;
+  Bucket bucket = 4;
+  repeated Point points = 5;
+}
+
+message Part {
+  int32 order = 1;
+  string title = 2;
+}
+
+message Bucket {
+  int32 order = 1;
+  string title = 2;
+}
+
+message Point {
+  int32 lesson_id = 1;
+  string type = 2;
+  bool is_done = 3;
+}
+
+message LessonDtoBody {
+  repeated Block blocks = 1;
+  Footer footer = 2;
+}
+
+message Block {
+  string body = 1;
+}
+
+message Footer {
+  int32 next_lesson_id = 1;
+  int32 current_lesson_id = 2;
+  int32 previous_lesson_id = 3;
+}
+
+message UserProfile {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  string bio = 4;
+  string avatar_src = 5;
+  bool hide_email = 6;
+  bool is_admin = 7;
+}
+
+message GetVideoUrlRequest {
+  int32 lesson_id = 1;
+}
+
+message GetVideoUrlResponse {
+  string url = 1;
+}
+
+message GetMetaRequest {
+  string name = 1;
+}
+
+message VideoMeta {
+  string name = 1;
+  int64 size = 2;
+}
+
+message GetFragmentRequest {
+  string name = 1;
+  int64 start = 2;
+  int64 end = 3;
+}
+
+message VideoFragment {
+  bytes chunk = 1;
+}
+
+message AnswerTestDTO {
+  int32 answer_id = 1;
+  string answer = 2;
+  bool is_right = 3;
+}
+
+message TestDTO {
+  int32 question_id = 1;
+  string question = 2;
+  repeated AnswerTestDTO answers = 3;
+}
+
+message UserAnswer {
+  bool is_right = 1;
+  int32 question_id = 2;
+  int32 answer_id = 3;
+}
+
+message GetTestLessonRequest {
+  int32 lesson_id = 1;
+  int32 user_id = 2;
+}
+
+message GetTestLessonResponse {
+  TestDTO TestDTO = 1;
+  UserAnswer UserAnswer = 2;
+}
+
+message AnswerQuizRequest {
+  int32 question_id = 1;
+  int32 answer_id = 2;
+  int32 user_id = 3;
+  int32 course_id = 4;
+}
+
+message AnswerQuizResponse {
+  bool is_right = 1;
+}
+
+message GetQuestionTestLessonRequest {
+  int32 lesson_id = 1;
+  int32 user_id = 2;
+}
+
+message UserAnswerQuestion {
+  string status = 1;
+  string answer = 2;
+}
+
+message GetQuestionTestLessonResponse {
+  int32 question_id = 1;
+  string question = 2;
+  UserAnswerQuestion user_answer = 3;
+}
+
+message AnswerQuestionRequest {
+  int32 question_id = 1;
+  int32 user_id = 2;
+  string answer = 3;
+}
+
+message SearchCoursesByTitleRequest {
+  UserProfile user_profile = 1;
+  string keywords = 2;
+}
+
+
+// Service Definition
+service CourseService {
+  rpc GetBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
+  rpc GetCourseLesson(GetCourseLessonRequest) returns (GetCourseLessonResponse);
+  rpc GetNextLesson(GetNextLessonRequest) returns (GetNextLessonResponse);
+  rpc MarkLessonAsNotCompleted(MarkLessonAsNotCompletedRequest) returns (google.protobuf.Empty);
+  rpc GetCourseRoadmap(GetCourseRoadmapRequest) returns (GetCourseRoadmapResponse);
+  rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
+  rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);
+  rpc AddCourseToFavourites(AddToFavouritesRequest) returns (google.protobuf.Empty);
+  rpc DeleteCourseFromFavourites(DeleteCourseFromFavouritesRequest) returns (google.protobuf.Empty);
+  rpc GetFavouriteCourses(GetFavouritesRequest) returns (GetFavouritesResponse);
+  rpc GetTestLesson(GetTestLessonRequest) returns (GetTestLessonResponse);
+  rpc AnswerQuiz(AnswerQuizRequest) returns (AnswerQuizResponse);
+  rpc GetQuestionTestLesson(GetQuestionTestLessonRequest) returns (GetQuestionTestLessonResponse);
+  rpc AnswerQuestion(AnswerQuestionRequest) returns (google.protobuf.Empty);
+  rpc SearchCoursesByTitle(SearchCoursesByTitleRequest) returns (GetBucketCoursesResponse);
+}
