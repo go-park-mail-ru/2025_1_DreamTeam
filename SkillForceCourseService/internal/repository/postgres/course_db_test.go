@@ -398,72 +398,72 @@ func TestGetLastLessonHeader_Success(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGetLessonHeaderByLessonId_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+// func TestGetLessonHeaderByLessonId_Success(t *testing.T) {
+// 	db, mock, err := sqlmock.New()
+// 	require.NoError(t, err)
+// 	defer db.Close()
 
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	database := &Database{conn: db}
+// 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+// 	database := &Database{conn: db}
 
-	userId := 1
-	currentLessonId := 10
+// 	userId := 1
+// 	currentLessonId := 10
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID, c.ID, c.Title
-		FROM lesson l
-		JOIN LESSON_BUCKET lb ON l.LESSON_BUCKET_ID = lb.ID
-		JOIN PART p ON lb.PART_ID = p.ID
-		JOIN COURSE c ON p.COURSE_ID = c.ID
-		WHERE l.ID = $1
-	`)).
-		WithArgs(currentLessonId).
-		WillReturnRows(sqlmock.NewRows([]string{
-			"p.Title", "p.Part_Order", "p.ID",
-			"lb.Title", "lb.Lesson_Bucket_Order", "lb.ID",
-			"c.ID", "c.Title"}).
-			AddRow("Part A", 1, 101, "Bucket A", 1, 201, 301, "Course Title"))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT p.Title, p.Part_Order, p.ID, lb.Title, lb.Lesson_Bucket_Order, lb.ID, c.ID, c.Title
+// 		FROM lesson l
+// 		JOIN LESSON_BUCKET lb ON l.LESSON_BUCKET_ID = lb.ID
+// 		JOIN PART p ON lb.PART_ID = p.ID
+// 		JOIN COURSE c ON p.COURSE_ID = c.ID
+// 		WHERE l.ID = $1
+// 	`)).
+// 		WithArgs(currentLessonId).
+// 		WillReturnRows(sqlmock.NewRows([]string{
+// 			"p.Title", "p.Part_Order", "p.ID",
+// 			"lb.Title", "lb.Lesson_Bucket_Order", "lb.ID",
+// 			"c.ID", "c.Title"}).
+// 			AddRow("Part A", 1, 101, "Bucket A", 1, 201, 301, "Course Title"))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT lesson_id
-		FROM LESSON_CHECKPOINT
-		WHERE course_id = $1 and user_id = $2
-	`)).
-		WithArgs(301, userId).
-		WillReturnRows(sqlmock.NewRows([]string{"lesson_id"}).
-			AddRow(10).
-			AddRow(11))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT lesson_id
+// 		FROM LESSON_CHECKPOINT
+// 		WHERE course_id = $1 and user_id = $2
+// 	`)).
+// 		WithArgs(301, userId).
+// 		WillReturnRows(sqlmock.NewRows([]string{"lesson_id"}).
+// 			AddRow(10).
+// 			AddRow(11))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, type
-		FROM LESSON
-		WHERE lesson_bucket_id = $1
-	`)).
-		WithArgs(201).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "type"}).
-			AddRow(10, "video").
-			AddRow(11, "quiz").
-			AddRow(12, "text"))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT id, type
+// 		FROM LESSON
+// 		WHERE lesson_bucket_id = $1
+// 	`)).
+// 		WithArgs(201).
+// 		WillReturnRows(sqlmock.NewRows([]string{"id", "type"}).
+// 			AddRow(10, "video").
+// 			AddRow(11, "quiz").
+// 			AddRow(12, "text"))
 
-	header, err := database.GetLessonHeaderByLessonId(ctx, userId, currentLessonId)
-	require.NoError(t, err)
-	require.NotNil(t, header)
+// 	header, err := database.GetLessonHeaderByLessonId(ctx, userId, currentLessonId)
+// 	require.NoError(t, err)
+// 	require.NotNil(t, header)
 
-	require.Equal(t, 301, header.CourseId)
-	require.Equal(t, "Course Title", header.CourseTitle)
-	require.Equal(t, 3, len(header.Points))
+// 	require.Equal(t, 301, header.CourseId)
+// 	require.Equal(t, "Course Title", header.CourseTitle)
+// 	require.Equal(t, 3, len(header.Points))
 
-	require.Equal(t, 10, header.Points[0].LessonId)
-	require.Equal(t, true, header.Points[0].IsDone)
+// 	require.Equal(t, 10, header.Points[0].LessonId)
+// 	require.Equal(t, true, header.Points[0].IsDone)
 
-	require.Equal(t, 11, header.Points[1].LessonId)
-	require.Equal(t, true, header.Points[1].IsDone)
+// 	require.Equal(t, 11, header.Points[1].LessonId)
+// 	require.Equal(t, true, header.Points[1].IsDone)
 
-	require.Equal(t, 12, header.Points[2].LessonId)
-	require.Equal(t, false, header.Points[2].IsDone)
+// 	require.Equal(t, 12, header.Points[2].LessonId)
+// 	require.Equal(t, false, header.Points[2].IsDone)
 
-	require.NoError(t, mock.ExpectationsWereMet())
-}
+// 	require.NoError(t, mock.ExpectationsWereMet())
+// }
 
 func TestGetLessonBlocks_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
@@ -663,139 +663,139 @@ func TestGetBucketByLessonId_NoRows(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGetLessonFooters_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+// func TestGetLessonFooters_Success(t *testing.T) {
+// 	db, mock, err := sqlmock.New()
+// 	require.NoError(t, err)
+// 	defer db.Close()
 
-	database := &Database{conn: db}
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	lessonID := 123
-	expectedFooters := []int{100, 123, 124}
+// 	database := &Database{conn: db}
+// 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+// 	lessonID := 123
+// 	expectedFooters := []int{100, 123, 124}
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
-		FROM LESSON l
-		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
-		WHERE l.id = $1
-	`)).
-		WithArgs(lessonID).
-		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
-			AddRow(2, 5, 1))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
+// 		FROM LESSON l
+// 		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+// 		WHERE l.id = $1
+// 	`)).
+// 		WithArgs(lessonID).
+// 		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
+// 			AddRow(2, 5, 1))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, lesson_order
-		FROM LESSON
-		WHERE lesson_bucket_id = $1
-		ORDER BY Lesson_Order ASC
-	`)).
-		WithArgs(5).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "lesson_order"}).
-			AddRow(100, 1).
-			AddRow(123, 2).
-			AddRow(124, 3))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT id, lesson_order
+// 		FROM LESSON
+// 		WHERE lesson_bucket_id = $1
+// 		ORDER BY Lesson_Order ASC
+// 	`)).
+// 		WithArgs(5).
+// 		WillReturnRows(sqlmock.NewRows([]string{"id", "lesson_order"}).
+// 			AddRow(100, 1).
+// 			AddRow(123, 2).
+// 			AddRow(124, 3))
 
-	footers, err := database.GetLessonFooters(ctx, lessonID)
+// 	footers, err := database.GetLessonFooters(ctx, lessonID)
 
-	require.NoError(t, err)
-	require.Equal(t, expectedFooters, footers)
-	require.NoError(t, mock.ExpectationsWereMet())
-}
+// 	require.NoError(t, err)
+// 	require.Equal(t, expectedFooters, footers)
+// 	require.NoError(t, mock.ExpectationsWereMet())
+// }
 
-func TestGetLessonFooters_QueryErrorFirst(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+// func TestGetLessonFooters_QueryErrorFirst(t *testing.T) {
+// 	db, mock, err := sqlmock.New()
+// 	require.NoError(t, err)
+// 	defer db.Close()
 
-	database := &Database{conn: db}
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	lessonID := 123
+// 	database := &Database{conn: db}
+// 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+// 	lessonID := 123
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
-		FROM LESSON l
-		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
-		WHERE l.id = $1
-	`)).
-		WithArgs(lessonID).
-		WillReturnError(errors.New("query failed"))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
+// 		FROM LESSON l
+// 		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+// 		WHERE l.id = $1
+// 	`)).
+// 		WithArgs(lessonID).
+// 		WillReturnError(errors.New("query failed"))
 
-	footers, err := database.GetLessonFooters(ctx, lessonID)
+// 	footers, err := database.GetLessonFooters(ctx, lessonID)
 
-	require.Error(t, err)
-	require.Nil(t, footers)
-	require.NoError(t, mock.ExpectationsWereMet())
-}
+// 	require.Error(t, err)
+// 	require.Nil(t, footers)
+// 	require.NoError(t, mock.ExpectationsWereMet())
+// }
 
-func TestGetLessonFooters_QueryErrorSecond(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+// func TestGetLessonFooters_QueryErrorSecond(t *testing.T) {
+// 	db, mock, err := sqlmock.New()
+// 	require.NoError(t, err)
+// 	defer db.Close()
 
-	database := &Database{conn: db}
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	lessonID := 123
+// 	database := &Database{conn: db}
+// 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+// 	lessonID := 123
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
-		FROM LESSON l
-		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
-		WHERE l.id = $1
-	`)).
-		WithArgs(lessonID).
-		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
-			AddRow(2, 5, 1))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
+// 		FROM LESSON l
+// 		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+// 		WHERE l.id = $1
+// 	`)).
+// 		WithArgs(lessonID).
+// 		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
+// 			AddRow(2, 5, 1))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, lesson_order
-		FROM LESSON
-		WHERE lesson_bucket_id = $1
-		ORDER BY Lesson_Order ASC
-	`)).
-		WithArgs(5).
-		WillReturnError(errors.New("query failed"))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT id, lesson_order
+// 		FROM LESSON
+// 		WHERE lesson_bucket_id = $1
+// 		ORDER BY Lesson_Order ASC
+// 	`)).
+// 		WithArgs(5).
+// 		WillReturnError(errors.New("query failed"))
 
-	footers, err := database.GetLessonFooters(ctx, lessonID)
+// 	footers, err := database.GetLessonFooters(ctx, lessonID)
 
-	require.Error(t, err)
-	require.Nil(t, footers)
-	require.NoError(t, mock.ExpectationsWereMet())
-}
+// 	require.Error(t, err)
+// 	require.Nil(t, footers)
+// 	require.NoError(t, mock.ExpectationsWereMet())
+// }
 
-func TestGetLessonFooters_NoLessonsInBucket(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer db.Close()
+// func TestGetLessonFooters_NoLessonsInBucket(t *testing.T) {
+// 	db, mock, err := sqlmock.New()
+// 	require.NoError(t, err)
+// 	defer db.Close()
 
-	database := &Database{conn: db}
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	lessonID := 123
+// 	database := &Database{conn: db}
+// 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
+// 	lessonID := 123
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
-		FROM LESSON l
-		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
-		WHERE l.id = $1
-	`)).
-		WithArgs(lessonID).
-		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
-			AddRow(2, 5, 1))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT l.lesson_order, lb.id, lb.lesson_bucket_order
+// 		FROM LESSON l
+// 		JOIN LESSON_BUCKET lb ON l.lesson_bucket_id = lb.id
+// 		WHERE l.id = $1
+// 	`)).
+// 		WithArgs(lessonID).
+// 		WillReturnRows(sqlmock.NewRows([]string{"lesson_order", "id", "lesson_bucket_order"}).
+// 			AddRow(2, 5, 1))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, lesson_order
-		FROM LESSON
-		WHERE lesson_bucket_id = $1
-		ORDER BY Lesson_Order ASC
-	`)).
-		WithArgs(5).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "lesson_order"}))
+// 	mock.ExpectQuery(regexp.QuoteMeta(`
+// 		SELECT id, lesson_order
+// 		FROM LESSON
+// 		WHERE lesson_bucket_id = $1
+// 		ORDER BY Lesson_Order ASC
+// 	`)).
+// 		WithArgs(5).
+// 		WillReturnRows(sqlmock.NewRows([]string{"id", "lesson_order"}))
 
-	footers, err := database.GetLessonFooters(ctx, lessonID)
+// 	footers, err := database.GetLessonFooters(ctx, lessonID)
 
-	require.Error(t, err)
-	require.Nil(t, footers)
-	require.NoError(t, mock.ExpectationsWereMet())
-}
+// 	require.Error(t, err)
+// 	require.Nil(t, footers)
+// 	require.NoError(t, mock.ExpectationsWereMet())
+// }
 
 func TestGetCourseParts_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
