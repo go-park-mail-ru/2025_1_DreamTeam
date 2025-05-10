@@ -513,6 +513,44 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 	response.SendOKResponse(w, r)
 }
 
+func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	lessonId := dto.LessonIDRequest{}
+	err := json.NewDecoder(r.Body).Decode(&lessonId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcMarkLessonAsCompletedRequest := &coursepb.MarkLessonAsCompletedRequest{
+		UserId:   int32(userProfile.Id),
+		LessonId: int32(lessonId.Id),
+	}
+	_, err = h.courseClient.MarkLessonAsCompleted(r.Context(), grpcMarkLessonAsCompletedRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
 // GetCourseRoadmap godoc
 // @Summary      Get course roadmap
 // @Description  Returns the roadmap of a course for the authenticated user
