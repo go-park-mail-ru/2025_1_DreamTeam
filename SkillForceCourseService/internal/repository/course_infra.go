@@ -35,6 +35,10 @@ func (i *CourseInfrastructure) GetBucketCourses(ctx context.Context) ([]*coursem
 	return i.Database.GetBucketCourses(ctx)
 }
 
+func (i *CourseInfrastructure) GetPurchasedBucketCourses(userId int, ctx context.Context) ([]*coursemodels.Course, error) {
+	return i.Database.GetPurchasedBucketCourses(userId, ctx)
+}
+
 func (i *CourseInfrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }

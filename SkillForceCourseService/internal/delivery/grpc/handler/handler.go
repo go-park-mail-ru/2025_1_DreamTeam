@@ -27,6 +27,14 @@ func (h *CourseHandler) GetBucketCourses(ctx context.Context, req *coursepb.GetB
 	return mapToGetBucketCoursesResponse(courses), nil
 }
 
+func (h *CourseHandler) GetPurchasedBucketCourses(ctx context.Context, req *coursepb.GetBucketCoursesRequest) (*coursepb.GetBucketCoursesResponse, error) {
+	courses, err := h.usecase.GetPurchasedBucketCourses(ctx, mapToGetUserProfile(req.UserProfile))
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetBucketCoursesResponse(courses), nil
+}
+
 func (h *CourseHandler) GetCourseLesson(ctx context.Context, req *coursepb.GetCourseLessonRequest) (*coursepb.GetCourseLessonResponse, error) {
 	lesson, err := h.usecase.GetCourseLesson(ctx, int(req.UserId), int(req.CourseId))
 	if err != nil {

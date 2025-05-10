@@ -67,6 +67,37 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course
 	return bucketCourses, nil
 }
 
+func (d *Database) GetPurchasedBucketCourses(userId int, ctx context.Context) ([]*coursemodels.Course, error) {
+	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
+	var bucketCourses []*coursemodels.Course
+	query := `
+	SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
+	FROM COURSE c
+	JOIN SIGNUPS s ON s.course_id = c.id
+	WHERE s.user_id = $1
+	`
+	rows, err := d.conn.Query(query, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("get course %+v from db", course))
+		bucketCourses = append(bucketCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "GetPurchasedBucketCourses", "get purchased bucket ourses from db")
+
+	return bucketCourses, nil
+}
+
 func (d *Database) GetBucketByLessonId(ctx context.Context, currentLessonId int) (*coursemodels.LessonBucket, error) {
 	var bucketId int
 	err := d.conn.QueryRow(`

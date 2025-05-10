@@ -9,6 +9,7 @@ import (
 
 type CourseRepository interface {
 	GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error)
+	GetPurchasedBucketCourses(userId int, ctx context.Context) ([]*coursemodels.Course, error)
 	SearchCoursesByTitle(ctx context.Context, keywords string) ([]*coursemodels.Course, error)
 	GetCourseById(ctx context.Context, courseId int) (*coursemodels.Course, error)
 	GetCourseParts(ctx context.Context, courseId int) ([]*coursemodels.CoursePart, error)
