@@ -74,6 +74,11 @@ func SendOKResponse(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("200 OK")
 }
 
+func SendNoContentOKResponse(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode("204 OK")
+}
+
 // SendBucketCoursesResponse - отправка списка курсов в JSON-формате
 func SendBucketCoursesResponse(bucketCourses []*dto.CourseDTO, w http.ResponseWriter, r *http.Request) {
 	response := BucketCoursesResponse{BucketCourses: bucketCourses}

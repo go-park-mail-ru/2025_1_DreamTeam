@@ -3587,9 +3587,15 @@ var file_course_proto_rawDesc = []byte{
 	0x72, 0x73, 0x65, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52,
 	0x0b, 0x75, 0x73, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x12, 0x1a, 0x0a, 0x08,
 	0x6b, 0x65, 0x79, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x6b, 0x65, 0x79, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x32, 0xc1, 0x0a, 0x0a, 0x0d, 0x43, 0x6f, 0x75,
+	0x6b, 0x65, 0x79, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x32, 0xa1, 0x0b, 0x0a, 0x0d, 0x43, 0x6f, 0x75,
 	0x72, 0x73, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x55, 0x0a, 0x10, 0x47, 0x65,
 	0x74, 0x42, 0x75, 0x63, 0x6b, 0x65, 0x74, 0x43, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x73, 0x12, 0x1f,
+	0x2e, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x75, 0x63, 0x6b, 0x65,
+	0x74, 0x43, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x20, 0x2e, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x75, 0x63, 0x6b,
+	0x65, 0x74, 0x43, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x5e, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x50, 0x75, 0x72, 0x63, 0x68, 0x61, 0x73, 0x65,
+	0x64, 0x42, 0x75, 0x63, 0x6b, 0x65, 0x74, 0x43, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x73, 0x12, 0x1f,
 	0x2e, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x75, 0x63, 0x6b, 0x65,
 	0x74, 0x43, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x20, 0x2e, 0x63, 0x6f, 0x75, 0x72, 0x73, 0x65, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x75, 0x63, 0x6b,
@@ -3783,39 +3789,41 @@ var file_course_proto_depIdxs = []int32{
 	49, // 32: course.GetQuestionTestLessonResponse.user_answer:type_name -> course.UserAnswerQuestion
 	34, // 33: course.SearchCoursesByTitleRequest.user_profile:type_name -> course.UserProfile
 	4,  // 34: course.CourseService.GetBucketCourses:input_type -> course.GetBucketCoursesRequest
-	6,  // 35: course.CourseService.GetCourseLesson:input_type -> course.GetCourseLessonRequest
-	8,  // 36: course.CourseService.GetNextLesson:input_type -> course.GetNextLessonRequest
-	10, // 37: course.CourseService.MarkLessonAsNotCompleted:input_type -> course.MarkLessonAsNotCompletedRequest
-	11, // 38: course.CourseService.MarkLessonAsCompleted:input_type -> course.MarkLessonAsCompletedRequest
-	12, // 39: course.CourseService.GetCourseRoadmap:input_type -> course.GetCourseRoadmapRequest
-	14, // 40: course.CourseService.GetCourse:input_type -> course.GetCourseRequest
-	16, // 41: course.CourseService.CreateCourse:input_type -> course.CreateCourseRequest
-	17, // 42: course.CourseService.AddCourseToFavourites:input_type -> course.AddToFavouritesRequest
-	18, // 43: course.CourseService.DeleteCourseFromFavourites:input_type -> course.DeleteCourseFromFavouritesRequest
-	19, // 44: course.CourseService.GetFavouriteCourses:input_type -> course.GetFavouritesRequest
-	44, // 45: course.CourseService.GetTestLesson:input_type -> course.GetTestLessonRequest
-	46, // 46: course.CourseService.AnswerQuiz:input_type -> course.AnswerQuizRequest
-	48, // 47: course.CourseService.GetQuestionTestLesson:input_type -> course.GetQuestionTestLessonRequest
-	51, // 48: course.CourseService.AnswerQuestion:input_type -> course.AnswerQuestionRequest
-	52, // 49: course.CourseService.SearchCoursesByTitle:input_type -> course.SearchCoursesByTitleRequest
-	5,  // 50: course.CourseService.GetBucketCourses:output_type -> course.GetBucketCoursesResponse
-	7,  // 51: course.CourseService.GetCourseLesson:output_type -> course.GetCourseLessonResponse
-	9,  // 52: course.CourseService.GetNextLesson:output_type -> course.GetNextLessonResponse
-	53, // 53: course.CourseService.MarkLessonAsNotCompleted:output_type -> google.protobuf.Empty
-	53, // 54: course.CourseService.MarkLessonAsCompleted:output_type -> google.protobuf.Empty
-	13, // 55: course.CourseService.GetCourseRoadmap:output_type -> course.GetCourseRoadmapResponse
-	15, // 56: course.CourseService.GetCourse:output_type -> course.GetCourseResponse
-	53, // 57: course.CourseService.CreateCourse:output_type -> google.protobuf.Empty
-	53, // 58: course.CourseService.AddCourseToFavourites:output_type -> google.protobuf.Empty
-	53, // 59: course.CourseService.DeleteCourseFromFavourites:output_type -> google.protobuf.Empty
-	20, // 60: course.CourseService.GetFavouriteCourses:output_type -> course.GetFavouritesResponse
-	45, // 61: course.CourseService.GetTestLesson:output_type -> course.GetTestLessonResponse
-	47, // 62: course.CourseService.AnswerQuiz:output_type -> course.AnswerQuizResponse
-	50, // 63: course.CourseService.GetQuestionTestLesson:output_type -> course.GetQuestionTestLessonResponse
-	53, // 64: course.CourseService.AnswerQuestion:output_type -> google.protobuf.Empty
-	5,  // 65: course.CourseService.SearchCoursesByTitle:output_type -> course.GetBucketCoursesResponse
-	50, // [50:66] is the sub-list for method output_type
-	34, // [34:50] is the sub-list for method input_type
+	4,  // 35: course.CourseService.GetPurchasedBucketCourses:input_type -> course.GetBucketCoursesRequest
+	6,  // 36: course.CourseService.GetCourseLesson:input_type -> course.GetCourseLessonRequest
+	8,  // 37: course.CourseService.GetNextLesson:input_type -> course.GetNextLessonRequest
+	10, // 38: course.CourseService.MarkLessonAsNotCompleted:input_type -> course.MarkLessonAsNotCompletedRequest
+	11, // 39: course.CourseService.MarkLessonAsCompleted:input_type -> course.MarkLessonAsCompletedRequest
+	12, // 40: course.CourseService.GetCourseRoadmap:input_type -> course.GetCourseRoadmapRequest
+	14, // 41: course.CourseService.GetCourse:input_type -> course.GetCourseRequest
+	16, // 42: course.CourseService.CreateCourse:input_type -> course.CreateCourseRequest
+	17, // 43: course.CourseService.AddCourseToFavourites:input_type -> course.AddToFavouritesRequest
+	18, // 44: course.CourseService.DeleteCourseFromFavourites:input_type -> course.DeleteCourseFromFavouritesRequest
+	19, // 45: course.CourseService.GetFavouriteCourses:input_type -> course.GetFavouritesRequest
+	44, // 46: course.CourseService.GetTestLesson:input_type -> course.GetTestLessonRequest
+	46, // 47: course.CourseService.AnswerQuiz:input_type -> course.AnswerQuizRequest
+	48, // 48: course.CourseService.GetQuestionTestLesson:input_type -> course.GetQuestionTestLessonRequest
+	51, // 49: course.CourseService.AnswerQuestion:input_type -> course.AnswerQuestionRequest
+	52, // 50: course.CourseService.SearchCoursesByTitle:input_type -> course.SearchCoursesByTitleRequest
+	5,  // 51: course.CourseService.GetBucketCourses:output_type -> course.GetBucketCoursesResponse
+	5,  // 52: course.CourseService.GetPurchasedBucketCourses:output_type -> course.GetBucketCoursesResponse
+	7,  // 53: course.CourseService.GetCourseLesson:output_type -> course.GetCourseLessonResponse
+	9,  // 54: course.CourseService.GetNextLesson:output_type -> course.GetNextLessonResponse
+	53, // 55: course.CourseService.MarkLessonAsNotCompleted:output_type -> google.protobuf.Empty
+	53, // 56: course.CourseService.MarkLessonAsCompleted:output_type -> google.protobuf.Empty
+	13, // 57: course.CourseService.GetCourseRoadmap:output_type -> course.GetCourseRoadmapResponse
+	15, // 58: course.CourseService.GetCourse:output_type -> course.GetCourseResponse
+	53, // 59: course.CourseService.CreateCourse:output_type -> google.protobuf.Empty
+	53, // 60: course.CourseService.AddCourseToFavourites:output_type -> google.protobuf.Empty
+	53, // 61: course.CourseService.DeleteCourseFromFavourites:output_type -> google.protobuf.Empty
+	20, // 62: course.CourseService.GetFavouriteCourses:output_type -> course.GetFavouritesResponse
+	45, // 63: course.CourseService.GetTestLesson:output_type -> course.GetTestLessonResponse
+	47, // 64: course.CourseService.AnswerQuiz:output_type -> course.AnswerQuizResponse
+	50, // 65: course.CourseService.GetQuestionTestLesson:output_type -> course.GetQuestionTestLessonResponse
+	53, // 66: course.CourseService.AnswerQuestion:output_type -> google.protobuf.Empty
+	5,  // 67: course.CourseService.SearchCoursesByTitle:output_type -> course.GetBucketCoursesResponse
+	51, // [51:68] is the sub-list for method output_type
+	34, // [34:51] is the sub-list for method input_type
 	34, // [34:34] is the sub-list for extension type_name
 	34, // [34:34] is the sub-list for extension extendee
 	0,  // [0:34] is the sub-list for field type_name
