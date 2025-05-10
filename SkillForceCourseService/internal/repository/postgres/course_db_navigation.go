@@ -77,7 +77,7 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 	currentLessonId := points[0].LessonId
 	currentLessonType := points[0].Type
 
-	err = d.MarkLessonCompleted(ctx, userId, courseId, currentLessonId)
+	err = d.MarkLessonCompleted(ctx, userId, currentLessonId)
 	if err != nil {
 		logs.PrintLog(ctx, "getLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
 		return nil, 0, "", false, err

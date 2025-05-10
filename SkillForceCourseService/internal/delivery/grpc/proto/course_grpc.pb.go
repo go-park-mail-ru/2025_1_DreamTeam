@@ -23,6 +23,7 @@ type CourseServiceClient interface {
 	GetCourseLesson(ctx context.Context, in *GetCourseLessonRequest, opts ...grpc.CallOption) (*GetCourseLessonResponse, error)
 	GetNextLesson(ctx context.Context, in *GetNextLessonRequest, opts ...grpc.CallOption) (*GetNextLessonResponse, error)
 	MarkLessonAsNotCompleted(ctx context.Context, in *MarkLessonAsNotCompletedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	MarkLessonAsCompleted(ctx context.Context, in *MarkLessonAsCompletedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetCourseRoadmap(ctx context.Context, in *GetCourseRoadmapRequest, opts ...grpc.CallOption) (*GetCourseRoadmapResponse, error)
 	GetCourse(ctx context.Context, in *GetCourseRequest, opts ...grpc.CallOption) (*GetCourseResponse, error)
 	CreateCourse(ctx context.Context, in *CreateCourseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -74,6 +75,15 @@ func (c *courseServiceClient) GetNextLesson(ctx context.Context, in *GetNextLess
 func (c *courseServiceClient) MarkLessonAsNotCompleted(ctx context.Context, in *MarkLessonAsNotCompletedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/course.CourseService/MarkLessonAsNotCompleted", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *courseServiceClient) MarkLessonAsCompleted(ctx context.Context, in *MarkLessonAsCompletedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/course.CourseService/MarkLessonAsCompleted", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,6 +197,7 @@ type CourseServiceServer interface {
 	GetCourseLesson(context.Context, *GetCourseLessonRequest) (*GetCourseLessonResponse, error)
 	GetNextLesson(context.Context, *GetNextLessonRequest) (*GetNextLessonResponse, error)
 	MarkLessonAsNotCompleted(context.Context, *MarkLessonAsNotCompletedRequest) (*emptypb.Empty, error)
+	MarkLessonAsCompleted(context.Context, *MarkLessonAsCompletedRequest) (*emptypb.Empty, error)
 	GetCourseRoadmap(context.Context, *GetCourseRoadmapRequest) (*GetCourseRoadmapResponse, error)
 	GetCourse(context.Context, *GetCourseRequest) (*GetCourseResponse, error)
 	CreateCourse(context.Context, *CreateCourseRequest) (*emptypb.Empty, error)
@@ -216,6 +227,9 @@ func (UnimplementedCourseServiceServer) GetNextLesson(context.Context, *GetNextL
 }
 func (UnimplementedCourseServiceServer) MarkLessonAsNotCompleted(context.Context, *MarkLessonAsNotCompletedRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkLessonAsNotCompleted not implemented")
+}
+func (UnimplementedCourseServiceServer) MarkLessonAsCompleted(context.Context, *MarkLessonAsCompletedRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkLessonAsCompleted not implemented")
 }
 func (UnimplementedCourseServiceServer) GetCourseRoadmap(context.Context, *GetCourseRoadmapRequest) (*GetCourseRoadmapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourseRoadmap not implemented")
@@ -331,6 +345,24 @@ func _CourseService_MarkLessonAsNotCompleted_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CourseServiceServer).MarkLessonAsNotCompleted(ctx, req.(*MarkLessonAsNotCompletedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_MarkLessonAsCompleted_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkLessonAsCompletedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).MarkLessonAsCompleted(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/MarkLessonAsCompleted",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).MarkLessonAsCompleted(ctx, req.(*MarkLessonAsCompletedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -555,6 +587,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MarkLessonAsNotCompleted",
 			Handler:    _CourseService_MarkLessonAsNotCompleted_Handler,
+		},
+		{
+			MethodName: "MarkLessonAsCompleted",
+			Handler:    _CourseService_MarkLessonAsCompleted_Handler,
 		},
 		{
 			MethodName: "GetCourseRoadmap",

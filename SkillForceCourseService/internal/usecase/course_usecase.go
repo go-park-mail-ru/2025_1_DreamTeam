@@ -392,12 +392,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
-
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -453,12 +447,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.NextLessonId = footers[2]
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
-
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
 
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
@@ -594,6 +582,10 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 
 func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
+}
+
+func (uc *CourseUsecase) MarkLessonAsCompleted(ctx context.Context, userId int, lessonId int) error {
+	return uc.repo.MarkLessonCompleted(ctx, userId, lessonId)
 }
 
 func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {

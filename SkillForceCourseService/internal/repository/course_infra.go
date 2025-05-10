@@ -59,8 +59,8 @@ func (i *CourseInfrastructure) GetLessonFooters(ctx context.Context, currentLess
 	return i.Database.GetLessonFooters(ctx, currentLessonId)
 }
 
-func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
-	return i.Database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, lessonId int) error {
+	return i.Database.MarkLessonCompleted(ctx, userId, lessonId)
 }
 
 func (i *CourseInfrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {

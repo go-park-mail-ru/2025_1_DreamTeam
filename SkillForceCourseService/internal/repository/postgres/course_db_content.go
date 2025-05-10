@@ -340,7 +340,7 @@ func (d *Database) AnswerQuiz(ctx context.Context, question_id int, answer_id in
 		Result: isTrue,
 	}
 
-	d.MarkLessonCompleted(ctx, user_id, course_id, question_id)
+	d.MarkLessonCompleted(ctx, user_id, question_id)
 
 	return res, nil
 

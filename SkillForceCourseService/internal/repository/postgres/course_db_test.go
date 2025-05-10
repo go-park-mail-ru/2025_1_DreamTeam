@@ -198,7 +198,7 @@ func TestMarkLessonCompleted_Success(t *testing.T) {
 			WithArgs(userId, lessonId, courseId).
 			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
-		err := database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		err := database.MarkLessonCompleted(ctx, userId, lessonId)
 		require.NoError(t, err)
 		require.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -216,7 +216,7 @@ func TestMarkLessonCompleted_Success(t *testing.T) {
 			WithArgs(userId, lessonId, courseId).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		err := database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+		err := database.MarkLessonCompleted(ctx, userId, lessonId)
 		require.NoError(t, err)
 		require.NoError(t, mock.ExpectationsWereMet())
 	})

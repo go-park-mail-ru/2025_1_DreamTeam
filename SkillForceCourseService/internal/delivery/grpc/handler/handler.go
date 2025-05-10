@@ -51,6 +51,14 @@ func (h *CourseHandler) MarkLessonAsNotCompleted(ctx context.Context, req *cours
 	return &emptypb.Empty{}, nil
 }
 
+func (h *CourseHandler) MarkLessonAsCompleted(ctx context.Context, req *coursepb.MarkLessonAsCompletedRequest) (*emptypb.Empty, error) {
+	err := h.usecase.MarkLessonAsCompleted(ctx, int(req.UserId), int(req.LessonId))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (h *CourseHandler) GetCourseRoadmap(ctx context.Context, req *coursepb.GetCourseRoadmapRequest) (*coursepb.GetCourseRoadmapResponse, error) {
 	roadmap, err := h.usecase.GetCourseRoadmap(ctx, int(req.UserId), int(req.CourseId))
 	if err != nil {
