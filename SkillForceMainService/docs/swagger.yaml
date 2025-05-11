@@ -1,4 +1,20 @@
 definitions:
+  dto.Answer:
+    properties:
+      answer_id:
+        type: integer
+      course_id:
+        type: integer
+      question_id:
+        type: integer
+    type: object
+  dto.AnswerQuestion:
+    properties:
+      answer:
+        type: string
+      question_id:
+        type: integer
+    type: object
   dto.CourseDTO:
     properties:
       creator_id:
@@ -7,6 +23,14 @@ definitions:
         type: string
       id:
         type: integer
+      is_favorite:
+        type: boolean
+      is_purchased:
+        type: boolean
+      parts:
+        items:
+          $ref: '#/definitions/dto.CoursePartDTO'
+        type: array
       price:
         type: integer
       purchases_amount:
@@ -71,6 +95,8 @@ definitions:
         type: array
       footer:
         properties:
+          current_lesson_id:
+            type: integer
           next_lesson_id:
             type: integer
           previous_lesson_id:
@@ -124,6 +150,48 @@ definitions:
         type: string
       lesson_type:
         type: string
+      lesson_value:
+        type: string
+    type: object
+  dto.QuestionTest:
+    properties:
+      question:
+        type: string
+      question_id:
+        type: integer
+      user_answer:
+        $ref: '#/definitions/dto.UserQuestionAnswer'
+    type: object
+  dto.QuizAnswer:
+    properties:
+      answer:
+        type: string
+      answer_id:
+        type: integer
+      is_right:
+        type: boolean
+    type: object
+  dto.Test:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/dto.QuizAnswer'
+        type: array
+      question:
+        type: string
+      question_id:
+        type: integer
+      user_answer:
+        $ref: '#/definitions/dto.UserAnswer'
+    type: object
+  dto.UserAnswer:
+    properties:
+      answer_id:
+        type: integer
+      is_right:
+        type: boolean
+      question_id:
+        type: integer
     type: object
   dto.UserDTO:
     properties:
@@ -144,37 +212,16 @@ definitions:
         type: string
       hide_email:
         type: boolean
-      name:
-        type: string
-    type: object
-  models.User:
-    properties:
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      salt:
-        items:
-          type: integer
-        type: array
-    type: object
-  models.UserProfile:
-    properties:
-      avatarSrc:
-        type: string
-      bio:
-        type: string
-      email:
-        type: string
-      hideEmail:
+      is_admin:
         type: boolean
-      id:
-        type: integer
       name:
+        type: string
+    type: object
+  dto.UserQuestionAnswer:
+    properties:
+      answer:
+        type: string
+      status:
         type: string
     type: object
   response.BucketCoursesResponse:
@@ -209,9 +256,269 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserProfileDTO'
     type: object
+  usermodels.User:
+    properties:
+      email:
+        type: string
+      hideEmail:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      salt:
+        items:
+          type: integer
+        type: array
+    type: object
+  usermodels.UserProfile:
+    properties:
+      avatarSrc:
+        type: string
+      bio:
+        type: string
+      email:
+        type: string
+      hideEmail:
+        type: boolean
+      id:
+        type: integer
+      isAdmin:
+        type: boolean
+      name:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /api/AnswerQuiz:
+    post:
+      consumes:
+      - application/json
+      description: Processes user's answer to a quiz question and returns the result
+      parameters:
+      - description: User's quiz answer
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Answer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Result of the quiz answer (true/false)
+          schema:
+            type: boolean
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: User not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Submit quiz answer
+      tags:
+      - lessons
+  /api/GetTestLesson:
+    get:
+      description: Retrieves test lesson information including questions and answers
+      parameters:
+      - description: Lesson ID to retrieve test for
+        in: query
+        name: lessonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test lesson details including question and answers
+          schema:
+            $ref: '#/definitions/dto.Test'
+        "400":
+          description: Invalid lesson ID format
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: User not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get test lesson details
+      tags:
+      - lessons
+  /api/addCourseToFavourites:
+    post:
+      consumes:
+      - application/json
+      description: Adds a course to the authenticated user's favorites list
+      parameters:
+      - description: Course data to add to favorites
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CourseDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: user not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Add course to user's favorites
+      tags:
+      - courses
+  /api/answerQuestion:
+    post:
+      consumes:
+      - application/json
+      description: Processes and stores a user's answer to a specific test question
+      parameters:
+      - description: User's answer to the question
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AnswerQuestion'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: User not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Submit answer to a question
+      tags:
+      - lessons
+  /api/deleteCourseFromFavourites:
+    post:
+      consumes:
+      - application/json
+      description: Removes a course from the authenticated user's favorites list
+      parameters:
+      - description: Course data to remove from favorites
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CourseDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: user not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Remove course from favorites
+      tags:
+      - courses
+  /api/deleteProfilePhoto:
+    post:
+      consumes:
+      - application/json
+      description: Deletes the profile photo of the authorized user and sets the default
+        avatar
+      parameters:
+      - description: Updated user profile
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/usermodels.UserProfile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Delete user`s profile photo
+      tags:
+      - users
   /api/getCourseLesson:
     get:
       consumes:
@@ -311,6 +618,31 @@ paths:
       summary: Get course
       tags:
       - courses
+  /api/getFavouriteCourses:
+    get:
+      description: Retrieves all courses marked as favorite by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: User not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get user's favorite courses
+      tags:
+      - courses
   /api/getNextLesson:
     get:
       consumes:
@@ -354,6 +686,46 @@ paths:
       summary: Get next lesson in a course
       tags:
       - courses
+  /api/getQuestionTestLesson:
+    get:
+      description: Retrieves a test question and user's previous answer (if exists)
+        for a specific lesson
+      parameters:
+      - description: Lesson ID to retrieve test question for
+        in: query
+        name: lessonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test question details including user's previous answer status
+          schema:
+            $ref: '#/definitions/dto.QuestionTest'
+        "400":
+          description: Invalid lesson ID format
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: User not authorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get test question for lesson
+      tags:
+      - lessons
   /api/isAuthorized:
     get:
       consumes:
@@ -430,6 +802,45 @@ paths:
       summary: Logout user
       tags:
       - users
+  /api/markLessonAsCompleted:
+    post:
+      consumes:
+      - application/json
+      description: Marks the specified lesson as not completed for the authenticated
+        user
+      parameters:
+      - description: Lesson ID
+        in: body
+        name: lessonId
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LessonIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: ivalid lesson ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Mark a lesson as not completed
+      tags:
+      - courses
   /api/markLessonAsNotCompleted:
     post:
       consumes:
@@ -459,7 +870,7 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "405":
-          description: uethod not allowed
+          description: method not allowed
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "500":
@@ -481,7 +892,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/usermodels.User'
       produces:
       - application/json
       responses:
@@ -509,6 +920,69 @@ paths:
       summary: Register a new user
       tags:
       - users
+  /api/searchCourses:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of available courses by title
+      parameters:
+      - description: Keywords to search courses
+        in: query
+        name: keywords
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of courses
+          schema:
+            $ref: '#/definitions/response.BucketCoursesResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Search courses by title
+      tags:
+      - courses
+  /api/serveVideo:
+    get:
+      consumes:
+      - '*/*'
+      description: Streams video content for a lesson based on the lesson ID provided
+        in the query parameters.
+      parameters:
+      - description: Lesson ID
+        in: query
+        name: lesson_id
+        required: true
+        type: integer
+      produces:
+      - video/mp4
+      responses:
+        "206":
+          description: Partial Content
+          schema:
+            type: file
+        "400":
+          description: Invalid lesson ID parameter
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Video not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Serve video content
+      tags:
+      - videos
   /api/updateProfile:
     post:
       consumes:
@@ -520,7 +994,7 @@ paths:
         name: profile
         required: true
         schema:
-          $ref: '#/definitions/models.UserProfile'
+          $ref: '#/definitions/usermodels.UserProfile'
       produces:
       - application/json
       responses:
@@ -541,6 +1015,43 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Update user profile photo
+      tags:
+      - users
+  /api/validEmail:
+    get:
+      consumes:
+      - application/json
+      description: Confirm user email using the token from the registration email
+      parameters:
+      - description: Token from registration email
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 200 OK
+          schema:
+            type: string
+        "400":
+          description: invalid token
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: email exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "405":
+          description: method not allowed
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Confirm user email
       tags:
       - users
 swagger: "2.0"

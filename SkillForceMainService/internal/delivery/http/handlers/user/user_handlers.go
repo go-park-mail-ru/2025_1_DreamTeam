@@ -80,7 +80,7 @@ func isValidLoginFields(user *dto.UserDTO) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.User true "User information"
+// @Param user body usermodels.User true "User information"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request | missing required fields | password too short | invalid email"
 // @Failure 404 {object} response.ErrorResponse "email exists"
@@ -306,7 +306,7 @@ func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
@@ -372,7 +372,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
@@ -446,7 +446,7 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
