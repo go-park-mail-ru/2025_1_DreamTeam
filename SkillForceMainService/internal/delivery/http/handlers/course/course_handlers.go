@@ -112,6 +112,79 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
+func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	grpcUserProfile := &coursepb.UserProfile{
+		Id:        int32(userProfile.Id),
+		Email:     userProfile.Email,
+		Bio:       userProfile.Bio,
+		Name:      userProfile.Name,
+		AvatarSrc: userProfile.AvatarSrc,
+		HideEmail: userProfile.HideEmail,
+		IsAdmin:   userProfile.IsAdmin,
+	}
+
+	grpcGetBucketcourses := coursepb.GetBucketCoursesRequest{
+		UserProfile: grpcUserProfile,
+	}
+
+	grpcBucketCoursesResponse, err := h.courseClient.GetPurchasedBucketCourses(r.Context(), &grpcGetBucketcourses)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	if len(grpcBucketCoursesResponse.Courses) == 0 {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+		response.SendNoContentOKResponse(w, r)
+	}
+
+	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
+	for i, grpcBucketCourse := range grpcBucketCoursesResponse.Courses {
+		bucketCourses[i] = &dto.CourseDTO{
+			Id:              int(grpcBucketCourse.Id),
+			Title:           grpcBucketCourse.Title,
+			ScrImage:        grpcBucketCourse.ScrImage,
+			Tags:            grpcBucketCourse.Tags,
+			Rating:          float32(grpcBucketCourse.Rating),
+			TimeToPass:      int(grpcBucketCourse.TimeToPass),
+			PurchasesAmount: int(grpcBucketCourse.PurchasesAmount),
+			IsPurchased:     grpcBucketCourse.IsPurchased,
+			IsFavorite:      grpcBucketCourse.IsFavorite,
+			CreatorId:       int(grpcBucketCourse.CreatorId),
+			Description:     grpcBucketCourse.Description,
+			Price:           int(grpcBucketCourse.Price),
+		}
+	}
+
+	logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+	response.SendBucketCoursesResponse(bucketCourses, w, r)
+}
+
+// SearchCourses godoc
+// @Summary Search courses by title
+// @Description Retrieves a list of available courses by title
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param keywords query string true "Keywords to search courses"
+// @Success 200 {object} response.BucketCoursesResponse "List of courses"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/searchCourses [get]
 func (h *Handler) SearchCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetCourses", "method not allowed")
@@ -472,7 +545,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 // @Success      200 {object} string "OK"
 // @Failure      400 {object} response.ErrorResponse "ivalid lesson ID"
 // @Failure      401 {object} response.ErrorResponse "unauthorized"
-// @Failure      405 {object} response.ErrorResponse "uethod not allowed"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
 // @Failure      500 {object} response.ErrorResponse "internal server error"
 // @Router       /api/markLessonAsNotCompleted [post]
 func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Request) {
@@ -506,6 +579,57 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 	_, err = h.courseClient.MarkLessonAsNotCompleted(r.Context(), grpcMarkLessonAsNotCompletedRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+// MarkLessonAsCompleted godoc
+// @Summary      Mark a lesson as not completed
+// @Description  Marks the specified lesson as not completed for the authenticated user
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        lessonId body dto.LessonIDRequest true "Lesson ID"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "ivalid lesson ID"
+// @Failure      401 {object} response.ErrorResponse "unauthorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/markLessonAsCompleted [post]
+func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	lessonId := dto.LessonIDRequest{}
+	err := json.NewDecoder(r.Body).Decode(&lessonId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcMarkLessonAsCompletedRequest := &coursepb.MarkLessonAsCompletedRequest{
+		UserId:   int32(userProfile.Id),
+		LessonId: int32(lessonId.Id),
+	}
+	_, err = h.courseClient.MarkLessonAsCompleted(r.Context(), grpcMarkLessonAsCompletedRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
@@ -761,6 +885,19 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
+// AddCourseToFavourites godoc
+// @Summary      Add course to user's favorites
+// @Description  Adds a course to the authenticated user's favorites list
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        course body dto.CourseDTO true "Course data to add to favorites"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "invalid request body"
+// @Failure      401 {object} response.ErrorResponse "user not authorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/addCourseToFavourites [post]
 func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", "method not allowed")
@@ -848,6 +985,19 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 	response.SendOKResponse(w, r)
 }
 
+// DeleteCourseFromFavourites godoc
+// @Summary      Remove course from favorites
+// @Description  Removes a course from the authenticated user's favorites list
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        course body dto.CourseDTO true "Course data to remove from favorites"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "invalid request body"
+// @Failure      401 {object} response.ErrorResponse "user not authorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/deleteCourseFromFavourites [post]
 func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", "method not allowed")
@@ -935,6 +1085,16 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 	response.SendOKResponse(w, r)
 }
 
+// GetFavouriteCourses godoc
+// @Summary Get user's favorite courses
+// @Description Retrieves all courses marked as favorite by the authenticated user
+// @Tags courses
+// @Produce json
+// @Success      200 {object} string "OK"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/getFavouriteCourses [get]
 func (h *Handler) GetFavouriteCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetFavouriteCourses", "method not allowed")
@@ -989,6 +1149,19 @@ func (h *Handler) GetFavouriteCourses(w http.ResponseWriter, r *http.Request) {
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
+// GetTestLesson godoc
+// @Summary Get test lesson details
+// @Description Retrieves test lesson information including questions and answers
+// @Tags lessons
+// @Produce json
+// @Param lessonId query int true "Lesson ID to retrieve test for"
+// @Success 200 {object} dto.Test "Test lesson details including question and answers"
+// @Failure 400 {object} response.ErrorResponse "Invalid lesson ID format"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 404 {object} response.ErrorResponse "Lesson not found"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/GetTestLesson [get]
 func (h *Handler) GetTestLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetTestLesson", "method not allowed")
@@ -1047,6 +1220,19 @@ func (h *Handler) GetTestLesson(w http.ResponseWriter, r *http.Request) {
 	response.SendTestLessonResponse(test, w, r)
 }
 
+// AnswerQuiz godoc
+// @Summary Submit quiz answer
+// @Description Processes user's answer to a quiz question and returns the result
+// @Tags lessons
+// @Accept json
+// @Produce json
+// @Param answer body dto.Answer true "User's quiz answer"
+// @Success 200 {object} bool "Result of the quiz answer (true/false)"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/AnswerQuiz [post]
 func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AnswerQuiz", "method not allowed")
@@ -1089,6 +1275,19 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	response.SendQuizResult(result, w, r)
 }
 
+// GetQuestionTestLesson godoc
+// @Summary Get test question for lesson
+// @Description Retrieves a test question and user's previous answer (if exists) for a specific lesson
+// @Tags lessons
+// @Produce json
+// @Param lessonId query int true "Lesson ID to retrieve test question for"
+// @Success 200 {object} dto.QuestionTest "Test question details including user's previous answer status"
+// @Failure 400 {object} response.ErrorResponse "Invalid lesson ID format"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 404 {object} response.ErrorResponse "Lesson not found"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/getQuestionTestLesson [get]
 func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "method not allowed")
@@ -1136,6 +1335,19 @@ func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) 
 	response.SendQuestionTestLessonResponse(question, w, r)
 }
 
+// AnswerQuestion godoc
+// @Summary Submit answer to a question
+// @Description Processes and stores a user's answer to a specific test question
+// @Tags lessons
+// @Accept json
+// @Produce json
+// @Param answer body dto.AnswerQuestion true "User's answer to the question"
+// @Success      200 {object} string "OK"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/answerQuestion [post]
 func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AnswerQuestion", "method not allowed")

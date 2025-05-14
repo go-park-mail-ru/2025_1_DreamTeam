@@ -94,6 +94,79 @@ func (uc *CourseUsecase) GetBucketCourses(ctx context.Context, userProfile *user
 	return resultBucketCourses, nil
 }
 
+func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProfile *usermodels.UserProfile) ([]*dto.CourseDTO, error) {
+	bucketCourses, err := uc.repo.GetPurchasedBucketCourses(userProfile.Id, ctx)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseFavourites := make(map[int]bool, 0)
+	if userProfile != nil {
+		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+			IsFavorite:      courseFavourites[course.Id],
+		})
+	}
+
+	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses, nil
+}
+
 func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfile *usermodels.UserProfile) (*dto.CourseDTO, error) {
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
@@ -392,12 +465,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
-
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -453,12 +520,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.NextLessonId = footers[2]
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
-
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
 
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
@@ -594,6 +655,10 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 
 func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
+}
+
+func (uc *CourseUsecase) MarkLessonAsCompleted(ctx context.Context, userId int, lessonId int) error {
+	return uc.repo.MarkLessonCompleted(ctx, userId, lessonId)
 }
 
 func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {

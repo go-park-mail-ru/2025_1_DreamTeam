@@ -35,6 +35,10 @@ func (i *CourseInfrastructure) GetBucketCourses(ctx context.Context) ([]*coursem
 	return i.Database.GetBucketCourses(ctx)
 }
 
+func (i *CourseInfrastructure) GetPurchasedBucketCourses(userId int, ctx context.Context) ([]*coursemodels.Course, error) {
+	return i.Database.GetPurchasedBucketCourses(userId, ctx)
+}
+
 func (i *CourseInfrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }
@@ -59,8 +63,8 @@ func (i *CourseInfrastructure) GetLessonFooters(ctx context.Context, currentLess
 	return i.Database.GetLessonFooters(ctx, currentLessonId)
 }
 
-func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
-	return i.Database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, lessonId int) error {
+	return i.Database.MarkLessonCompleted(ctx, userId, lessonId)
 }
 
 func (i *CourseInfrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {

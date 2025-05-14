@@ -76,6 +76,11 @@ message MarkLessonAsNotCompletedRequest {
   int32 lesson_id = 2;
 }
 
+message MarkLessonAsCompletedRequest {
+  int32 user_id = 1;
+  int32 lesson_id = 2;
+}
+
 message GetCourseRoadmapRequest {
   int32 user_id = 1;
   int32 course_id = 2;
@@ -310,9 +315,11 @@ message SearchCoursesByTitleRequest {
 // Service Definition
 service CourseService {
   rpc GetBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
+  rpc GetPurchasedBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
   rpc GetCourseLesson(GetCourseLessonRequest) returns (GetCourseLessonResponse);
   rpc GetNextLesson(GetNextLessonRequest) returns (GetNextLessonResponse);
   rpc MarkLessonAsNotCompleted(MarkLessonAsNotCompletedRequest) returns (google.protobuf.Empty);
+  rpc MarkLessonAsCompleted(MarkLessonAsCompletedRequest) returns (google.protobuf.Empty);
   rpc GetCourseRoadmap(GetCourseRoadmapRequest) returns (GetCourseRoadmapResponse);
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
   rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);

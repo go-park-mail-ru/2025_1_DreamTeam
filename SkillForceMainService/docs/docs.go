@@ -15,6 +15,349 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/AnswerQuiz": {
+            "post": {
+                "description": "Processes user's answer to a quiz question and returns the result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Submit quiz answer",
+                "parameters": [
+                    {
+                        "description": "User's quiz answer",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Answer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Result of the quiz answer (true/false)",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/GetTestLesson": {
+            "get": {
+                "description": "Retrieves test lesson information including questions and answers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Get test lesson details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID to retrieve test for",
+                        "name": "lessonId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test lesson details including question and answers",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Test"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid lesson ID format",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Lesson not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/addCourseToFavourites": {
+            "post": {
+                "description": "Adds a course to the authenticated user's favorites list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Add course to user's favorites",
+                "parameters": [
+                    {
+                        "description": "Course data to add to favorites",
+                        "name": "course",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CourseDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "user not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/answerQuestion": {
+            "post": {
+                "description": "Processes and stores a user's answer to a specific test question",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Submit answer to a question",
+                "parameters": [
+                    {
+                        "description": "User's answer to the question",
+                        "name": "answer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AnswerQuestion"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/deleteCourseFromFavourites": {
+            "post": {
+                "description": "Removes a course from the authenticated user's favorites list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Remove course from favorites",
+                "parameters": [
+                    {
+                        "description": "Course data to remove from favorites",
+                        "name": "course",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CourseDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "user not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/deleteProfilePhoto": {
+            "post": {
+                "description": "Deletes the profile photo of the authorized user and sets the default avatar",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Delete user` + "`" + `s profile photo",
+                "parameters": [
+                    {
+                        "description": "Updated user profile",
+                        "name": "profile",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/usermodels.UserProfile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "200 OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/getCourseLesson": {
             "get": {
                 "description": "Returns the lesson the user should take in the course",
@@ -165,6 +508,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/getFavouriteCourses": {
+            "get": {
+                "description": "Retrieves all courses marked as favorite by the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Get user's favorite courses",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/getNextLesson": {
             "get": {
                 "description": "Returns the next lesson the user should take based on current lesson and course",
@@ -221,6 +602,65 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/getQuestionTestLesson": {
+            "get": {
+                "description": "Retrieves a test question and user's previous answer (if exists) for a specific lesson",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lessons"
+                ],
+                "summary": "Get test question for lesson",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID to retrieve test question for",
+                        "name": "lessonId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test question details including user's previous answer status",
+                        "schema": {
+                            "$ref": "#/definitions/dto.QuestionTest"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid lesson ID format",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Lesson not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -344,6 +784,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/markLessonAsCompleted": {
+            "post": {
+                "description": "Marks the specified lesson as not completed for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Mark a lesson as not completed",
+                "parameters": [
+                    {
+                        "description": "Lesson ID",
+                        "name": "lessonId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LessonIDRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "ivalid lesson ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/markLessonAsNotCompleted": {
             "post": {
                 "description": "Marks the specified lesson as not completed for the authenticated user",
@@ -388,7 +886,7 @@ const docTemplate = `{
                         }
                     },
                     "405": {
-                        "description": "uethod not allowed",
+                        "description": "method not allowed",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -422,7 +920,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/usermodels.User"
                         }
                     }
                 ],
@@ -460,6 +958,100 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/searchCourses": {
+            "get": {
+                "description": "Retrieves a list of available courses by title",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Search courses by title",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keywords to search courses",
+                        "name": "keywords",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of courses",
+                        "schema": {
+                            "$ref": "#/definitions/response.BucketCoursesResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/serveVideo": {
+            "get": {
+                "description": "Streams video content for a lesson based on the lesson ID provided in the query parameters.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "video/mp4"
+                ],
+                "tags": [
+                    "videos"
+                ],
+                "summary": "Serve video content",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID",
+                        "name": "lesson_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "206": {
+                        "description": "Partial Content",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid lesson ID parameter",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Video not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/updateProfile": {
             "post": {
                 "description": "Updates the profile photo of the authorized user",
@@ -480,7 +1072,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.UserProfile"
+                            "$ref": "#/definitions/usermodels.UserProfile"
                         }
                     }
                 ],
@@ -511,9 +1103,90 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/validEmail": {
+            "get": {
+                "description": "Confirm user email using the token from the registration email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Confirm user email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token from registration email",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "200 OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "email exists",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "method not allowed",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.Answer": {
+            "type": "object",
+            "properties": {
+                "answer_id": {
+                    "type": "integer"
+                },
+                "course_id": {
+                    "type": "integer"
+                },
+                "question_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AnswerQuestion": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "question_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CourseDTO": {
             "type": "object",
             "properties": {
@@ -525,6 +1198,18 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "is_favorite": {
+                    "type": "boolean"
+                },
+                "is_purchased": {
+                    "type": "boolean"
+                },
+                "parts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CoursePartDTO"
+                    }
                 },
                 "price": {
                     "type": "integer"
@@ -625,6 +1310,9 @@ const docTemplate = `{
                 "footer": {
                     "type": "object",
                     "properties": {
+                        "current_lesson_id": {
+                            "type": "integer"
+                        },
                         "next_lesson_id": {
                             "type": "integer"
                         },
@@ -707,6 +1395,71 @@ const docTemplate = `{
                 },
                 "lesson_type": {
                     "type": "string"
+                },
+                "lesson_value": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.QuestionTest": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string"
+                },
+                "question_id": {
+                    "type": "integer"
+                },
+                "user_answer": {
+                    "$ref": "#/definitions/dto.UserQuestionAnswer"
+                }
+            }
+        },
+        "dto.QuizAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "answer_id": {
+                    "type": "integer"
+                },
+                "is_right": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.Test": {
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.QuizAnswer"
+                    }
+                },
+                "question": {
+                    "type": "string"
+                },
+                "question_id": {
+                    "type": "integer"
+                },
+                "user_answer": {
+                    "$ref": "#/definitions/dto.UserAnswer"
+                }
+            }
+        },
+        "dto.UserAnswer": {
+            "type": "object",
+            "properties": {
+                "answer_id": {
+                    "type": "integer"
+                },
+                "is_right": {
+                    "type": "boolean"
+                },
+                "question_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -739,53 +1492,21 @@ const docTemplate = `{
                 "hide_email": {
                     "type": "boolean"
                 },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.User": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "salt": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "models.UserProfile": {
-            "type": "object",
-            "properties": {
-                "avatarSrc": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "hideEmail": {
+                "is_admin": {
                     "type": "boolean"
                 },
-                "id": {
-                    "type": "integer"
-                },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserQuestionAnswer": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -838,6 +1559,58 @@ const docTemplate = `{
             "properties": {
                 "user": {
                     "$ref": "#/definitions/dto.UserProfileDTO"
+                }
+            }
+        },
+        "usermodels.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "hideEmail": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "salt": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "usermodels.UserProfile": {
+            "type": "object",
+            "properties": {
+                "avatarSrc": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hideEmail": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isAdmin": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         }

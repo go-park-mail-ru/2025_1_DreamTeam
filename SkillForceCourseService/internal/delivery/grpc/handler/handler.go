@@ -27,6 +27,14 @@ func (h *CourseHandler) GetBucketCourses(ctx context.Context, req *coursepb.GetB
 	return mapToGetBucketCoursesResponse(courses), nil
 }
 
+func (h *CourseHandler) GetPurchasedBucketCourses(ctx context.Context, req *coursepb.GetBucketCoursesRequest) (*coursepb.GetBucketCoursesResponse, error) {
+	courses, err := h.usecase.GetPurchasedBucketCourses(ctx, mapToGetUserProfile(req.UserProfile))
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetBucketCoursesResponse(courses), nil
+}
+
 func (h *CourseHandler) GetCourseLesson(ctx context.Context, req *coursepb.GetCourseLessonRequest) (*coursepb.GetCourseLessonResponse, error) {
 	lesson, err := h.usecase.GetCourseLesson(ctx, int(req.UserId), int(req.CourseId))
 	if err != nil {
@@ -45,6 +53,14 @@ func (h *CourseHandler) GetNextLesson(ctx context.Context, req *coursepb.GetNext
 
 func (h *CourseHandler) MarkLessonAsNotCompleted(ctx context.Context, req *coursepb.MarkLessonAsNotCompletedRequest) (*emptypb.Empty, error) {
 	err := h.usecase.MarkLessonAsNotCompleted(ctx, int(req.UserId), int(req.LessonId))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *CourseHandler) MarkLessonAsCompleted(ctx context.Context, req *coursepb.MarkLessonAsCompletedRequest) (*emptypb.Empty, error) {
+	err := h.usecase.MarkLessonAsCompleted(ctx, int(req.UserId), int(req.LessonId))
 	if err != nil {
 		return nil, err
 	}

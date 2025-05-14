@@ -6,10 +6,10 @@ import (
 	"skillForce/pkg/logs"
 )
 
-func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
+func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, lessonId int) error {
 	exists := false
-	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2 AND course_id = $3)",
-		userId, lessonId, courseId).Scan(&exists)
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2)",
+		userId, lessonId).Scan(&exists)
 	if err != nil {
 		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("%+v", err))
 	}
@@ -17,6 +17,19 @@ func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, courseId
 	if exists {
 		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("lesson id:%+v is already learned by the user id:%+v", lessonId, userId))
 		return nil
+	}
+
+	var courseId int
+	err = d.conn.QueryRow(`
+			SELECT p.Course_ID
+			FROM LESSON l
+			JOIN LESSON_BUCKET lb ON l.Lesson_Bucket_ID = lb.id
+			JOIN PART p ON p.id = lb.Part_ID
+			WHERE l.id = $1
+		`, lessonId).Scan(&courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "MarkLessonComplete", fmt.Sprintf("%+v", err))
+		return err
 	}
 
 	_, err = d.conn.Exec(
