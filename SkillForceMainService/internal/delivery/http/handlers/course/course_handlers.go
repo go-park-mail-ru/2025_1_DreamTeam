@@ -1287,7 +1287,7 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} response.ErrorResponse "Lesson not found"
 // @Failure 405 {object} response.ErrorResponse "Method not allowed"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /api/getQuestionTestLesson [get]
+// @Router /api/GetQuestionTestLesson [get]
 func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "method not allowed")
@@ -1347,7 +1347,7 @@ func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) 
 // @Failure 401 {object} response.ErrorResponse "User not authorized"
 // @Failure 405 {object} response.ErrorResponse "Method not allowed"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /api/answerQuestion [post]
+// @Router /api/AnswerQuestion [post]
 func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AnswerQuestion", "method not allowed")
