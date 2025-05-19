@@ -95,27 +95,27 @@ func (uc *CourseUsecase) GetBucketCourses(ctx context.Context, userProfile *user
 }
 
 func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProfile *usermodels.UserProfile) ([]*dto.CourseDTO, error) {
-	bucketCourses, err := uc.repo.GetPurchasedBucketCourses(userProfile.Id, ctx)
+	bucketCourses, err := uc.repo.GetPurchasedBucketCourses(ctx, userProfile.Id)
 	if err != nil {
-		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
 	if err != nil {
-		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
 	if err != nil {
-		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
 	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
 	if err != nil {
-		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
 
@@ -123,7 +123,7 @@ func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProf
 	if userProfile != nil {
 		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
 		if err != nil {
-			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
 	}
@@ -132,19 +132,19 @@ func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProf
 	for _, course := range bucketCourses {
 		rating, ok := coursesRatings[course.Id]
 		if !ok {
-			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
 			rating = 0
 		}
 
 		tags, ok := courseTags[course.Id]
 		if !ok {
-			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
 			tags = []string{}
 		}
 
 		purchases, ok := coursePurchases[course.Id]
 		if !ok {
-			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
 			purchases = 0
 		}
 		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
@@ -162,7 +162,80 @@ func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProf
 		})
 	}
 
-	logs.PrintLog(ctx, "GetBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+	logs.PrintLog(ctx, "GetPurchasedBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses, nil
+}
+
+func (uc *CourseUsecase) GetCompletedBucketCourses(ctx context.Context, userProfile *usermodels.UserProfile) ([]*dto.CourseDTO, error) {
+	bucketCourses, err := uc.repo.GetCompletedBucketCourses(ctx, userProfile.Id)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseFavourites := make(map[int]bool, 0)
+	if userProfile != nil {
+		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+			IsFavorite:      courseFavourites[course.Id],
+		})
+	}
+
+	logs.PrintLog(ctx, "GetCompletedBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
 
 	return resultBucketCourses, nil
 }

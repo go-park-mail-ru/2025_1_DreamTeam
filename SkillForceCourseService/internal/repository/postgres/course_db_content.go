@@ -67,8 +67,7 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course
 	return bucketCourses, nil
 }
 
-func (d *Database) GetPurchasedBucketCourses(userId int, ctx context.Context) ([]*coursemodels.Course, error) {
-	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
+func (d *Database) GetPurchasedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
 	var bucketCourses []*coursemodels.Course
 	query := `
 	SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
@@ -94,6 +93,36 @@ func (d *Database) GetPurchasedBucketCourses(userId int, ctx context.Context) ([
 	}
 
 	logs.PrintLog(ctx, "GetPurchasedBucketCourses", "get purchased bucket ourses from db")
+
+	return bucketCourses, nil
+}
+
+func (d *Database) GetCompletedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	var bucketCourses []*coursemodels.Course
+	query := `
+	SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
+	FROM COURSE c
+	JOIN COMPLETED_COURSES s ON s.course_id = c.id
+	WHERE s.user_id = $1
+	`
+	rows, err := d.conn.Query(query, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("get course %+v from db", course))
+		bucketCourses = append(bucketCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "GetCompletedBucketCourses", "get purchased bucket ourses from db")
 
 	return bucketCourses, nil
 }
