@@ -33,6 +33,7 @@ type CourseRepository interface {
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error)
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
+	MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error
 
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error)

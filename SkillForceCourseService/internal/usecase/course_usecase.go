@@ -657,6 +657,10 @@ func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId in
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
 
+func (uc *CourseUsecase) MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error {
+	return uc.repo.MarkCourseAsCompleted(ctx, userId, courseId)
+}
+
 func (uc *CourseUsecase) MarkLessonAsCompleted(ctx context.Context, userId int, lessonId int) error {
 	return uc.repo.MarkLessonCompleted(ctx, userId, lessonId)
 }

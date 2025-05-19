@@ -67,6 +67,10 @@ func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId i
 	return i.Database.MarkLessonCompleted(ctx, userId, lessonId)
 }
 
+func (i *CourseInfrastructure) MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error {
+	return i.Database.MarkCourseAsCompleted(ctx, userId, courseId)
+}
+
 func (i *CourseInfrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	return i.Database.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }

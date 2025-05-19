@@ -45,6 +45,40 @@ func (d *Database) MarkLessonCompleted(ctx context.Context, userId int, lessonId
 	return nil
 }
 
+func (d *Database) MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error {
+	tx, err := d.conn.BeginTx(ctx, nil)
+	if err != nil {
+		logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprint("failed to begin transaction: %w", err))
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx,
+		"DELETE FROM SIGNUPS WHERE User_ID = $1 AND Course_ID = $2",
+		userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprint("failed to delete from SIGNUPS: %w", err))
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx,
+		`INSERT INTO COMPLETED_COURSES (User_ID, Course_ID) 
+		  VALUES ($1, $2) 
+		  ON CONFLICT (Course_ID, User_ID) DO NOTHING`,
+		userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprint("failed to insert into COMPLETED_COURSES: %w", err))
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprint("failed to commit transaction: %w", err))
+		return err
+	}
+
+	return nil
+}
+
 func (d *Database) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
 	_, err := d.conn.Exec(
 		"DELETE FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2",
