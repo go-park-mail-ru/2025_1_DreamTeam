@@ -637,6 +637,57 @@ func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) 
 	response.SendOKResponse(w, r)
 }
 
+// MarkCourseAsCompleted godoc
+// @Summary Mark a course as completed
+// @Description Marks the specified course as completed for the authenticated user
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param courseId body dto.LessonIDRequest true "Course ID"
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} response.ErrorResponse "invalid course ID"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /api/markCourseAsCompleted [post]
+func (h *Handler) MarkCourseAsCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseId := dto.LessonIDRequest{}
+	err := json.NewDecoder(r.Body).Decode(&courseId)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcMarkCourseAsCompletedRequest := &coursepb.MarkCourseAsCompletedRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(courseId.Id),
+	}
+	_, err = h.courseClient.MarkCourseAsCompleted(r.Context(), grpcMarkCourseAsCompletedRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
 // GetCourseRoadmap godoc
 // @Summary      Get course roadmap
 // @Description  Returns the roadmap of a course for the authenticated user

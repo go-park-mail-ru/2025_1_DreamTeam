@@ -27,6 +27,7 @@ type CourseDTO struct {
 	Description     string           `json:"description"`
 	ScrImage        string           `json:"src_image"`
 	IsPurchased     bool             `json:"is_purchased"`
+	IsCompleted     bool             `json:"is_completed"`
 	Parts           []*CoursePartDTO `json:"parts"`
 	IsFavorite      bool             `json:"is_favorite"`
 }
@@ -91,6 +92,10 @@ type CoursePartDTO struct {
 
 type LessonIDRequest struct {
 	Id int `json:"lesson_id"`
+}
+
+type CourseIDRequest struct {
+	Id int `json:"course_id"`
 }
 
 type VideoRangeRequest struct {
