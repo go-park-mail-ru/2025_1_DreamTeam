@@ -322,6 +322,7 @@ message SearchCoursesByTitleRequest {
 service CourseService {
   rpc GetBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
   rpc GetPurchasedBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
+  rpc GetCompletedBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
   rpc GetCourseLesson(GetCourseLessonRequest) returns (GetCourseLessonResponse);
   rpc GetNextLesson(GetNextLessonRequest) returns (GetNextLessonResponse);
   rpc MarkLessonAsNotCompleted(MarkLessonAsNotCompletedRequest) returns (google.protobuf.Empty);

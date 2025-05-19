@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 type CourseServiceClient interface {
 	GetBucketCourses(ctx context.Context, in *GetBucketCoursesRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error)
 	GetPurchasedBucketCourses(ctx context.Context, in *GetBucketCoursesRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error)
+	GetCompletedBucketCourses(ctx context.Context, in *GetBucketCoursesRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error)
 	GetCourseLesson(ctx context.Context, in *GetCourseLessonRequest, opts ...grpc.CallOption) (*GetCourseLessonResponse, error)
 	GetNextLesson(ctx context.Context, in *GetNextLessonRequest, opts ...grpc.CallOption) (*GetNextLessonResponse, error)
 	MarkLessonAsNotCompleted(ctx context.Context, in *MarkLessonAsNotCompletedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -59,6 +60,15 @@ func (c *courseServiceClient) GetBucketCourses(ctx context.Context, in *GetBucke
 func (c *courseServiceClient) GetPurchasedBucketCourses(ctx context.Context, in *GetBucketCoursesRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error) {
 	out := new(GetBucketCoursesResponse)
 	err := c.cc.Invoke(ctx, "/course.CourseService/GetPurchasedBucketCourses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *courseServiceClient) GetCompletedBucketCourses(ctx context.Context, in *GetBucketCoursesRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error) {
+	out := new(GetBucketCoursesResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/GetCompletedBucketCourses", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +225,7 @@ func (c *courseServiceClient) SearchCoursesByTitle(ctx context.Context, in *Sear
 type CourseServiceServer interface {
 	GetBucketCourses(context.Context, *GetBucketCoursesRequest) (*GetBucketCoursesResponse, error)
 	GetPurchasedBucketCourses(context.Context, *GetBucketCoursesRequest) (*GetBucketCoursesResponse, error)
+	GetCompletedBucketCourses(context.Context, *GetBucketCoursesRequest) (*GetBucketCoursesResponse, error)
 	GetCourseLesson(context.Context, *GetCourseLessonRequest) (*GetCourseLessonResponse, error)
 	GetNextLesson(context.Context, *GetNextLessonRequest) (*GetNextLessonResponse, error)
 	MarkLessonAsNotCompleted(context.Context, *MarkLessonAsNotCompletedRequest) (*emptypb.Empty, error)
@@ -243,6 +254,9 @@ func (UnimplementedCourseServiceServer) GetBucketCourses(context.Context, *GetBu
 }
 func (UnimplementedCourseServiceServer) GetPurchasedBucketCourses(context.Context, *GetBucketCoursesRequest) (*GetBucketCoursesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPurchasedBucketCourses not implemented")
+}
+func (UnimplementedCourseServiceServer) GetCompletedBucketCourses(context.Context, *GetBucketCoursesRequest) (*GetBucketCoursesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCompletedBucketCourses not implemented")
 }
 func (UnimplementedCourseServiceServer) GetCourseLesson(context.Context, *GetCourseLessonRequest) (*GetCourseLessonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCourseLesson not implemented")
@@ -337,6 +351,24 @@ func _CourseService_GetPurchasedBucketCourses_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CourseServiceServer).GetPurchasedBucketCourses(ctx, req.(*GetBucketCoursesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_GetCompletedBucketCourses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBucketCoursesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetCompletedBucketCourses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/GetCompletedBucketCourses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetCompletedBucketCourses(ctx, req.(*GetBucketCoursesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -643,6 +675,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPurchasedBucketCourses",
 			Handler:    _CourseService_GetPurchasedBucketCourses_Handler,
+		},
+		{
+			MethodName: "GetCompletedBucketCourses",
+			Handler:    _CourseService_GetCompletedBucketCourses_Handler,
 		},
 		{
 			MethodName: "GetCourseLesson",
