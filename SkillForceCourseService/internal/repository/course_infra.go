@@ -111,6 +111,10 @@ func (i *CourseInfrastructure) IsUserPurchasedCourse(ctx context.Context, userId
 	return i.Database.IsUserPurchasedCourse(ctx, userId, courseId)
 }
 
+func (i *CourseInfrastructure) IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsUserCompletedCourse(ctx, userId, courseId)
+}
+
 func (i *CourseInfrastructure) GetLessonVideo(ctx context.Context, lessonId int) ([]string, error) {
 	return i.Database.GetLessonVideo(ctx, lessonId)
 }

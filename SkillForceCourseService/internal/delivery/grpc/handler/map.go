@@ -22,6 +22,7 @@ func mapToCourseDTO(dto *dto.CourseDTO) *coursepb.CourseDTO {
 		Description:     dto.Description,
 		ScrImage:        dto.ScrImage,
 		IsPurchased:     dto.IsPurchased,
+		IsCompleted:     dto.IsCompleted,
 		IsFavorite:      dto.IsFavorite,
 		Parts:           mapCourseParts(dto.Parts),
 	}

@@ -115,3 +115,20 @@ func (d *Database) IsUserPurchasedCourse(ctx context.Context, userId int, course
 	}
 	return exists, nil
 }
+
+func (d *Database) IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM COMPLETED_COURSES WHERE user_id = $1 AND course_id = $2)",
+		userId, courseId).Scan(&exists)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		logs.PrintLog(ctx, "IsUserCompletedCourse", fmt.Sprintf("%+v", err))
+		return false, nil
+	}
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsUserCompletedCourse", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+	return exists, nil
+}

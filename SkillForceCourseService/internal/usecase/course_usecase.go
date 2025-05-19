@@ -234,6 +234,12 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user purchased course: %+v", err))
 			return nil, err
 		}
+
+		resultBucketCourses[0].IsCompleted, err = uc.repo.IsUserCompletedCourse(ctx, userProfile.Id, course.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user completed course: %+v", err))
+			return nil, err
+		}
 	}
 
 	logs.PrintLog(ctx, "GetCourse", "get course with ratings and tags from db, mapping to dto")

@@ -32,6 +32,7 @@ type CourseRepository interface {
 	MarkLessonCompleted(ctx context.Context, userId int, lessonId int) error
 	MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error
 	IsUserPurchasedCourse(ctx context.Context, userId int, courseId int) (bool, error)
+	IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error)
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
 	MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error
 
