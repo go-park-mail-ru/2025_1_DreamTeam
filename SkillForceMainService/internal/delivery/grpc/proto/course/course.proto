@@ -141,8 +141,9 @@ message CourseDTO {
   string description = 9;
   string scr_image = 10;
   bool is_purchased = 11;
-  repeated CoursePartDTO parts = 12;
-  bool is_favorite = 13;
+  bool is_completed = 12;
+  repeated CoursePartDTO parts = 13;
+  bool is_favorite = 14;
 }
 
 message CourseRoadmapDTO {

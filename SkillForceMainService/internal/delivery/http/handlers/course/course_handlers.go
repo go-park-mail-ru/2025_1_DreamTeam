@@ -304,6 +304,7 @@ func (h *Handler) GetCourse(w http.ResponseWriter, r *http.Request) {
 		TimeToPass:      int(grpcGetCourseResponse.Course.TimeToPass),
 		PurchasesAmount: int(grpcGetCourseResponse.Course.PurchasesAmount),
 		IsPurchased:     grpcGetCourseResponse.Course.IsPurchased,
+		IsCompleted:     grpcGetCourseResponse.Course.IsCompleted,
 		IsFavorite:      grpcGetCourseResponse.Course.IsFavorite,
 		CreatorId:       int(grpcGetCourseResponse.Course.CreatorId),
 		Description:     grpcGetCourseResponse.Course.Description,
