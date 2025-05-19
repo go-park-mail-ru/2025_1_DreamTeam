@@ -667,13 +667,15 @@ func (h *Handler) MarkCourseAsCompleted(w http.ResponseWriter, r *http.Request) 
 
 	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
-	courseId := dto.LessonIDRequest{}
+	courseId := dto.CourseIDRequest{}
 	err := json.NewDecoder(r.Body).Decode(&courseId)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
+
+	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v wants to mark course %+v as completed", userProfile, courseId))
 
 	grpcMarkCourseAsCompletedRequest := &coursepb.MarkCourseAsCompletedRequest{
 		UserId:   int32(userProfile.Id),

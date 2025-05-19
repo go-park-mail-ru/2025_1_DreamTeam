@@ -2,8 +2,10 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	coursepb "skillForce/internal/delivery/grpc/proto"
 	"skillForce/internal/usecase"
+	"skillForce/pkg/logs"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -69,6 +71,7 @@ func (h *CourseHandler) MarkLessonAsCompleted(ctx context.Context, req *coursepb
 
 func (h *CourseHandler) MarkCourseAsCompleted(ctx context.Context, req *coursepb.MarkCourseAsCompletedRequest) (*emptypb.Empty, error) {
 	err := h.usecase.MarkCourseAsCompleted(ctx, int(req.UserId), int(req.CourseId))
+	logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprintf("course id: %v, user id: %v", int(req.CourseId), int(req.UserId)))
 	if err != nil {
 		return nil, err
 	}
