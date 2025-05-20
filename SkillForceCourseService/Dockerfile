@@ -16,5 +16,6 @@ WORKDIR /app
 COPY --from=builder /app/main .
 COPY config/.env ./config/.env
 COPY config/config.yaml ./config/config.yaml
+COPY --from=builder /app/pkg/sertificate ./pkg/sertificate
 
 CMD ["./main"]

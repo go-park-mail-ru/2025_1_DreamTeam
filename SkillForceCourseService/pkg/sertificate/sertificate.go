@@ -20,16 +20,16 @@ func GenerateCertificate(name, course, dateStr string, outputFile string) error 
 	pdf.Rect(5, 5, 287, 200, "D")
 
 	// Шрифт
-	fontPath := "./fonts/DejaVuSerif.ttf"
+	fontPath := "./pkg/sertificate/fonts/DejaVuSerif.ttf"
 	pdf.AddUTF8Font("DejaVu", "", fontPath)
 
 	// Логотип
 	opt := gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
-	imageInfo := pdf.RegisterImageOptions("logo1.png", opt)
+	imageInfo := pdf.RegisterImageOptions("./pkg/sertificate/logo1.png", opt)
 	if imageInfo == nil {
 		return fmt.Errorf("не удалось зарегистрировать изображение логотипа")
 	}
-	pdf.ImageOptions("logo1.png", 20, 20, 20, 20, false, opt, 0, "")
+	pdf.ImageOptions("./pkg/sertificate/logo1.png", 20, 20, 20, 20, false, opt, 0, "")
 
 	pdf.SetTextColor(34, 63, 151)
 	pdf.SetFont("DejaVu", "", 28)
@@ -71,11 +71,11 @@ func GenerateCertificate(name, course, dateStr string, outputFile string) error 
 	pdf.SetXY(55, -50)
 	pdf.CellFormat(0, 10, fmt.Sprintf("Дата: %s   Подпись:", dateStr), "", 0, "L", false, 0, "")
 
-	imageInfo = pdf.RegisterImageOptions("signature.png", opt)
+	imageInfo = pdf.RegisterImageOptions("./pkg/sertificate/signature.png", opt)
 	if imageInfo == nil {
 		return fmt.Errorf("не удалось зарегистрировать изображение подписи")
 	}
-	pdf.ImageOptions("signature.png", 182, 137, 80, 30, false, opt, 0, "")
+	pdf.ImageOptions("./pkg/sertificate/signature.png", 182, 137, 80, 30, false, opt, 0, "")
 
 	pdf.SetXY(160, -50)
 	pdf.CellFormat(0, 10, "______________________________________", "", 1, "C", false, 0, "")
