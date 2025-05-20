@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mime/multipart"
+	"net/textproto"
+	"os"
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
@@ -814,13 +817,46 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 	}
 	date := time.Now().Format("02.01.2006")
 
-	err = sertificate.GenerateCertificate(userProfile.Name, course.Title, date, "certificate.pdf")
+	tempFileName := fmt.Sprintf("certificate_%v_%v.pdf", userProfile.Name, course.Id)
+	err = sertificate.GenerateCertificate(userProfile.Name, course.Title, date, tempFileName)
 	if err != nil {
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("can't generate certificate: %+v", err))
 		return "", err
 	}
+	defer os.Remove(tempFileName)
 
-	return "certificate.pdf", err
+	logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("certificate for user (id: %v) and course (id: %v) was generated", userProfile.Id, course.Id))
+
+	// Открываем файл для чтения
+	file, err := os.Open(tempFileName)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to open certificate file: %+v", err))
+		return "", err
+	}
+	defer file.Close()
+
+	// Получаем информацию о файле
+	fileInfo, err := file.Stat()
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to get file info: %+v", err))
+		return "", err
+	}
+
+	fileHeader := &multipart.FileHeader{
+		Filename: tempFileName,
+		Size:     fileInfo.Size(),
+		Header:   make(textproto.MIMEHeader),
+	}
+	fileHeader.Header.Set("Content-Type", "application/pdf")
+
+	// Загружаем файл в MinIO
+	url, err := uc.repo.UploadFileToMinIO(ctx, file, fileHeader)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to upload certificate: %+v", err))
+		return "", err
+	}
+
+	return url, nil
 }
 
 func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {

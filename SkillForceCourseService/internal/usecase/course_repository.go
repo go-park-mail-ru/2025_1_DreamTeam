@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"mime/multipart"
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
@@ -54,4 +55,6 @@ type CourseRepository interface {
 	DeleteCourseFromFavourites(ctx context.Context, courseId int, userId int) error
 	GetFavouriteCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error)
 	GetCoursesFavouriteStatus(ctx context.Context, bucketCourses []*coursemodels.Course, userId int) (map[int]bool, error)
+
+	UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 }

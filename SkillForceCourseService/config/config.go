@@ -22,7 +22,6 @@ type Config struct {
 		AccessKey       string
 		SecretAccessKey string
 		BucketName      string
-		VideoBucket     string
 		UseSSL          bool
 	}
 
@@ -46,10 +45,9 @@ type yamlConfig struct {
 	} `yaml:"database"`
 
 	Minio struct {
-		Endpoint    string `yaml:"endpoint"`
-		BucketName  string `yaml:"bucket_name"`
-		VideoBucket string `yaml:"video_bucket_name"`
-		UseSSL      bool   `yaml:"use_ssl"`
+		Endpoint   string `yaml:"endpoint"`
+		BucketName string `yaml:"bucket_name"`
+		UseSSL     bool   `yaml:"use_ssl"`
 	} `yaml:"minio"`
 }
 
@@ -89,14 +87,12 @@ func LoadConfig() *Config {
 			AccessKey       string
 			SecretAccessKey string
 			BucketName      string
-			VideoBucket     string
 			UseSSL          bool
 		}{
 			Endpoint:        ycfg.Minio.Endpoint,
 			AccessKey:       os.Getenv("MINIO_ACCESS_KEY"),
 			SecretAccessKey: os.Getenv("MINIO_SECRET_KEY"),
 			BucketName:      ycfg.Minio.BucketName,
-			VideoBucket:     ycfg.Minio.VideoBucket,
 			UseSSL:          ycfg.Minio.UseSSL,
 		},
 		Secrets: struct{ JwtSessionSecret string }{

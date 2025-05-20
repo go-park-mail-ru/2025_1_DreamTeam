@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"skillForce/config"
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
+	"skillForce/internal/repository/minio"
 	"skillForce/internal/repository/postgres"
 )
 
 type CourseInfrastructure struct {
 	Database *postgres.Database
+	Minio    *minio.Minio
 }
 
 func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
@@ -22,8 +25,14 @@ func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName)
+	if err != nil {
+		log.Fatalf("Failed to connect to MinIO: %v", err)
+	}
+
 	return &CourseInfrastructure{
 		Database: database,
+		Minio:    mn,
 	}
 }
 
@@ -193,4 +202,8 @@ func (i *CourseInfrastructure) AnswerQuestion(ctx context.Context, question_id i
 
 func (i *CourseInfrastructure) SearchCoursesByTitle(ctx context.Context, keyword string) ([]*coursemodels.Course, error) {
 	return i.Database.SearchCoursesByTitle(ctx, keyword)
+}
+
+func (i *CourseInfrastructure) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return i.Minio.UploadFileToMinIO(ctx, file, fileHeader)
 }
