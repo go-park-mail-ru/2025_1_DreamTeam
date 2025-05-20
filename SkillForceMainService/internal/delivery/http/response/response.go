@@ -28,6 +28,10 @@ type PhotoUrlResponse struct {
 	Url string `json:"url"`
 }
 
+type SertificateUrlResponse struct {
+	Url string `json:"url"`
+}
+
 type LessonResponse struct {
 	Lesson *dto.LessonDTO `json:"lesson"`
 }
@@ -123,6 +127,13 @@ func SendUserProfile(UserProfile *dto.UserProfileDTO, w http.ResponseWriter, r *
 // SendPhotoUrl - отправка ссылки на фото в JSON-формате
 func SendPhotoUrl(url string, w http.ResponseWriter, r *http.Request) {
 	response := PhotoUrlResponse{Url: url}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func SendSertificateUrl(url string, w http.ResponseWriter, r *http.Request) {
+	response := SertificateUrlResponse{Url: url}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)

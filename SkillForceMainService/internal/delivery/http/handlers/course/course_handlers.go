@@ -834,25 +834,25 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) GetRaiting(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetRating(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		logs.PrintLog(r.Context(), "GetNextLesson", "method not allowed")
+		logs.PrintLog(r.Context(), "GetRating", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
-		logs.PrintLog(r.Context(), "GetCourseRoadmap", "user not logged in")
+		logs.PrintLog(r.Context(), "GetRating", "user not logged in")
 		userProfile = &models.UserProfile{Id: -1}
 	}
 
-	logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("user %+v is authorized", userProfile))
+	logs.PrintLog(r.Context(), "GetRating", fmt.Sprintf("user %+v is authorized", userProfile))
 
 	courseIdStr := r.URL.Query().Get("courseId")
 	courseId, err := strconv.Atoi(courseIdStr)
 	if err != nil {
-		logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("%+v", err))
+		logs.PrintLog(r.Context(), "GetRating", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
@@ -892,6 +892,46 @@ func (h *Handler) GetRaiting(w http.ResponseWriter, r *http.Request) {
 	rating := dto.Raiting{Rating: ratingItems}
 	logs.PrintLog(r.Context(), "GetRaiting", "get rating from grpc")
 	response.SendRatingResponse(&rating, w, r)
+}
+
+func (h *Handler) GetSertificate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSertificate", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetSertificate", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(courseId),
+	}
+
+	grpcGetSertificateResponse, err := h.courseClient.GetSertificate(r.Context(), grpcGetSertificateRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
+	response.SendSertificateUrl(sertificateUrl, w, r)
 }
 
 // ServeVideo godoc
