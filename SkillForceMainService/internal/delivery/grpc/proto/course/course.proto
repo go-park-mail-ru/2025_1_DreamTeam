@@ -332,7 +332,7 @@ message RatingItem {
 }
 
 message GetSertificateRequest {
-  int32 user_id = 1;
+  UserProfile user = 1;
   int32 course_id = 2;
 }
 

@@ -917,8 +917,21 @@ func (h *Handler) GetSertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
 	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
-		UserId:   int32(userProfile.Id),
+		User:     grpcUserProfile,
 		CourseId: int32(courseId),
 	}
 

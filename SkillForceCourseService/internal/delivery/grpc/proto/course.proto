@@ -331,6 +331,15 @@ message RatingItem {
   int32 rating = 2;
 }
 
+message GetSertificateRequest {
+  UserProfile user = 1;
+  int32 course_id = 2;
+}
+
+message GetSertificateResponse {
+  string sertificate_url = 1;
+}
+
 
 // Service Definition
 service CourseService {
@@ -345,6 +354,7 @@ service CourseService {
   rpc GetCourseRoadmap(GetCourseRoadmapRequest) returns (GetCourseRoadmapResponse);
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
   rpc GetRating (GetRatingRequest) returns (GetRatingResponse);
+  rpc GetSertificate (GetSertificateRequest) returns (GetSertificateResponse);
   rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);
   rpc AddCourseToFavourites(AddToFavouritesRequest) returns (google.protobuf.Empty);
   rpc DeleteCourseFromFavourites(DeleteCourseFromFavouritesRequest) returns (google.protobuf.Empty);

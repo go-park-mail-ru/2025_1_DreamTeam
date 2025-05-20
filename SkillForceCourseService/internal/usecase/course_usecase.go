@@ -9,6 +9,8 @@ import (
 	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 	"skillForce/pkg/sanitize"
+	"skillForce/pkg/sertificate"
+	"time"
 )
 
 type CourseUsecase struct {
@@ -802,6 +804,23 @@ func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, cours
 
 func (uc *CourseUsecase) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
 	return uc.repo.GetRating(ctx, userId, courseId)
+}
+
+func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	course, err := uc.repo.GetCourseById(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	date := time.Now().Format("02.01.2006")
+
+	err = sertificate.GenerateCertificate(userProfile.Name, course.Title, date, "certificate.pdf")
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("can't generate certificate: %+v", err))
+		return "", err
+	}
+
+	return "certificate.pdf", err
 }
 
 func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {
