@@ -94,6 +94,14 @@ func (h *CourseHandler) GetCourseRoadmap(ctx context.Context, req *coursepb.GetC
 	return mapToCourseRoadmapResponse(roadmap), nil
 }
 
+func (h *CourseHandler) GetRating(ctx context.Context, req *coursepb.GetRatingRequest) (*coursepb.GetRatingResponse, error) {
+	rating, err := h.usecase.GetRating(ctx, int(req.UserId), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return mapToRatingResponse(rating), nil
+}
+
 func (h *CourseHandler) GetCourse(ctx context.Context, req *coursepb.GetCourseRequest) (*coursepb.GetCourseResponse, error) {
 	course, err := h.usecase.GetCourse(ctx, int(req.CourseId), mapToGetUserProfile(req.UserProfile))
 	if err != nil {

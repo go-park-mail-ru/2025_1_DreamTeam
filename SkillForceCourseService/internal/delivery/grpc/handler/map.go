@@ -290,3 +290,28 @@ func mapToAnswerQuizResponse(test *dto.QuizResult) *coursepb.AnswerQuizResponse 
 		IsRight: test.Result,
 	}
 }
+
+func mapToRatingResponse(r *dto.Raiting) *coursepb.GetRatingResponse {
+	if r == nil {
+		return &coursepb.GetRatingResponse{Rating: []*coursepb.RatingItem{}}
+	}
+
+	ratingItems := make([]*coursepb.RatingItem, 0, len(r.Rating))
+	for _, item := range r.Rating {
+		ratingItems = append(ratingItems, &coursepb.RatingItem{
+			User: &coursepb.UserProfile{
+				Name:      item.User.Name,
+				Email:     item.User.Email,
+				Bio:       item.User.Bio,
+				AvatarSrc: item.User.AvatarSrc,
+				HideEmail: item.User.HideEmail,
+				IsAdmin:   item.User.IsAdmin,
+			},
+			Rating: int32(item.Rating),
+		})
+	}
+
+	return &coursepb.GetRatingResponse{
+		Rating: ratingItems,
+	}
+}

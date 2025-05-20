@@ -317,6 +317,20 @@ message SearchCoursesByTitleRequest {
   string keywords = 2;
 }
 
+message GetRatingRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
+message GetRatingResponse {
+  repeated RatingItem rating = 1;
+}
+
+message RatingItem {
+  UserProfile user = 1;
+  int32 rating = 2;
+}
+
 
 // Service Definition
 service CourseService {
@@ -330,6 +344,7 @@ service CourseService {
   rpc MarkCourseAsCompleted(MarkCourseAsCompletedRequest) returns (google.protobuf.Empty);
   rpc GetCourseRoadmap(GetCourseRoadmapRequest) returns (GetCourseRoadmapResponse);
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
+  rpc GetRating (GetRatingRequest) returns (GetRatingResponse);
   rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);
   rpc AddCourseToFavourites(AddToFavouritesRequest) returns (google.protobuf.Empty);
   rpc DeleteCourseFromFavourites(DeleteCourseFromFavouritesRequest) returns (google.protobuf.Empty);

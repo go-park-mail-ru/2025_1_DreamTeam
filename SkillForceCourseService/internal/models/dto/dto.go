@@ -171,3 +171,12 @@ type QuestionTest struct {
 	Question   string             `json:"question"`
 	UserAnswer UserQuestionAnswer `json:"user_answer"`
 }
+
+type RaitingItem struct {
+	User   UserProfileDTO `json:"user"`
+	Rating int            `json:"rating"`
+}
+
+type Raiting struct {
+	Rating []RaitingItem `json:"rating"`
+}

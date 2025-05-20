@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	coursemodels "skillForce/internal/models/course"
+	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 )
 
@@ -131,4 +132,52 @@ func (d *Database) IsUserCompletedCourse(ctx context.Context, userId int, course
 		return false, err
 	}
 	return exists, nil
+}
+
+func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
+	query := `
+		SELECT 
+			u.name, u.avatar_src, u.id,
+			COUNT(lc.id) AS lessons_completed
+		FROM 
+			lesson_checkpoint lc
+		JOIN 
+			usertable u ON lc.user_id = u.id
+		WHERE 
+			lc.course_id = $1
+		GROUP BY 
+			u.id, u.name
+		ORDER BY 
+			lessons_completed DESC
+	`
+
+	rows, err := d.conn.Query(query, courseId)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query database: %v", err)
+	}
+	defer rows.Close()
+
+	var rating []dto.RaitingItem
+
+	for rows.Next() {
+		var item dto.RaitingItem
+		var amountCompletedLessons int
+		var newUserId int
+		err := rows.Scan(&item.User.Name, &item.User.AvatarSrc, &newUserId, &amountCompletedLessons)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+		item.Rating = amountCompletedLessons
+		rating = append(rating, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		logs.PrintLog(ctx, "GetRating", fmt.Sprintf("%+v", err))
+		return nil, fmt.Errorf("error during rows iteration: %v", err)
+	}
+
+	resultRatingList := dto.Raiting{Rating: rating}
+
+	return &resultRatingList, nil
 }

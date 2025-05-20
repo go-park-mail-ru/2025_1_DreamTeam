@@ -24,6 +24,7 @@ type CourseRepository interface {
 	AnswerQuiz(ctx context.Context, question_id int, answer_id int, user_id int, course_id int) (*dto.QuizResult, error)
 	GetQuestionTestLesson(ctx context.Context, currentLessonId int, user_id int) (*dto.QuestionTest, error)
 	AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error
+	GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error)
 
 	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)

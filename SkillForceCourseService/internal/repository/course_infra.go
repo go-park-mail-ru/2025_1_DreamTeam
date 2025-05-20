@@ -47,6 +47,10 @@ func (i *CourseInfrastructure) GetCoursesRaitings(ctx context.Context, bucketCou
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
 }
 
+func (i *CourseInfrastructure) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
+	return i.Database.GetRating(ctx, userId, courseId)
+}
+
 func (i *CourseInfrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error) {
 	return i.Database.GetCoursesTags(ctx, bucketCoursesWithoutTags)
 }
