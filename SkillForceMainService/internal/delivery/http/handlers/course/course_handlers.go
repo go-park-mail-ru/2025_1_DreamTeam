@@ -783,7 +783,7 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	courseIdStr := r.URL.Query().Get("courseId")
 	courseId, err := strconv.Atoi(courseIdStr)
 	if err != nil {
-		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
@@ -832,6 +832,66 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	logs.PrintLog(r.Context(), "GetCourseRoadmap", "send course roadmap to user")
 	response.SendCourseRoadmap(&courseRoadmap, w, r)
 
+}
+
+func (h *Handler) GetRaiting(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetNextLesson", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetCourseRoadmap", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetRatingsRequest := &coursepb.GetRatingRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(courseId),
+	}
+
+	grpcGetRatingsResponse, err := h.courseClient.GetRating(r.Context(), grpcGetRatingsRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetRaiting", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	ratingItems := make([]dto.RaitingItem, 0, len(grpcGetRatingsResponse.GetRating()))
+	for _, item := range grpcGetRatingsResponse.GetRating() {
+		user := item.GetUser()
+		if user == nil {
+			continue
+		}
+
+		ratingItems = append(ratingItems, dto.RaitingItem{
+			User: dto.UserProfileDTO{
+				Name:      user.GetName(),
+				Email:     user.GetEmail(),
+				Bio:       user.GetBio(),
+				AvatarSrc: user.GetAvatarSrc(),
+				HideEmail: user.GetHideEmail(),
+				IsAdmin:   user.GetIsAdmin(),
+			},
+			Rating: int(item.GetRating()),
+		})
+	}
+
+	rating := dto.Raiting{Rating: ratingItems}
+	logs.PrintLog(r.Context(), "GetRaiting", "get rating from grpc")
+	response.SendRatingResponse(&rating, w, r)
 }
 
 // ServeVideo godoc

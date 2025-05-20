@@ -61,6 +61,7 @@ func main() {
 	siteMux.HandleFunc("/api/markLessonAsCompleted", courseHandler.MarkLessonAsCompleted)
 	siteMux.HandleFunc("/api/markCourseAsCompleted", courseHandler.MarkCourseAsCompleted)
 	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
+	siteMux.HandleFunc("/api/getRaiting", courseHandler.GetRaiting)
 	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
 	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
 	siteMux.HandleFunc("/api/addCourseToFavourites", courseHandler.AddCourseToFavourites)

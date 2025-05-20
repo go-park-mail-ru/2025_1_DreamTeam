@@ -182,3 +182,12 @@ type AnswerQuestion struct {
 	QuestionID int    `json:"question_id"`
 	Answer     string `json:"answer"`
 }
+
+type RaitingItem struct {
+	User   UserProfileDTO `json:"user"`
+	Rating int            `json:"rating"`
+}
+
+type Raiting struct {
+	Rating []RaitingItem `json:"rating"`
+}

@@ -60,6 +60,10 @@ type QuestionTestResponse struct {
 	Question *dto.QuestionTest `json:"question"`
 }
 
+type RaitingResponse struct {
+	Raiting *dto.Raiting `json:"course_raiting"`
+}
+
 // SendErrorResponse - отправка ошибки в JSON-формате
 func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter, r *http.Request) {
 	response := ErrorResponse{ErrorStr: textError}
@@ -183,6 +187,13 @@ func SendSurveyResponse(survey *dto.SurveyDTO, w http.ResponseWriter, r *http.Re
 
 func SendSurveyMetricsResponse(surveyMetrics *dto.SurveyMetricsDTO, w http.ResponseWriter, r *http.Request) {
 	response := SurveyMetricsResponse{SurveyMetrics: surveyMetrics}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func SendRatingResponse(raiting *dto.Raiting, w http.ResponseWriter, r *http.Request) {
+	response := RaitingResponse{Raiting: raiting}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
