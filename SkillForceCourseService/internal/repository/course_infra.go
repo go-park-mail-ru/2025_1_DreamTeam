@@ -155,19 +155,8 @@ func (i *CourseInfrastructure) CreateVideoLesson(ctx context.Context, lesson *co
 	return i.Database.CreateVideoLesson(ctx, lesson, bucketId)
 }
 
-func (i *CourseInfrastructure) CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error {
-	return i.Database.CreateSurvey(ctx, survey, userProfile)
-}
-
 func (i *CourseInfrastructure) SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
 	return i.Database.SendSurveyQuestionAnswer(ctx, surveyAnswerDto, userProfile)
-}
-func (i *CourseInfrastructure) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) {
-	return i.Database.GetSurvey(ctx)
-}
-
-func (i *CourseInfrastructure) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
-	return i.Database.GetMetrics(ctx, metric)
 }
 
 func (i *CourseInfrastructure) AddCourseToFavourites(ctx context.Context, courseId int, userId int) error {
