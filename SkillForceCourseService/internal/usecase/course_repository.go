@@ -39,6 +39,7 @@ type CourseRepository interface {
 	IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error)
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
 	MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error
+	SaveSertificate(ctx context.Context, userId int, courseId int, sertificateUrl string) error
 
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error)

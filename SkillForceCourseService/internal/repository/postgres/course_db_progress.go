@@ -116,3 +116,14 @@ func (d *Database) AddUserToCourse(ctx context.Context, userId int, courseId int
 	logs.PrintLog(ctx, "AddUserToCourse", fmt.Sprintf("add user with id %+v to course with id %+v", userId, courseId))
 	return nil
 }
+
+func (d *Database) SaveSertificate(ctx context.Context, userId int, courseId int, sertificate string) error {
+	_, err := d.conn.Exec(
+		"INSERT INTO SERTIFICATES (user_id, course_id, sertificate_src) VALUES ($1, $2, $3)",
+		userId, courseId, sertificate)
+	if err != nil {
+		logs.PrintLog(ctx, "SaveSertificate", fmt.Sprintf("%+v", err))
+		return err
+	}
+	return nil
+}

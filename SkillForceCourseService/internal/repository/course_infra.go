@@ -211,3 +211,7 @@ func (i *CourseInfrastructure) UploadFileToMinIO(ctx context.Context, file multi
 func (i *CourseInfrastructure) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
 	return i.Database.GetGeneratedSertificate(ctx, userProfile, courseId)
 }
+
+func (i *CourseInfrastructure) SaveSertificate(ctx context.Context, userId int, courseId int, sertificate string) error {
+	return i.Database.SaveSertificate(ctx, userId, courseId, sertificate)
+}

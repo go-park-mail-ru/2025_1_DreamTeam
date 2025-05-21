@@ -856,6 +856,12 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 		return "", err
 	}
 
+	err = uc.repo.SaveSertificate(ctx, userProfile.Id, course.Id, url)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to save sertificate: %+v", err))
+		return "", err
+	}
+
 	return url, nil
 }
 
