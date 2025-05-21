@@ -1000,6 +1000,59 @@ func (h *Handler) GetGeneratedSertificate(w http.ResponseWriter, r *http.Request
 	response.SendSertificateUrl(sertificateUrl, w, r)
 }
 
+func (h *Handler) GetStatistic(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetStatistic", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetStatistic", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetStatisticRequest := &coursepb.GetStatisticRequest{
+		CourseId: int32(courseId),
+		UserId:   int32(userProfile.Id),
+	}
+
+	grpcGetStatisticResponse, err := h.courseClient.GetStatistic(r.Context(), grpcGetStatisticRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	statistic := &dto.UserStats{
+		Percentage:            int(grpcGetStatisticResponse.Percentage),
+		CompletedTextLessons:  int(grpcGetStatisticResponse.CompletedTextLessons),
+		AmountTextLessons:     int(grpcGetStatisticResponse.AmountTextLessons),
+		CompletedVideoLessons: int(grpcGetStatisticResponse.CompletedVideoLessons),
+		AmountVideoLessons:    int(grpcGetStatisticResponse.AmountVideoLessons),
+		RecievedPoints:        int(grpcGetStatisticResponse.ReceivedPoints),
+		AmountPoints:          int(grpcGetStatisticResponse.AmountPoints),
+		CompletedTests:        int(grpcGetStatisticResponse.CompletedTests),
+		AmountTests:           int(grpcGetStatisticResponse.AmountTests),
+		CompletedQuestions:    int(grpcGetStatisticResponse.CompletedQuestions),
+		AmountQuestions:       int(grpcGetStatisticResponse.AmountQuestions),
+	}
+
+	logs.PrintLog(r.Context(), "GetStatistic", "get statistic from grpc")
+	response.SendStatistic(statistic, w, r)
+}
+
 // ServeVideo godoc
 // @Summary Serve video content
 // @Description Streams video content for a lesson based on the lesson ID provided in the query parameters.

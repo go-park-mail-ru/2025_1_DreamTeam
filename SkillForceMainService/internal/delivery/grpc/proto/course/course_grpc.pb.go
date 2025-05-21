@@ -30,6 +30,7 @@ type CourseServiceClient interface {
 	GetCourseRoadmap(ctx context.Context, in *GetCourseRoadmapRequest, opts ...grpc.CallOption) (*GetCourseRoadmapResponse, error)
 	GetCourse(ctx context.Context, in *GetCourseRequest, opts ...grpc.CallOption) (*GetCourseResponse, error)
 	GetRating(ctx context.Context, in *GetRatingRequest, opts ...grpc.CallOption) (*GetRatingResponse, error)
+	GetStatistic(ctx context.Context, in *GetStatisticRequest, opts ...grpc.CallOption) (*GetStatisticResponse, error)
 	GetSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error)
 	GetGeneratedSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error)
 	CreateCourse(ctx context.Context, in *CreateCourseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -150,6 +151,15 @@ func (c *courseServiceClient) GetRating(ctx context.Context, in *GetRatingReques
 	return out, nil
 }
 
+func (c *courseServiceClient) GetStatistic(ctx context.Context, in *GetStatisticRequest, opts ...grpc.CallOption) (*GetStatisticResponse, error) {
+	out := new(GetStatisticResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/GetStatistic", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *courseServiceClient) GetSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error) {
 	out := new(GetSertificateResponse)
 	err := c.cc.Invoke(ctx, "/course.CourseService/GetSertificate", in, out, opts...)
@@ -264,6 +274,7 @@ type CourseServiceServer interface {
 	GetCourseRoadmap(context.Context, *GetCourseRoadmapRequest) (*GetCourseRoadmapResponse, error)
 	GetCourse(context.Context, *GetCourseRequest) (*GetCourseResponse, error)
 	GetRating(context.Context, *GetRatingRequest) (*GetRatingResponse, error)
+	GetStatistic(context.Context, *GetStatisticRequest) (*GetStatisticResponse, error)
 	GetSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error)
 	GetGeneratedSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error)
 	CreateCourse(context.Context, *CreateCourseRequest) (*emptypb.Empty, error)
@@ -314,6 +325,9 @@ func (UnimplementedCourseServiceServer) GetCourse(context.Context, *GetCourseReq
 }
 func (UnimplementedCourseServiceServer) GetRating(context.Context, *GetRatingRequest) (*GetRatingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRating not implemented")
+}
+func (UnimplementedCourseServiceServer) GetStatistic(context.Context, *GetStatisticRequest) (*GetStatisticResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStatistic not implemented")
 }
 func (UnimplementedCourseServiceServer) GetSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSertificate not implemented")
@@ -555,6 +569,24 @@ func _CourseService_GetRating_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CourseServiceServer).GetRating(ctx, req.(*GetRatingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_GetStatistic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStatisticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetStatistic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/GetStatistic",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetStatistic(ctx, req.(*GetStatisticRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -807,6 +839,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRating",
 			Handler:    _CourseService_GetRating_Handler,
+		},
+		{
+			MethodName: "GetStatistic",
+			Handler:    _CourseService_GetStatistic_Handler,
 		},
 		{
 			MethodName: "GetSertificate",
