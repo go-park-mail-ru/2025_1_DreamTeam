@@ -947,6 +947,59 @@ func (h *Handler) GetSertificate(w http.ResponseWriter, r *http.Request) {
 	response.SendSertificateUrl(sertificateUrl, w, r)
 }
 
+func (h *Handler) GetGeneratedSertificate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSertificate", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetSertificate", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
+	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
+		User:     grpcUserProfile,
+		CourseId: int32(courseId),
+	}
+
+	grpcGetSertificateResponse, err := h.courseClient.GetGeneratedSertificate(r.Context(), grpcGetSertificateRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
+	response.SendSertificateUrl(sertificateUrl, w, r)
+}
+
 // ServeVideo godoc
 // @Summary Serve video content
 // @Description Streams video content for a lesson based on the lesson ID provided in the query parameters.
