@@ -355,6 +355,7 @@ service CourseService {
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
   rpc GetRating (GetRatingRequest) returns (GetRatingResponse);
   rpc GetSertificate (GetSertificateRequest) returns (GetSertificateResponse);
+  rpc GetGeneratedSertificate (GetSertificateRequest) returns (GetSertificateResponse);
   rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);
   rpc AddCourseToFavourites(AddToFavouritesRequest) returns (google.protobuf.Empty);
   rpc DeleteCourseFromFavourites(DeleteCourseFromFavouritesRequest) returns (google.protobuf.Empty);

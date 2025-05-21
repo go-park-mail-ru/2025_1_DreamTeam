@@ -207,3 +207,7 @@ func (i *CourseInfrastructure) SearchCoursesByTitle(ctx context.Context, keyword
 func (i *CourseInfrastructure) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return i.Minio.UploadFileToMinIO(ctx, file, fileHeader)
 }
+
+func (i *CourseInfrastructure) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return i.Database.GetGeneratedSertificate(ctx, userProfile, courseId)
+}

@@ -31,6 +31,7 @@ type CourseServiceClient interface {
 	GetCourse(ctx context.Context, in *GetCourseRequest, opts ...grpc.CallOption) (*GetCourseResponse, error)
 	GetRating(ctx context.Context, in *GetRatingRequest, opts ...grpc.CallOption) (*GetRatingResponse, error)
 	GetSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error)
+	GetGeneratedSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error)
 	CreateCourse(ctx context.Context, in *CreateCourseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddCourseToFavourites(ctx context.Context, in *AddToFavouritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteCourseFromFavourites(ctx context.Context, in *DeleteCourseFromFavouritesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -158,6 +159,15 @@ func (c *courseServiceClient) GetSertificate(ctx context.Context, in *GetSertifi
 	return out, nil
 }
 
+func (c *courseServiceClient) GetGeneratedSertificate(ctx context.Context, in *GetSertificateRequest, opts ...grpc.CallOption) (*GetSertificateResponse, error) {
+	out := new(GetSertificateResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/GetGeneratedSertificate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *courseServiceClient) CreateCourse(ctx context.Context, in *CreateCourseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/course.CourseService/CreateCourse", in, out, opts...)
@@ -255,6 +265,7 @@ type CourseServiceServer interface {
 	GetCourse(context.Context, *GetCourseRequest) (*GetCourseResponse, error)
 	GetRating(context.Context, *GetRatingRequest) (*GetRatingResponse, error)
 	GetSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error)
+	GetGeneratedSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error)
 	CreateCourse(context.Context, *CreateCourseRequest) (*emptypb.Empty, error)
 	AddCourseToFavourites(context.Context, *AddToFavouritesRequest) (*emptypb.Empty, error)
 	DeleteCourseFromFavourites(context.Context, *DeleteCourseFromFavouritesRequest) (*emptypb.Empty, error)
@@ -306,6 +317,9 @@ func (UnimplementedCourseServiceServer) GetRating(context.Context, *GetRatingReq
 }
 func (UnimplementedCourseServiceServer) GetSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSertificate not implemented")
+}
+func (UnimplementedCourseServiceServer) GetGeneratedSertificate(context.Context, *GetSertificateRequest) (*GetSertificateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGeneratedSertificate not implemented")
 }
 func (UnimplementedCourseServiceServer) CreateCourse(context.Context, *CreateCourseRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCourse not implemented")
@@ -563,6 +577,24 @@ func _CourseService_GetSertificate_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CourseService_GetGeneratedSertificate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSertificateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).GetGeneratedSertificate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/GetGeneratedSertificate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).GetGeneratedSertificate(ctx, req.(*GetSertificateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CourseService_CreateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCourseRequest)
 	if err := dec(in); err != nil {
@@ -779,6 +811,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSertificate",
 			Handler:    _CourseService_GetSertificate_Handler,
+		},
+		{
+			MethodName: "GetGeneratedSertificate",
+			Handler:    _CourseService_GetGeneratedSertificate_Handler,
 		},
 		{
 			MethodName: "CreateCourse",

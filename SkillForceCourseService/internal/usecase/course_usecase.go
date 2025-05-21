@@ -859,6 +859,10 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 	return url, nil
 }
 
+func (uc *CourseUsecase) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return uc.repo.GetGeneratedSertificate(ctx, userProfile, courseId)
+}
+
 func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {
 	course := coursemodels.Course{
 		CreatorId:   userProfile.Id,
