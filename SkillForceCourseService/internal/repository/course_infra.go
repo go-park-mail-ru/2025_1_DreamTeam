@@ -215,3 +215,7 @@ func (i *CourseInfrastructure) GetGeneratedSertificate(ctx context.Context, user
 func (i *CourseInfrastructure) SaveSertificate(ctx context.Context, userId int, courseId int, sertificate string) error {
 	return i.Database.SaveSertificate(ctx, userId, courseId, sertificate)
 }
+
+func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsSertificateExists(ctx, userId, courseId)
+}

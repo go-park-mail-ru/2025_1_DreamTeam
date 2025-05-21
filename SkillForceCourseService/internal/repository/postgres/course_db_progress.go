@@ -127,3 +127,14 @@ func (d *Database) SaveSertificate(ctx context.Context, userId int, courseId int
 	}
 	return nil
 }
+
+func (d *Database) IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM SERTIFICATES WHERE user_id = $1 AND course_id = $2)",
+		userId, courseId).Scan(&exists)
+	if err != nil {
+		logs.PrintLog(ctx, "IsSertificateExists", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+	return exists, nil
+}

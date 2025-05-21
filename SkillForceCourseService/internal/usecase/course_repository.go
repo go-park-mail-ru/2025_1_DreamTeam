@@ -27,6 +27,7 @@ type CourseRepository interface {
 	AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error
 	GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error)
 	GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error)
+	IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error)
 
 	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)

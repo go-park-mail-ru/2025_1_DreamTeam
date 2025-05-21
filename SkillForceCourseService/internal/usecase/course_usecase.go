@@ -810,6 +810,16 @@ func (uc *CourseUsecase) GetRating(ctx context.Context, userId int, courseId int
 }
 
 func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	exists, err := uc.repo.IsSertificateExists(ctx, userProfile.Id, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
+	if exists {
+		return "", errors.New("certificate already exists")
+	}
+
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
