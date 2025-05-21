@@ -45,6 +45,7 @@ type CourseRepository interface {
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error)
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*coursemodels.Course) (map[int]int, error)
+	GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error)
 
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
 

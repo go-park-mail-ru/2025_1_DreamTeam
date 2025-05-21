@@ -809,6 +809,10 @@ func (uc *CourseUsecase) GetRating(ctx context.Context, userId int, courseId int
 	return uc.repo.GetRating(ctx, userId, courseId)
 }
 
+func (uc *CourseUsecase) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return uc.repo.GetStatistic(ctx, userId, courseId)
+}
+
 func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
 	exists, err := uc.repo.IsSertificateExists(ctx, userProfile.Id, courseId)
 	if err != nil {

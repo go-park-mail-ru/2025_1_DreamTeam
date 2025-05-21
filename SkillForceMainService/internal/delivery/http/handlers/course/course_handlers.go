@@ -150,6 +150,7 @@ func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
 	if len(grpcBucketCoursesResponse.Courses) == 0 {
 		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
 		response.SendNoContentOKResponse(w, r)
+		return
 	}
 
 	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
@@ -176,14 +177,14 @@ func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "method not allowed")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "user not logged in")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
@@ -204,14 +205,15 @@ func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 
 	grpcBucketCoursesResponse, err := h.courseClient.GetCompletedBucketCourses(r.Context(), &grpcGetBucketcourses)
 	if err != nil {
-		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(r.Context(), "GetCompletedCourses", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
 
 	if len(grpcBucketCoursesResponse.Courses) == 0 {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "send NoContentOKResponse")
 		response.SendNoContentOKResponse(w, r)
+		return
 	}
 
 	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
@@ -232,7 +234,7 @@ func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+	logs.PrintLog(r.Context(), "GetCompletedCourses", "send completed bucket courses")
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 

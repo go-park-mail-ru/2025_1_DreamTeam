@@ -219,3 +219,7 @@ func (i *CourseInfrastructure) SaveSertificate(ctx context.Context, userId int, 
 func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error) {
 	return i.Database.IsSertificateExists(ctx, userId, courseId)
 }
+
+func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return &dto.UserStats{}, nil
+}

@@ -118,6 +118,14 @@ func (h *CourseHandler) GetGeneratedSertificate(ctx context.Context, req *course
 	return &coursepb.GetSertificateResponse{SertificateUrl: sertificateUrl}, nil
 }
 
+func (h *CourseHandler) GetStatistic(ctx context.Context, req *coursepb.GetStatisticRequest) (*coursepb.GetStatisticResponse, error) {
+	stats, err := h.usecase.GetStatistic(ctx, int(req.UserId), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return mapToStatisticResponse(stats), nil
+}
+
 func (h *CourseHandler) GetCourse(ctx context.Context, req *coursepb.GetCourseRequest) (*coursepb.GetCourseResponse, error) {
 	course, err := h.usecase.GetCourse(ctx, int(req.CourseId), mapToGetUserProfile(req.UserProfile))
 	if err != nil {
