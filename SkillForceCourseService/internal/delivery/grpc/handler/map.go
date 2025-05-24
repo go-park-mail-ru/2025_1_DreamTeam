@@ -315,3 +315,19 @@ func mapToRatingResponse(r *dto.Raiting) *coursepb.GetRatingResponse {
 		Rating: ratingItems,
 	}
 }
+
+func mapToStatisticResponse(userStats *dto.UserStats) *coursepb.GetStatisticResponse {
+	return &coursepb.GetStatisticResponse{
+		Percentage:            int32(userStats.Percentage),
+		CompletedTextLessons:  int32(userStats.CompletedTextLessons),
+		AmountTextLessons:     int32(userStats.AmountTextLessons),
+		CompletedVideoLessons: int32(userStats.CompletedVideoLessons),
+		AmountVideoLessons:    int32(userStats.AmountVideoLessons),
+		ReceivedPoints:        int32(userStats.RecievedPoints),
+		AmountPoints:          int32(userStats.AmountPoints),
+		CompletedTests:        int32(userStats.CompletedTests),
+		AmountTests:           int32(userStats.AmountTests),
+		CompletedQuestions:    int32(userStats.CompletedQuestions),
+		AmountQuestions:       int32(userStats.AmountQuestions),
+	}
+}

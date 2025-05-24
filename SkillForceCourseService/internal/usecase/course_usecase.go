@@ -809,7 +809,21 @@ func (uc *CourseUsecase) GetRating(ctx context.Context, userId int, courseId int
 	return uc.repo.GetRating(ctx, userId, courseId)
 }
 
+func (uc *CourseUsecase) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return uc.repo.GetStatistic(ctx, userId, courseId)
+}
+
 func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	exists, err := uc.repo.IsSertificateExists(ctx, userProfile.Id, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
+	if exists {
+		return "", errors.New("certificate already exists")
+	}
+
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
@@ -856,7 +870,17 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 		return "", err
 	}
 
+	err = uc.repo.SaveSertificate(ctx, userProfile.Id, course.Id, url)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to save sertificate: %+v", err))
+		return "", err
+	}
+
 	return url, nil
+}
+
+func (uc *CourseUsecase) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return uc.repo.GetGeneratedSertificate(ctx, userProfile, courseId)
 }
 
 func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {

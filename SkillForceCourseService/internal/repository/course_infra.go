@@ -207,3 +207,19 @@ func (i *CourseInfrastructure) SearchCoursesByTitle(ctx context.Context, keyword
 func (i *CourseInfrastructure) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
 	return i.Minio.UploadFileToMinIO(ctx, file, fileHeader)
 }
+
+func (i *CourseInfrastructure) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return i.Database.GetGeneratedSertificate(ctx, userProfile, courseId)
+}
+
+func (i *CourseInfrastructure) SaveSertificate(ctx context.Context, userId int, courseId int, sertificate string) error {
+	return i.Database.SaveSertificate(ctx, userId, courseId, sertificate)
+}
+
+func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsSertificateExists(ctx, userId, courseId)
+}
+
+func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return &dto.UserStats{}, nil
+}

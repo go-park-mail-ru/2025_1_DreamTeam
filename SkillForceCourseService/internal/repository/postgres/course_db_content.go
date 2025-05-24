@@ -7,6 +7,7 @@ import (
 
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
+	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 )
 
@@ -493,4 +494,14 @@ func (d *Database) GetVideoUrl(ctx context.Context, lessonId int) (string, error
 		return "", err
 	}
 	return videoUrl, nil
+}
+
+func (d *Database) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	var sertificateURL string
+	err := d.conn.QueryRow("SELECT sertificate_src FROM SERTIFICATES WHERE user_id = $1 AND course_id = $2", userProfile.Id, courseId).Scan(&sertificateURL)
+	if err != nil {
+		logs.PrintLog(ctx, "GetGeneratedSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	return sertificateURL, nil
 }

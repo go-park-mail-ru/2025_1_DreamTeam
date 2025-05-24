@@ -57,7 +57,8 @@ func main() {
 	siteMux.HandleFunc("/api/getCompletedCourses", courseHandler.GetCompletedCourses)
 	siteMux.HandleFunc("/api/searchCourses", courseHandler.SearchCourses)
 	siteMux.HandleFunc("/api/getCourse", courseHandler.GetCourse)
-	siteMux.HandleFunc("/api/getSertificate", courseHandler.GetSertificate)
+	siteMux.HandleFunc("/api/generateSertificate", courseHandler.GetSertificate)
+	siteMux.HandleFunc("/api/getSertificate", courseHandler.GetGeneratedSertificate)
 	siteMux.HandleFunc("/api/getCourseLesson", courseHandler.GetCourseLesson)
 	siteMux.HandleFunc("/api/getNextLesson", courseHandler.GetNextLesson)
 	siteMux.HandleFunc("/api/markLessonAsNotCompleted", courseHandler.MarkLessonAsNotCompleted)
@@ -74,6 +75,7 @@ func main() {
 	siteMux.HandleFunc("/api/AnswerQuiz", courseHandler.AnswerQuiz)
 	siteMux.HandleFunc("/api/GetQuestionTestLesson", courseHandler.GetQuestionTestLesson)
 	siteMux.HandleFunc("/api/AnswerQuestion", courseHandler.AnswerQuestion)
+	siteMux.HandleFunc("/api/getStatistic", courseHandler.GetStatistic)
 
 	siteMux.HandleFunc("/api/createPaymentHandler", billingHandler.CreatePaymentHandler)
 	siteMux.HandleFunc("/api/webhookHandler", billingHandler.WebhookHandler)

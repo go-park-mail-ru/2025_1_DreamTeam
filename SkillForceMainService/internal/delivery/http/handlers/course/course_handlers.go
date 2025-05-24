@@ -150,6 +150,7 @@ func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
 	if len(grpcBucketCoursesResponse.Courses) == 0 {
 		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
 		response.SendNoContentOKResponse(w, r)
+		return
 	}
 
 	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
@@ -176,14 +177,14 @@ func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "method not allowed")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "method not allowed")
 		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
 		return
 	}
 
 	userProfile := h.cookieManager.CheckCookie(r)
 	if userProfile == nil {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "user not logged in")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "user not logged in")
 		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
 		return
 	}
@@ -204,14 +205,15 @@ func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 
 	grpcBucketCoursesResponse, err := h.courseClient.GetCompletedBucketCourses(r.Context(), &grpcGetBucketcourses)
 	if err != nil {
-		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
+		logs.PrintLog(r.Context(), "GetCompletedCourses", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
 
 	if len(grpcBucketCoursesResponse.Courses) == 0 {
-		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "send NoContentOKResponse")
 		response.SendNoContentOKResponse(w, r)
+		return
 	}
 
 	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
@@ -232,7 +234,7 @@ func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+	logs.PrintLog(r.Context(), "GetCompletedCourses", "send completed bucket courses")
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
@@ -945,6 +947,112 @@ func (h *Handler) GetSertificate(w http.ResponseWriter, r *http.Request) {
 	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
 	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
 	response.SendSertificateUrl(sertificateUrl, w, r)
+}
+
+func (h *Handler) GetGeneratedSertificate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSertificate", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetSertificate", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
+	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
+		User:     grpcUserProfile,
+		CourseId: int32(courseId),
+	}
+
+	grpcGetSertificateResponse, err := h.courseClient.GetGeneratedSertificate(r.Context(), grpcGetSertificateRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
+	response.SendSertificateUrl(sertificateUrl, w, r)
+}
+
+func (h *Handler) GetStatistic(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetStatistic", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetStatistic", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetStatisticRequest := &coursepb.GetStatisticRequest{
+		CourseId: int32(courseId),
+		UserId:   int32(userProfile.Id),
+	}
+
+	grpcGetStatisticResponse, err := h.courseClient.GetStatistic(r.Context(), grpcGetStatisticRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	statistic := &dto.UserStats{
+		Percentage:            int(grpcGetStatisticResponse.Percentage),
+		CompletedTextLessons:  int(grpcGetStatisticResponse.CompletedTextLessons),
+		AmountTextLessons:     int(grpcGetStatisticResponse.AmountTextLessons),
+		CompletedVideoLessons: int(grpcGetStatisticResponse.CompletedVideoLessons),
+		AmountVideoLessons:    int(grpcGetStatisticResponse.AmountVideoLessons),
+		RecievedPoints:        int(grpcGetStatisticResponse.ReceivedPoints),
+		AmountPoints:          int(grpcGetStatisticResponse.AmountPoints),
+		CompletedTests:        int(grpcGetStatisticResponse.CompletedTests),
+		AmountTests:           int(grpcGetStatisticResponse.AmountTests),
+		CompletedQuestions:    int(grpcGetStatisticResponse.CompletedQuestions),
+		AmountQuestions:       int(grpcGetStatisticResponse.AmountQuestions),
+	}
+
+	logs.PrintLog(r.Context(), "GetStatistic", "get statistic from grpc")
+	response.SendStatistic(statistic, w, r)
 }
 
 // ServeVideo godoc

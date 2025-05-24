@@ -26,6 +26,8 @@ type CourseRepository interface {
 	GetQuestionTestLesson(ctx context.Context, currentLessonId int, user_id int) (*dto.QuestionTest, error)
 	AnswerQuestion(ctx context.Context, question_id int, user_id int, answer string) error
 	GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error)
+	GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error)
+	IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error)
 
 	GetLastLessonHeader(ctx context.Context, userId int, courseId int) (*dto.LessonDtoHeader, int, string, bool, error)
 	GetLessonHeaderByLessonId(ctx context.Context, userId int, currentLessonId int) (*dto.LessonDtoHeader, error)
@@ -38,10 +40,12 @@ type CourseRepository interface {
 	IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error)
 	AddUserToCourse(ctx context.Context, userId int, courseId int) error
 	MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error
+	SaveSertificate(ctx context.Context, userId int, courseId int, sertificateUrl string) error
 
 	GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error)
 	GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error)
 	GetCoursesPurchases(ctx context.Context, bucketCoursesWithoutPurchases []*coursemodels.Course) (map[int]int, error)
+	GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error)
 
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
 
