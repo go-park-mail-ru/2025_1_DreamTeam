@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package billing;
+
+option go_package = "skillForce/internal/delivery/grpc/proto/billing;billingpb";
+
+import "google/protobuf/empty.proto";
+
+service BillingService {
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+
+  rpc HandleWebhook(YooKassaWebhook) returns (google.protobuf.Empty);
+}
+
+message CreatePaymentRequest {
+  double amount = 1;
+  string return_url = 2;
+  string course_title = 3;
+  int32 user_id = 4;
+  int32 course_id = 5;
+}
+
+message CreatePaymentResponse {
+  string confirmation_url = 1;
+}
+
+message YooKassaWebhook {
+  string event = 1;
+  string payment_id = 2;
+  string status = 3;
+  string raw_payload = 4;
+}

@@ -60,6 +60,10 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
+type Billing struct {
+	Continue_url string `json:"continue_url"`
+}
+
 type QuestionTestResponse struct {
 	Question *dto.QuestionTest `json:"question"`
 }
@@ -80,6 +84,13 @@ func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter
 func SendOKResponse(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("200 OK")
+}
+
+func SendBillingRedirect(w http.ResponseWriter, r *http.Request, continue_url string) {
+	response := Billing{Continue_url: continue_url}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func SendNoContentOKResponse(w http.ResponseWriter, r *http.Request) {

@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	cookie "skillForce/internal/delivery/http/cookie"
+	billingHandler "skillForce/internal/delivery/http/handlers/billing"
 	courseHandler "skillForce/internal/delivery/http/handlers/course"
 	userHandler "skillForce/internal/delivery/http/handlers/user"
 
@@ -38,6 +39,7 @@ func main() {
 	defer courseInfrastructure.Close()
 	courseUsecase := courseUsecase.NewCourseUsecase(courseInfrastructure)
 	courseHandler := courseHandler.NewHandler(cookieManager, courseUsecase)
+	billingHandler := billingHandler.NewHandler(cookieManager)
 
 	userHandler := userHandler.NewHandler(cookieManager)
 
@@ -72,6 +74,9 @@ func main() {
 	siteMux.HandleFunc("/api/AnswerQuiz", courseHandler.AnswerQuiz)
 	siteMux.HandleFunc("/api/GetQuestionTestLesson", courseHandler.GetQuestionTestLesson)
 	siteMux.HandleFunc("/api/AnswerQuestion", courseHandler.AnswerQuestion)
+
+	siteMux.HandleFunc("/api/createPaymentHandler", billingHandler.CreatePaymentHandler)
+	siteMux.HandleFunc("/api/webhookHandler", billingHandler.WebhookHandler)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
