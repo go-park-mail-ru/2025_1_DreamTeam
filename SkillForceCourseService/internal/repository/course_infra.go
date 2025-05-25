@@ -9,13 +9,15 @@ import (
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
+	"skillForce/internal/repository/kafka"
 	"skillForce/internal/repository/minio"
 	"skillForce/internal/repository/postgres"
 )
 
 type CourseInfrastructure struct {
-	Database *postgres.Database
-	Minio    *minio.Minio
+	Database      *postgres.Database
+	Minio         *minio.Minio
+	KafkaProducer *kafka.Producer
 }
 
 func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
@@ -30,9 +32,11 @@ func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
 		log.Fatalf("Failed to connect to MinIO: %v", err)
 	}
 
+	kafkaProducer := kafka.NewKafkaProducer()
 	return &CourseInfrastructure{
-		Database: database,
-		Minio:    mn,
+		Database:      database,
+		Minio:         mn,
+		KafkaProducer: kafkaProducer,
 	}
 }
 
@@ -222,4 +226,8 @@ func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId i
 
 func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
 	return i.Database.GetStatistic(ctx, userId, courseId)
+}
+
+func (i *CourseInfrastructure) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error {
+	return i.KafkaProducer.SendWelcomeCourseMail(ctx, user, course)
 }

@@ -86,7 +86,3 @@ func (i *UserInfrastructure) GetUserByToken(ctx context.Context, token string) (
 func (i *UserInfrastructure) SendRegMail(ctx context.Context, user *usermodels.User, token string) error {
 	return i.KafkaProducer.SendRegMail(ctx, user, token)
 }
-
-func (i *UserInfrastructure) SendWelcomeMail(ctx context.Context, user *usermodels.User) error {
-	return i.KafkaProducer.SendWelcomeMail(ctx, user)
-}

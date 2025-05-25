@@ -41,8 +41,6 @@ func (uc *UserUsecase) RegisterUser(ctx context.Context, token string) (string, 
 		return "", err
 	}
 
-	go uc.repo.SendWelcomeMail(ctx, user)
-
 	return uc.repo.RegisterUser(ctx, user)
 }
 

@@ -39,6 +39,7 @@ services:
       - monitoring
     depends_on:
       - postgres
+      - kafka
 
   billing-service:
     build:

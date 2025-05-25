@@ -20,5 +20,4 @@ type UserRepository interface {
 	DeleteProfilePhoto(ctx context.Context, userId int) error
 
 	SendRegMail(ctx context.Context, user *usermodels.User, token string) error
-	SendWelcomeMail(ctx context.Context, user *usermodels.User) error
 }

@@ -61,4 +61,6 @@ type CourseRepository interface {
 	GetCoursesFavouriteStatus(ctx context.Context, bucketCourses []*coursemodels.Course, userId int) (map[int]bool, error)
 
 	UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+
+	SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error
 }

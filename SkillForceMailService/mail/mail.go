@@ -13,18 +13,20 @@ import (
 )
 
 type KafkaMessage struct {
-	Method    string
-	Token     string
-	UserEmail string
-	UserName  string
-	CourseId  int
-	Url       string
+	Method     string
+	Token      string
+	UserEmail  string
+	UserName   string
+	CourseName string
+	CourseId   int
+	Url        string
 }
 
 type EmailData struct {
-	UserName string
-	CourseId int
-	Url      string
+	UserName   string
+	CourseName string
+	CourseId   int
+	Url        string
 }
 
 type Mail struct {
@@ -100,7 +102,7 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, kafkaMsg KafkaMessage)
 
 	subject := "Продолжайте своё обучение!"
 
-	templatePath := "./mail/layouts/confirm_mail.html/welcome_course_mail.html"
+	templatePath := "./mail/layouts/welcome_course_mail.html"
 	tmplBytes, err := os.ReadFile(templatePath)
 	if err != nil {
 		fmt.Println("SendWelcomeMail", err.Error())
@@ -115,7 +117,7 @@ func (m *Mail) SendWelcomeCourseMail(ctx context.Context, kafkaMsg KafkaMessage)
 
 	url := fmt.Sprintf("https://skill-force.ru/course/%d", kafkaMsg.CourseId)
 	var body bytes.Buffer
-	err = tmpl.Execute(&body, EmailData{CourseId: kafkaMsg.CourseId, UserName: kafkaMsg.UserName, Url: url})
+	err = tmpl.Execute(&body, EmailData{CourseName: kafkaMsg.CourseName, UserName: kafkaMsg.UserName, Url: url})
 	if err != nil {
 		fmt.Println("SendWelcomeMail", err.Error())
 		return err
