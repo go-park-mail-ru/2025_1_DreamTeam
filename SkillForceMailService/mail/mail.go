@@ -71,7 +71,7 @@ func (m *Mail) SendRegMail(ctx context.Context, kafkaMsg KafkaMessage) error {
 		return err
 	}
 
-	url := fmt.Sprintf("http://217.16.21.64/validate/%s", kafkaMsg.Token)
+	url := fmt.Sprintf("https://dmtrii.online/validate/%s", kafkaMsg.Token)
 	var body bytes.Buffer
 	err = tmpl.Execute(&body, EmailData{UserName: kafkaMsg.UserName, Url: url})
 	if err != nil {
