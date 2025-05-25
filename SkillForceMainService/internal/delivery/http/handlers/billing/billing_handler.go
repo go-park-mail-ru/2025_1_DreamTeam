@@ -3,15 +3,16 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	billingpb "skillForce/internal/delivery/grpc/proto/billing"
 	"skillForce/internal/delivery/http/response"
+	"skillForce/internal/models/dto"
 	models "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 
+	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
 )
 
@@ -52,13 +53,8 @@ func (h *Handler) CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		ReturnURL string `json:"return_url"`
-		User_ID   int32
-		CourseID  int32 `json:"course_id"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var req dto.CreatePaymentRequest
+	if err := easyjson.UnmarshalFromReader(r.Body, &req); err != nil {
 		logs.PrintLog(r.Context(), "CreatePaymentHandler", "invalid JSON")
 		response.SendErrorResponse("invalid JSON", http.StatusBadRequest, w, r)
 		return
@@ -95,14 +91,8 @@ func (h *Handler) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	var data struct {
-		Event  string `json:"event"`
-		Object struct {
-			ID     string `json:"id"`
-			Status string `json:"status"`
-		} `json:"object"`
-	}
-	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&data); err != nil {
+	var data dto.WebhookHandlerData
+	if err := easyjson.UnmarshalFromReader(r.Body, &data); err != nil {
 		logs.PrintLog(r.Context(), "WebhookHandler", "invalid JSON")
 		response.SendErrorResponse("invalid JSON", http.StatusBadRequest, w, r)
 		return

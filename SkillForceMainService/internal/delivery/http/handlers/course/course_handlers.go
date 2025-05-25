@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +15,7 @@ import (
 
 	"strings"
 
+	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
 )
 
@@ -630,8 +630,7 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 	logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
 	lessonId := dto.LessonIDRequest{}
-	err := json.NewDecoder(r.Body).Decode(&lessonId)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &lessonId); err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -641,7 +640,7 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 		UserId:   int32(userProfile.Id),
 		LessonId: int32(lessonId.Id),
 	}
-	_, err = h.courseClient.MarkLessonAsNotCompleted(r.Context(), grpcMarkLessonAsNotCompletedRequest)
+	_, err := h.courseClient.MarkLessonAsNotCompleted(r.Context(), grpcMarkLessonAsNotCompletedRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -681,8 +680,7 @@ func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) 
 	logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
 	lessonId := dto.LessonIDRequest{}
-	err := json.NewDecoder(r.Body).Decode(&lessonId)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &lessonId); err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -692,7 +690,7 @@ func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) 
 		UserId:   int32(userProfile.Id),
 		LessonId: int32(lessonId.Id),
 	}
-	_, err = h.courseClient.MarkLessonAsCompleted(r.Context(), grpcMarkLessonAsCompletedRequest)
+	_, err := h.courseClient.MarkLessonAsCompleted(r.Context(), grpcMarkLessonAsCompletedRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -732,8 +730,7 @@ func (h *Handler) MarkCourseAsCompleted(w http.ResponseWriter, r *http.Request) 
 	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
 	courseId := dto.CourseIDRequest{}
-	err := json.NewDecoder(r.Body).Decode(&courseId)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &courseId); err != nil {
 		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -745,7 +742,7 @@ func (h *Handler) MarkCourseAsCompleted(w http.ResponseWriter, r *http.Request) 
 		UserId:   int32(userProfile.Id),
 		CourseId: int32(courseId.Id),
 	}
-	_, err = h.courseClient.MarkCourseAsCompleted(r.Context(), grpcMarkCourseAsCompletedRequest)
+	_, err := h.courseClient.MarkCourseAsCompleted(r.Context(), grpcMarkCourseAsCompletedRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -1150,8 +1147,7 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -1212,7 +1208,7 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, err = h.courseClient.CreateCourse(r.Context(), grpcCreateCourseRequest)
+	_, err := h.courseClient.CreateCourse(r.Context(), grpcCreateCourseRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -1250,8 +1246,7 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -1312,7 +1307,7 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
-	_, err = h.courseClient.AddCourseToFavourites(r.Context(), grpcAddCourseToFavourites)
+	_, err := h.courseClient.AddCourseToFavourites(r.Context(), grpcAddCourseToFavourites)
 	if err != nil {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -1350,8 +1345,7 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -1412,7 +1406,7 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 		},
 	}
 
-	_, err = h.courseClient.DeleteCourseFromFavourites(r.Context(), grpcDeleteCourseFromFavourites)
+	_, err := h.courseClient.DeleteCourseFromFavourites(r.Context(), grpcDeleteCourseFromFavourites)
 	if err != nil {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -1585,11 +1579,9 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var AnswerInput dto.Answer
-	err := json.NewDecoder(r.Body).Decode(&AnswerInput)
-
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &AnswerInput); err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuiz", fmt.Sprintf("%+v", err))
-		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -1700,11 +1692,9 @@ func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var AnswerInput dto.AnswerQuestion
-	err := json.NewDecoder(r.Body).Decode(&AnswerInput)
-
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &AnswerInput); err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
-		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -1714,7 +1704,7 @@ func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 		Answer:     AnswerInput.Answer,
 	}
 
-	_, err = h.courseClient.AnswerQuestion(r.Context(), grpcAnswerQuestion)
+	_, err := h.courseClient.AnswerQuestion(r.Context(), grpcAnswerQuestion)
 	if err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)

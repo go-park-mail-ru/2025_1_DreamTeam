@@ -237,3 +237,19 @@ type UserStats struct {
 	CompletedQuestions    int `json:"completed_questions"`
 	AmountQuestions       int `json:"amount_questions"`
 }
+
+//easyjson:json
+type CreatePaymentRequest struct {
+	ReturnURL string `json:"return_url"`
+	User_ID   int32
+	CourseID  int32 `json:"course_id"`
+}
+
+//easyjson:json
+type WebhookHandlerData struct {
+	Event  string `json:"event"`
+	Object struct {
+		ID     string `json:"id"`
+		Status string `json:"status"`
+	} `json:"object"`
+}

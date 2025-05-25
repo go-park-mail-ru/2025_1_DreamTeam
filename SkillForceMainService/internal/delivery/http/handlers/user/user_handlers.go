@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +14,7 @@ import (
 	"skillForce/pkg/logs"
 
 	"github.com/badoux/checkmail"
+	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -95,14 +95,13 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userInput dto.UserDTO
-	err := json.NewDecoder(r.Body).Decode(&userInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &userInput); err != nil {
 		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidRegistrationFields(&userInput)
+	err := isValidRegistrationFields(&userInput)
 	if err != nil {
 		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
@@ -204,14 +203,13 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userInput dto.UserDTO
-	err := json.NewDecoder(r.Body).Decode(&userInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &userInput); err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidLoginFields(&userInput)
+	err := isValidLoginFields(&userInput)
 	if err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
@@ -325,8 +323,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var UserProfileInput dto.UserProfileDTO
-	err := json.NewDecoder(r.Body).Decode(&UserProfileInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &UserProfileInput); err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -345,7 +342,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		Profile: grpcNewUserProfile,
 	}
 
-	_, err = h.userClient.UpdateProfile(r.Context(), grpcUpdateProfileRequest)
+	_, err := h.userClient.UpdateProfile(r.Context(), grpcUpdateProfileRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
