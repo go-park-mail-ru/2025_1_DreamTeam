@@ -215,6 +215,9 @@ func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (
 		stats.Percentage = (completedLessons * 100) / totalLessons
 	}
 
+	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons
+	stats.RecievedPoints = stats.CompletedTextLessons + stats.CompletedVideoLessons
+
 	logs.PrintLog(ctx, "GetStatistic", fmt.Sprintf("stats: %+v", stats))
 
 	return stats, nil
