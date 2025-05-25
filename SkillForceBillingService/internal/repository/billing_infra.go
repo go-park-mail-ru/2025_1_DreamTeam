@@ -49,3 +49,7 @@ func (i *BillingInfrastructure) UpdateBilling(ctx context.Context, billing_id st
 func (i *BillingInfrastructure) HandleWebhook(ctx context.Context, req *billingpb.YooKassaWebhook) (bool, error) {
 	return i.Billing.HandleWebhook(ctx, req)
 }
+
+func (i *BillingInfrastructure) GetBillingInfo(ctx context.Context, courseID int) (string, int, error) {
+	return i.Database.GetBillingInfo(ctx, courseID)
+}

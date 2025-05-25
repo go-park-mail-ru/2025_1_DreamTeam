@@ -53,11 +53,9 @@ func (h *Handler) CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Amount      float64 `json:"amount"`
-		ReturnURL   string  `json:"return_url"`
-		CourseTitle string  `json:"course_title"`
-		User_ID     int32
-		CourseID    int32 `json:"course_id"`
+		ReturnURL string `json:"return_url"`
+		User_ID   int32
+		CourseID  int32 `json:"course_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -69,11 +67,9 @@ func (h *Handler) CreatePaymentHandler(w http.ResponseWriter, r *http.Request) {
 	req.User_ID = int32(userProfile.Id)
 
 	resp, err := h.billingClient.CreatePayment(context.Background(), &billingpb.CreatePaymentRequest{
-		CourseTitle: req.CourseTitle,
-		Amount:      req.Amount,
-		ReturnUrl:   req.ReturnURL,
-		UserId:      req.User_ID,
-		CourseId:    req.CourseID,
+		ReturnUrl: req.ReturnURL,
+		UserId:    req.User_ID,
+		CourseId:  req.CourseID,
 	})
 	if err != nil {
 		logs.PrintLog(r.Context(), "CreatePaymentHandler", "gRPC error: "+err.Error())

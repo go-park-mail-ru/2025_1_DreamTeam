@@ -13,11 +13,9 @@ service BillingService {
 }
 
 message CreatePaymentRequest {
-  double amount = 1;
-  string return_url = 2;
-  string course_title = 3;
-  int32 user_id = 4;
-  int32 course_id = 5;
+  string return_url = 1;
+  int32 user_id = 2;
+  int32 course_id = 3;
 }
 
 message CreatePaymentResponse {

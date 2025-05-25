@@ -20,7 +20,7 @@ func NewBillingHandler(uc *usecase.BillingUsecase) *BillingHandler {
 }
 
 func (h *BillingHandler) CreatePayment(ctx context.Context, req *billingpb.CreatePaymentRequest) (*billingpb.CreatePaymentResponse, error) {
-	response, err := h.usecase.CreatePayment(ctx, int(req.UserId), int(req.CourseId), req.CourseTitle, int(req.Amount), req.ReturnUrl)
+	response, err := h.usecase.CreatePayment(ctx, int(req.UserId), int(req.CourseId), req.ReturnUrl)
 	if err != nil {
 		return nil, err
 	}

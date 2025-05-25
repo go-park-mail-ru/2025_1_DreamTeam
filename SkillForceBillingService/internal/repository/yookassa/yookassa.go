@@ -67,6 +67,7 @@ func (s *BillingServer) CreatePayment(returnUrl string, title string, userID int
 		return "", nil, fmt.Errorf("cannot get billing id")
 	}
 
+	fmt.Print("OKKKKK")
 	confirmation := result["confirmation"].(map[string]interface{})
 	confirmation_url := confirmation["confirmation_url"].(string)
 	return billing_id, &billingpb.CreatePaymentResponse{

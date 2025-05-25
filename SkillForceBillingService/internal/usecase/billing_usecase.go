@@ -19,7 +19,12 @@ func NewBillingUsecase(repo BillingRepository) *BillingUsecase {
 	}
 }
 
-func (uc *BillingUsecase) CreatePayment(ctx context.Context, userId int, courseID int, title string, amount int, returnUrl string) (*billingpb.CreatePaymentResponse, error) {
+func (uc *BillingUsecase) CreatePayment(ctx context.Context, userId int, courseID int, returnUrl string) (*billingpb.CreatePaymentResponse, error) {
+	title, amount, err := uc.repo.GetBillingInfo(ctx, courseID)
+	if err != nil {
+		logs.PrintLog(ctx, "GetBillingInfo", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
 	billing_id, response, err := uc.repo.CreatePayment(returnUrl, title, int32(userId), int32(courseID), amount)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBillingInfo", fmt.Sprintf("%+v", err))
