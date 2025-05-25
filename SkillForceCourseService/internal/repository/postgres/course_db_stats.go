@@ -181,3 +181,41 @@ func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dt
 
 	return &resultRatingList, nil
 }
+
+func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	stats := &dto.UserStats{}
+
+	err := d.conn.QueryRowContext(ctx, `
+		SELECT 
+            COUNT(CASE WHEN l.type = 'text' THEN 1 END) as text_lessons,
+            COUNT(CASE WHEN l.type = 'video' THEN 1 END) as video_lessons
+        FROM lesson l
+        JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+        JOIN part p ON lb.part_id = p.id
+        WHERE p.course_id = $1`, courseId).Scan(&stats.AmountTextLessons, &stats.AmountVideoLessons)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total lessons count: %w", err)
+	}
+
+	err = d.conn.QueryRowContext(ctx, `
+		SELECT 
+			COUNT(CASE WHEN l.type = 'text' THEN 1 END) as completed_text,
+			COUNT(CASE WHEN l.type = 'video' THEN 1 END) as completed_video
+		FROM lesson_checkpoint lc
+		JOIN lesson l ON lc.lesson_id = l.id
+		WHERE lc.user_id = $1 AND lc.course_id = $2`, userId, courseId).Scan(&stats.CompletedTextLessons, &stats.CompletedVideoLessons)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed lessons count: %w", err)
+	}
+
+	totalLessons := stats.AmountTextLessons + stats.AmountVideoLessons
+	completedLessons := stats.CompletedTextLessons + stats.CompletedVideoLessons
+
+	if totalLessons > 0 {
+		stats.Percentage = (completedLessons * 100) / totalLessons
+	}
+
+	logs.PrintLog(ctx, "GetStatistic", fmt.Sprintf("stats: %+v", stats))
+
+	return stats, nil
+}

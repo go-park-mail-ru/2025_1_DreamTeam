@@ -221,5 +221,5 @@ func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId i
 }
 
 func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
-	return &dto.UserStats{}, nil
+	return i.Database.GetStatistic(ctx, userId, courseId)
 }
