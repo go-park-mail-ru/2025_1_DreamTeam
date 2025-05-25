@@ -42,6 +42,6 @@ func (mn *Minio) UploadFileToMinIO(ctx context.Context, file multipart.File, fil
 		return "", err
 	}
 
-	fileURL := fmt.Sprintf("http://217.16.21.64:8006/%s/%s", mn.AvatarsBucket, objectName)
+	fileURL := fmt.Sprintf("https://dmtrii.online/%s/%s", mn.AvatarsBucket, objectName)
 	return fileURL, nil
 }
