@@ -536,3 +536,33 @@ func (d *Database) IsMiddle(ctx context.Context, userId int, courseId int) (bool
 
 	return false, nil
 }
+
+func (d *Database) IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow(`
+			SELECT EXISTS (
+			SELECT 1 FROM WELCOME_COURSE_SENDED_MAILS 
+			WHERE User_ID = $1 AND Course_ID = $2
+		)
+		`, userId, courseId).Scan(&exists)
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsWelcomeCourseMailSended", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+
+	if exists {
+		return false, nil
+	}
+
+	_, err = d.conn.Exec(
+		"INSERT INTO WELCOME_COURSE_SENDED_MAILS (User_ID, Course_ID) VALUES ($1, $2)",
+		userId, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "IsWelcomeCourseMailSended", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+	logs.PrintLog(ctx, "IsWelcomeCourseMailSended", "marked that sended mail")
+
+	return true, nil
+}

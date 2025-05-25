@@ -63,4 +63,5 @@ type CourseRepository interface {
 	UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
 
 	SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error
+	IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error)
 }

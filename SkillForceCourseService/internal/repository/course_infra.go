@@ -231,3 +231,7 @@ func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, cou
 func (i *CourseInfrastructure) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error {
 	return i.KafkaProducer.SendWelcomeCourseMail(ctx, user, course)
 }
+
+func (i *CourseInfrastructure) IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsWelcomeCourseMailSended(ctx, userId, courseId)
+}
