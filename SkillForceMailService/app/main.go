@@ -54,7 +54,7 @@ func main() {
 	}
 }
 
-func handleMessage(mailLient *mail.Mail, msg *kafka.Message) {
+func handleMessage(mailCLient *mail.Mail, msg *kafka.Message) {
 	var message mail.KafkaMessage
 	err := json.Unmarshal(msg.Value, &message)
 	if err != nil {
@@ -66,11 +66,9 @@ func handleMessage(mailLient *mail.Mail, msg *kafka.Message) {
 
 	switch message.Method {
 	case "send_confirm_mail":
-		mailLient.SendRegMail(nil, message)
-	case "send_welcome_mail":
-		// TODO: send_welcome_mail
+		mailCLient.SendRegMail(nil, message)
 	case "send_welcome_course_mail":
-		// TODO: send_welcome_course_mail
+		mailCLient.SendWelcomeCourseMail(nil, message)
 	case "send_middle_course_mail":
 		// TODO: send_middle_course_mail
 	}

@@ -94,3 +94,43 @@ func (m *Mail) SendRegMail(ctx context.Context, kafkaMsg KafkaMessage) error {
 	fmt.Println("SendRegMail", fmt.Sprintf("mail sent to %s", kafkaMsg.UserEmail))
 	return nil
 }
+
+func (m *Mail) SendWelcomeCourseMail(ctx context.Context, kafkaMsg KafkaMessage) error {
+	auth := smtp.PlainAuth("", m.from, m.password, m.host)
+
+	subject := "Продолжайте своё обучение!"
+
+	templatePath := "./mail/layouts/confirm_mail.html/welcome_course_mail.html"
+	tmplBytes, err := os.ReadFile(templatePath)
+	if err != nil {
+		fmt.Println("SendWelcomeMail", err.Error())
+		return err
+	}
+
+	tmpl, err := template.New("email").Parse(string(tmplBytes))
+	if err != nil {
+		fmt.Println("SendWelcomeMail", err.Error())
+		return err
+	}
+
+	url := fmt.Sprintf("https://skill-force.ru/course/%d", kafkaMsg.CourseId)
+	var body bytes.Buffer
+	err = tmpl.Execute(&body, EmailData{CourseId: kafkaMsg.CourseId, UserName: kafkaMsg.UserName, Url: url})
+	if err != nil {
+		fmt.Println("SendWelcomeMail", err.Error())
+		return err
+	}
+
+	msg := fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: %s\r\n", kafkaMsg.UserEmail, m.from, subject)
+	msg += "MIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n"
+	msg += body.String()
+
+	err = smtp.SendMail(fmt.Sprintf("%s:%s", m.host, m.port), auth, m.from, []string{kafkaMsg.UserEmail}, []byte(msg))
+	if err != nil {
+		fmt.Println("SendWelcomeMail", err.Error())
+		return err
+	}
+
+	fmt.Println("SendWelcomeMail", fmt.Sprintf("mail sent to %s", kafkaMsg.UserEmail))
+	return nil
+}
