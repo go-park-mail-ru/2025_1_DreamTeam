@@ -136,23 +136,40 @@ func (d *Database) IsUserCompletedCourse(ctx context.Context, userId int, course
 
 func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
 	query := `
-		SELECT 
-			u.name, u.avatar_src, u.id,
-			COUNT(lc.id) AS lessons_completed
-		FROM 
-			lesson_checkpoint lc
-		JOIN 
-			usertable u ON lc.user_id = u.id
-		WHERE 
-			lc.course_id = $1
-		GROUP BY 
-			u.id, u.name
-		ORDER BY 
-			lessons_completed DESC
-	`
+        SELECT * FROM (
+    SELECT 
+        u.name, 
+        u.avatar_src, 
+        u.id,
+        (COUNT(DISTINCT CASE WHEN l.type IN ('text', 'video') THEN lc.lesson_id END) + 
+         COUNT(DISTINCT CASE WHEN l.type = 'test' AND ua.is_right = true THEN ua.id END) * 5) AS user_score
+    FROM 
+        usertable u
+    LEFT JOIN 
+        lesson_checkpoint lc ON lc.user_id = u.id AND lc.course_id = $1
+    LEFT JOIN 
+        lesson l ON lc.lesson_id = l.id
+    LEFT JOIN 
+        user_answers ua ON ua.user_id = u.id AND ua.is_right = true
+    LEFT JOIN 
+        quiz_task qt ON ua.question_lesson_id = qt.id
+    LEFT JOIN 
+        test_lesson tl ON qt.lesson_test_id = tl.id
+    LEFT JOIN 
+        lesson test_lesson ON tl.lesson_id = test_lesson.id
+    LEFT JOIN 
+        lesson_bucket lb ON (l.lesson_bucket_id = lb.id OR test_lesson.lesson_bucket_id = lb.id)
+    LEFT JOIN 
+        part p ON lb.part_id = p.id AND p.course_id = $1
+    GROUP BY 
+        u.id, u.name, u.avatar_src
+	) AS ranked_users
+	WHERE user_score > 0
+	ORDER BY user_score DESC
+	LIMIT 15
+    `
 
 	rows, err := d.conn.Query(query, courseId)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %v", err)
 	}
@@ -162,13 +179,13 @@ func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dt
 
 	for rows.Next() {
 		var item dto.RaitingItem
-		var amountCompletedLessons int
+		var userScore int
 		var newUserId int
-		err := rows.Scan(&item.User.Name, &item.User.AvatarSrc, &newUserId, &amountCompletedLessons)
+		err := rows.Scan(&item.User.Name, &item.User.AvatarSrc, &newUserId, &userScore)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
-		item.Rating = amountCompletedLessons
+		item.Rating = userScore
 		rating = append(rating, item)
 	}
 
@@ -178,7 +195,6 @@ func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dt
 	}
 
 	resultRatingList := dto.Raiting{Rating: rating}
-
 	return &resultRatingList, nil
 }
 

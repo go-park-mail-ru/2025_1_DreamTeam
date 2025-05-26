@@ -378,23 +378,25 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 		LessonBody.Footer.PreviousLessonId = footers[0]
 		lessonDto.LessonBody = LessonBody
 
-		first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
-		if first {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
-			user, err := uc.repo.GetUserById(ctx, userId)
-			if err != nil {
-				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
-				return nil, err
+		/*
+			first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
+			if first {
+				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
+				user, err := uc.repo.GetUserById(ctx, userId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
+					return nil, err
+				}
+				course, err := uc.repo.GetCourseById(ctx, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
+					return nil, err
+				}
+				if !user.HideEmail {
+					go uc.repo.SendWelcomeCourseMail(ctx, user, course)
+				}
 			}
-			course, err := uc.repo.GetCourseById(ctx, courseId)
-			if err != nil {
-				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
-				return nil, err
-			}
-			if !user.HideEmail {
-				go uc.repo.SendWelcomeCourseMail(ctx, user, course)
-			}
-		}
+		*/
 
 		return lessonDto, err
 	}
@@ -434,23 +436,25 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 		LessonBody.Footer.PreviousLessonId = footers[0]
 		lessonDto.LessonBody = LessonBody
 
-		first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
-		if first {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
-			user, err := uc.repo.GetUserById(ctx, userId)
-			if err != nil {
-				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
-				return nil, err
+		/*
+			first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
+			if first {
+				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
+				user, err := uc.repo.GetUserById(ctx, userId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
+					return nil, err
+				}
+				course, err := uc.repo.GetCourseById(ctx, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
+					return nil, err
+				}
+				if !user.HideEmail {
+					go uc.repo.SendWelcomeCourseMail(ctx, user, course)
+				}
 			}
-			course, err := uc.repo.GetCourseById(ctx, courseId)
-			if err != nil {
-				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
-				return nil, err
-			}
-			if !user.HideEmail {
-				go uc.repo.SendWelcomeCourseMail(ctx, user, course)
-			}
-		}
+		*/
 
 		return lessonDto, err
 
