@@ -841,8 +841,20 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 	}
 	date := time.Now().Format("02.01.2006")
 
+	stats, err := uc.repo.GetStatistic(ctx, userProfile.Id, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
 	tempFileName := fmt.Sprintf("certificate_%v_%v.pdf", userProfile.Name, course.Id)
-	err = sertificate.GenerateCertificate(userProfile.Name, course.Title, date, tempFileName)
+
+	if (stats.RecievedPoints)*100/stats.AmountPoints >= 85 {
+		err = sertificate.GenerateGoodCertificate(userProfile.Name, course.Title, date, tempFileName)
+	} else {
+		err = sertificate.GenerateNormalCertificate(userProfile.Name, course.Title, date, tempFileName)
+	}
+
 	if err != nil {
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("can't generate certificate: %+v", err))
 		return "", err
