@@ -208,6 +208,33 @@ func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (
 		return nil, fmt.Errorf("failed to get completed lessons count: %w", err)
 	}
 
+	err = d.conn.QueryRowContext(ctx, `
+		SELECT COUNT(qt.id) AS total_quiz_tasks
+		FROM quiz_task qt
+		JOIN test_lesson tl ON qt.lesson_test_id = tl.id
+		JOIN lesson l ON tl.lesson_id = l.id
+		JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+		JOIN part p ON lb.part_id = p.id
+		WHERE p.course_id = $1;
+		`, courseId).Scan(&stats.AmountTests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total tests count: %w", err)
+	}
+
+	err = d.conn.QueryRow(`
+        SELECT COUNT(ua.id)
+		FROM user_answers ua
+		JOIN lesson l ON ua.question_lesson_id = l.id
+		JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+		JOIN part p ON lb.part_id = p.id
+		WHERE ua.user_id = $1
+		AND p.course_id = $2
+		AND ua.is_right = true;`,
+		userId, courseId).Scan(&stats.CompletedTests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed tests count: %w", err)
+	}
+
 	totalLessons := stats.AmountTextLessons + stats.AmountVideoLessons
 	completedLessons := stats.CompletedTextLessons + stats.CompletedVideoLessons
 
@@ -215,8 +242,8 @@ func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (
 		stats.Percentage = (completedLessons * 100) / totalLessons
 	}
 
-	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons
-	stats.RecievedPoints = stats.CompletedTextLessons + stats.CompletedVideoLessons
+	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons + stats.AmountTests
+	stats.RecievedPoints = stats.CompletedTextLessons + stats.CompletedVideoLessons + (stats.CompletedTests * 5)
 
 	logs.PrintLog(ctx, "GetStatistic", fmt.Sprintf("stats: %+v", stats))
 
