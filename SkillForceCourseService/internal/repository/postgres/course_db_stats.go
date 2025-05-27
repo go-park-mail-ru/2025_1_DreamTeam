@@ -136,37 +136,34 @@ func (d *Database) IsUserCompletedCourse(ctx context.Context, userId int, course
 
 func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
 	query := `
-        SELECT * FROM (
-    SELECT 
-        u.name, 
-        u.avatar_src, 
-        u.id,
-        (COUNT(DISTINCT CASE WHEN l.type IN ('text', 'video') THEN lc.lesson_id END) + 
-         COUNT(DISTINCT CASE WHEN l.type = 'test' AND ua.is_right = true THEN ua.id END) * 5) AS user_score
-    FROM 
-        usertable u
-    LEFT JOIN 
-        lesson_checkpoint lc ON lc.user_id = u.id AND lc.course_id = $1
-    LEFT JOIN 
-        lesson l ON lc.lesson_id = l.id
-    LEFT JOIN 
-        user_answers ua ON ua.user_id = u.id AND ua.is_right = true
-    LEFT JOIN 
-        quiz_task qt ON ua.question_lesson_id = qt.id
-    LEFT JOIN 
-        test_lesson tl ON qt.lesson_test_id = tl.id
-    LEFT JOIN 
-        lesson test_lesson ON tl.lesson_id = test_lesson.id
-    LEFT JOIN 
-        lesson_bucket lb ON (l.lesson_bucket_id = lb.id OR test_lesson.lesson_bucket_id = lb.id)
-    LEFT JOIN 
-        part p ON lb.part_id = p.id AND p.course_id = $1
-    GROUP BY 
-        u.id, u.name, u.avatar_src
-	) AS ranked_users
-	WHERE user_score > 0
-	ORDER BY user_score DESC
-	LIMIT 15
+		SELECT *
+		FROM (
+			SELECT 
+				u.name, 
+				u.avatar_src, 
+				u.id,
+				-- Итоговый балл (пройденные уроки + правильные тесты × 5)
+				(
+					-- Пройденные уроки
+					(SELECT COUNT(*) FROM lesson_checkpoint lc 
+					JOIN lesson l ON lc.lesson_id = l.id 
+					JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id 
+					JOIN part p ON lb.part_id = p.id 
+					WHERE lc.user_id = u.id AND p.course_id = $1 AND l.type IN ('text', 'video')) +
+					-- Правильные ответы на тесты (×5)
+					(SELECT COUNT(ua.id) * 5
+					FROM user_answers ua
+					JOIN lesson l ON ua.question_lesson_id = l.id
+					JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+					JOIN part p ON lb.part_id = p.id
+					WHERE ua.user_id = u.id AND p.course_id = $1 AND ua.is_right = true)
+				) AS user_score
+			FROM 
+				usertable u
+		) t
+		WHERE user_score > 0
+		ORDER BY user_score DESC
+		LIMIT 15;
     `
 
 	rows, err := d.conn.Query(query, courseId)
@@ -258,7 +255,7 @@ func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (
 		stats.Percentage = (completedLessons * 100) / totalLessons
 	}
 
-	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons + stats.AmountTests
+	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons + (stats.AmountTests * 5)
 	stats.RecievedPoints = stats.CompletedTextLessons + stats.CompletedVideoLessons + (stats.CompletedTests * 5)
 
 	logs.PrintLog(ctx, "GetStatistic", fmt.Sprintf("stats: %+v", stats))
