@@ -16,7 +16,12 @@ import (
 func setupDB(t *testing.T) (*Database, sqlmock.Sqlmock, func()) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
-	return &Database{conn: db}, mock, func() { db.Close() }
+
+	return &Database{conn: db}, mock, func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("failed to close mock database: %v", err)
+		}
+	}
 }
 
 func TestAddCourseToFavourites_Success(t *testing.T) {

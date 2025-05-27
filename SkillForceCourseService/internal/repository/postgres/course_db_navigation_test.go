@@ -14,7 +14,11 @@ import (
 func TestGetLessonFooters(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("failed to close database: %v", err)
+		}
+	}()
 
 	pg := &Database{conn: db}
 	ctx := context.Background()
@@ -62,7 +66,11 @@ func TestGetLessonHeaderNewCourse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("an error '%s' occurred when opening a mock database connection", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("failed to close database: %v", err)
+		}
+	}()
 
 	d := &Database{conn: db}
 

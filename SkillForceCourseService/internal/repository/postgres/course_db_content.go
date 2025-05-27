@@ -433,7 +433,10 @@ func (d *Database) AnswerQuiz(ctx context.Context, question_id int, answer_id in
 		Result: isTrue,
 	}
 
-	d.MarkLessonCompleted(ctx, user_id, question_id)
+	err = d.MarkLessonCompleted(ctx, user_id, question_id)
+	if err != nil {
+		logs.PrintLog(ctx, "AnswerQuiz", fmt.Sprintf("can't mark lesson completed: %+v", err))
+	}
 
 	return res, nil
 
