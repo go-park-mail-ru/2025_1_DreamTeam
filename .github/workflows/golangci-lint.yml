@@ -1,4 +1,4 @@
-name: Run golangci-lint (Docker)
+name: Run golangci-lint
 
 on:
   push:
@@ -8,13 +8,19 @@ on:
 
 jobs:
   lint-all:
-    name: Lint All Services (Docker)
+    name: Lint All Services
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run golangci-lint via Docker
+      - name: Build custom golangci-lint image with Go 1.23
+        run: |
+          docker build -f .github/docker/golangci-lint-go123.Dockerfile -t custom-golangci-lint .
+
+      - name: Run linters
         run: |
           services=(
             "SkillForceBillingService"
@@ -27,9 +33,11 @@ jobs:
           for service in "${services[@]}"; do
             if [ -d "$service" ]; then
               echo "🔍 Linting $service"
-              docker run --rm -v $(pwd)/$service:/app -w /app \
-                golangci/golangci-lint:v1.55.2 \
-                golangci-lint run --timeout=5m
+              docker run --rm \
+                -v "$(pwd)/$service:/app" \
+                -w /app \
+                custom-golangci-lint \
+                golangci-lint run ./...
             else
               echo "⚠️ Warning: Directory $service not found"
             fi
