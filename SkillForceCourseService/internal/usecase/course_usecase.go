@@ -966,14 +966,14 @@ func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.Course
 				lesson.Order = lessonOrder + 1
 				lesson.BucketId = bucketId
 
-				if lesson.Type == "video" {
+				switch lesson.Type {
+				case "video":
 					err = uc.repo.CreateVideoLesson(ctx, lesson, bucketId)
 					if err != nil {
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 						return err
 					}
-
-				} else if lesson.Type == "text" {
+				case "text":
 					err = uc.repo.CreateTextLesson(ctx, lesson, bucketId)
 					if err != nil {
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))

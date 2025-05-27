@@ -412,9 +412,10 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 			return nil, err
 		}
 
-		if footer.Order == currentLessonOrder-1 {
+		switch diff := footer.Order - currentLessonOrder; {
+		case diff == -1:
 			footers[0] = footer.LessonId
-		} else if footer.Order == currentLessonOrder+1 {
+		case diff == 1:
 			footers[2] = footer.LessonId
 		}
 	}
