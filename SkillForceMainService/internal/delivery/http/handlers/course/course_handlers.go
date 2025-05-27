@@ -1104,7 +1104,11 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 			response.SendErrorResponse("video getting error"+err.Error(), http.StatusInternalServerError, w, r)
 			return
 		}
-		defer reader.Close()
+		defer func() {
+			if err := reader.Close(); err != nil {
+				logs.PrintLog(ctx, "ServeVideo", "failed to close reader")
+			}
+		}()
 
 		response.SendVideoRange(0, meta.Size-1, meta.Size, reader, w, r)
 		return
@@ -1127,7 +1131,11 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse("reading frame error"+err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
-	defer reader.Close()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			logs.PrintLog(ctx, "ServeVideo", "failed to close reader")
+		}
+	}()
 
 	response.SendVideoRange(start, end, meta.Size, reader, w, r)
 }

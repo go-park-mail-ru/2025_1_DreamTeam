@@ -400,7 +400,11 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logs.PrintLog(r.Context(), "ServeVideo", "failed to close reader")
+		}
+	}()
 
 	fileData, err := io.ReadAll(file)
 	if err != nil {
