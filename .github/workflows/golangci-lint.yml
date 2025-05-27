@@ -16,7 +16,8 @@ jobs:
           fetch-depth: 0
 
       - name: Build custom golangci-lint image
-        run: docker build -t custom-golangci-lint:1.23 .
+        run: |
+          docker build -f .github/docker/golangci-lint-go123.Dockerfile -t custom-golangci-lint .
 
       - name: Run linters
         run: |
