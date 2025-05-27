@@ -15,11 +15,6 @@ import (
 func TestGetUserById_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -46,11 +41,6 @@ func TestGetUserById_Success(t *testing.T) {
 func TestGetUserById_NoRows(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -70,11 +60,6 @@ func TestGetUserById_NoRows(t *testing.T) {
 func TestGetUserById_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})

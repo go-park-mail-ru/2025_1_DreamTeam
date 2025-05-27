@@ -13,20 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupDB(t *testing.T) (*Database, sqlmock.Sqlmock, func()) {
+func setupDB(t *testing.T) (*Database, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 
-	return &Database{conn: db}, mock, func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close mock database: %v", err)
-		}
-	}
+	return &Database{conn: db}, mock
 }
 
 func TestAddCourseToFavourites_Success(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -45,8 +40,7 @@ func TestAddCourseToFavourites_Success(t *testing.T) {
 }
 
 func TestAddCourseToFavourites_Error(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -61,8 +55,7 @@ func TestAddCourseToFavourites_Error(t *testing.T) {
 }
 
 func TestDeleteCourseFromFavourites_Success(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -77,8 +70,7 @@ func TestDeleteCourseFromFavourites_Success(t *testing.T) {
 }
 
 func TestDeleteCourseFromFavourites_Error(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -93,8 +85,7 @@ func TestDeleteCourseFromFavourites_Error(t *testing.T) {
 }
 
 func TestGetFavouriteCourses_Success(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -116,8 +107,8 @@ func TestGetFavouriteCourses_Success(t *testing.T) {
 }
 
 func TestGetFavouriteCourses_QueryError(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
+
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
 		Data: make([]*logs.LogString, 0),
@@ -133,8 +124,7 @@ func TestGetFavouriteCourses_QueryError(t *testing.T) {
 }
 
 func TestGetFavouriteCourses_ScanError(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -153,8 +143,7 @@ func TestGetFavouriteCourses_ScanError(t *testing.T) {
 }
 
 func TestGetCoursesFavouriteStatus_Success(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	input := []*coursemodels.Course{
 		{Id: 1}, {Id: 2}, {Id: 3},
@@ -180,8 +169,7 @@ func TestGetCoursesFavouriteStatus_Success(t *testing.T) {
 }
 
 func TestGetCoursesFavouriteStatus_Error(t *testing.T) {
-	db, mock, close := setupDB(t)
-	defer close()
+	db, mock := setupDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{

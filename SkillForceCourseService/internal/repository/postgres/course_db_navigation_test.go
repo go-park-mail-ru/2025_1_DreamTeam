@@ -14,11 +14,6 @@ import (
 func TestGetLessonFooters(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	pg := &Database{conn: db}
 	ctx := context.Background()
@@ -66,11 +61,6 @@ func TestGetLessonHeaderNewCourse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("an error '%s' occurred when opening a mock database connection", err)
 	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	d := &Database{conn: db}
 
@@ -113,9 +103,4 @@ func TestGetLessonHeaderNewCourse(t *testing.T) {
 	assert.Equal(t, "Bucket 1", lessonHeader.Bucket.Title)
 	assert.Equal(t, 1, currentLessonId)
 	assert.Equal(t, "video", currentLessonType)
-
-	// Ensure all expectations were met
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
 }

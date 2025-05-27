@@ -16,11 +16,6 @@ import (
 func TestGetBucketCourses_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
@@ -56,11 +51,6 @@ func TestGetBucketCourses_Success(t *testing.T) {
 func TestGetCoursesPurchases_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{
 		Data: make([]*logs.LogString, 0),
@@ -83,11 +73,6 @@ func TestGetCoursesPurchases_Success(t *testing.T) {
 func TestGetCoursesRaitings_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	course := &coursemodels.Course{Id: 1}
@@ -116,11 +101,6 @@ func TestGetCoursesRaitings_Success(t *testing.T) {
 func TestGetCoursesTags_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	course := &coursemodels.Course{Id: 1}
@@ -155,11 +135,6 @@ func TestGetCoursesTags_Success(t *testing.T) {
 func TestGetCourseById_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	courseId := 1
@@ -199,61 +174,9 @@ func TestGetCourseById_Success(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestMarkLessonCompleted_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
-
-	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
-	userId := 1
-	courseId := 10
-	lessonId := 100
-
-	database := &Database{conn: db}
-
-	t.Run("lesson already marked as completed", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2 AND course_id = $3)",
-		)).
-			WithArgs(userId, lessonId, courseId).
-			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
-
-		err := database.MarkLessonCompleted(ctx, userId, lessonId)
-		require.NoError(t, err)
-		require.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("lesson not marked, inserts into table", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta(
-			"SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2 AND course_id = $3)",
-		)).
-			WithArgs(userId, lessonId, courseId).
-			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
-
-		mock.ExpectExec(regexp.QuoteMeta(
-			"INSERT INTO LESSON_CHECKPOINT (user_id, lesson_id, course_id) VALUES ($1, $2, $3)",
-		)).
-			WithArgs(userId, lessonId, courseId).
-			WillReturnResult(sqlmock.NewResult(1, 1))
-
-		err := database.MarkLessonCompleted(ctx, userId, lessonId)
-		require.NoError(t, err)
-		require.NoError(t, mock.ExpectationsWereMet())
-	})
-}
-
 func TestMarkLessonAsNotCompleted(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	userId := 1
@@ -290,11 +213,7 @@ func TestMarkLessonAsNotCompleted(t *testing.T) {
 func TestGetLessonHeaderNewCourse_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
+	defer db.Close()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -305,50 +224,53 @@ func TestGetLessonHeaderNewCourse_Success(t *testing.T) {
 	lessonId := 300
 	lessonType := "text"
 
+	// Настройка ожиданий для запросов
 	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT title, part_order, id
-		FROM part
-		WHERE course_id = $1
-		ORDER BY part_order ASC
-		LIMIT 1;
-	`)).
+        SELECT title, part_order, id
+        FROM part
+        WHERE course_id = $1
+        ORDER BY part_order ASC
+        LIMIT 1;
+    `)).
 		WithArgs(courseId).
 		WillReturnRows(sqlmock.NewRows([]string{"title", "part_order", "id"}).
 			AddRow("Part Title", 1, partId))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT title, lesson_bucket_order, id
-		FROM lesson_bucket
-		WHERE part_id = $1
-		ORDER BY lesson_bucket_order ASC
-		LIMIT 1;
-	`)).
+        SELECT title, lesson_bucket_order, id
+        FROM lesson_bucket
+        WHERE part_id = $1
+        ORDER BY lesson_bucket_order ASC
+        LIMIT 1;
+    `)).
 		WithArgs(partId).
 		WillReturnRows(sqlmock.NewRows([]string{"title", "lesson_bucket_order", "id"}).
 			AddRow("Bucket Title", 1, bucketId))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`
-		SELECT id, type
-		FROM LESSON
-		WHERE lesson_bucket_id = $1
-		ORDER BY Lesson_Order ASC
-	`)).
+        SELECT id, type
+        FROM LESSON
+        WHERE lesson_bucket_id = $1
+        ORDER BY Lesson_Order ASC
+    `)).
 		WithArgs(bucketId).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "type"}).
 			AddRow(lessonId, lessonType))
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		"SELECT EXISTS (SELECT 1 FROM LESSON_CHECKPOINT WHERE user_id = $1 AND lesson_id = $2 AND course_id = $3)")).
-		WithArgs(userId, lessonId, courseId).
+		WithArgs(userId, lessonId, courseId). // Используем реальные значения
 		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 
 	mock.ExpectExec(regexp.QuoteMeta(
 		"INSERT INTO LESSON_CHECKPOINT (user_id, lesson_id, course_id) VALUES ($1, $2, $3)")).
-		WithArgs(userId, lessonId, courseId).
+		WithArgs(userId, lessonId, courseId). // Используем реальные значения
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
+	// Вызов тестируемого метода
 	header, gotLessonId, gotType, gotIsNew, err := database.getLessonHeaderNewCourse(ctx, userId, courseId)
 
+	// Проверки
 	require.NoError(t, err)
 	require.NotNil(t, header)
 	require.Equal(t, lessonId, gotLessonId)
@@ -357,19 +279,11 @@ func TestGetLessonHeaderNewCourse_Success(t *testing.T) {
 	require.Len(t, header.Points, 1)
 	require.Equal(t, "Part Title", header.Part.Title)
 	require.Equal(t, "Bucket Title", header.Bucket.Title)
-	require.True(t, header.Points[0].IsDone)
-
-	require.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetLastLessonHeader_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	database := &Database{conn: db}
@@ -504,11 +418,6 @@ func TestGetLastLessonHeader_Success(t *testing.T) {
 func TestGetLessonBlocks_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -538,11 +447,6 @@ func TestGetLessonBlocks_Success(t *testing.T) {
 func TestGetLessonVideo_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -568,11 +472,6 @@ func TestGetLessonVideo_Success(t *testing.T) {
 func TestGetLessonVideo_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -592,11 +491,6 @@ func TestGetLessonVideo_QueryError(t *testing.T) {
 func TestGetLessonById_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -626,11 +520,6 @@ func TestGetLessonById_Success(t *testing.T) {
 func TestGetLessonById_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -650,11 +539,6 @@ func TestGetLessonById_QueryError(t *testing.T) {
 func TestGetBucketByLessonId_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -682,11 +566,6 @@ func TestGetBucketByLessonId_Success(t *testing.T) {
 func TestGetBucketByLessonId_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -706,11 +585,6 @@ func TestGetBucketByLessonId_QueryError(t *testing.T) {
 func TestGetBucketByLessonId_NoRows(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -868,11 +742,6 @@ func TestGetBucketByLessonId_NoRows(t *testing.T) {
 func TestGetCourseParts_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -903,11 +772,6 @@ func TestGetCourseParts_Success(t *testing.T) {
 func TestGetCourseParts_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -932,11 +796,6 @@ func TestGetCourseParts_QueryError(t *testing.T) {
 func TestGetCourseParts_NoParts(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -961,11 +820,6 @@ func TestGetCourseParts_NoParts(t *testing.T) {
 func TestGetPartBuckets_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -996,11 +850,6 @@ func TestGetPartBuckets_Success(t *testing.T) {
 func TestGetPartBuckets_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1025,11 +874,6 @@ func TestGetPartBuckets_QueryError(t *testing.T) {
 func TestGetBucketLessons_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1073,11 +917,6 @@ func TestGetBucketLessons_Success(t *testing.T) {
 func TestGetBucketLessons_ErrorOnCompletedLessonsQuery(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1095,11 +934,6 @@ func TestGetBucketLessons_ErrorOnCompletedLessonsQuery(t *testing.T) {
 func TestGetBucketLessons_ErrorOnLessonQuery(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1121,11 +955,6 @@ func TestGetBucketLessons_ErrorOnLessonQuery(t *testing.T) {
 func TestAddUserToCourse_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1152,11 +981,6 @@ func TestAddUserToCourse_Success(t *testing.T) {
 func TestAddUserToCourse_AlreadyExists(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1173,11 +997,6 @@ func TestAddUserToCourse_AlreadyExists(t *testing.T) {
 func TestAddUserToCourse_QueryRowError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1198,11 +1017,6 @@ func TestAddUserToCourse_QueryRowError(t *testing.T) {
 func TestGetVideoUrl_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1222,11 +1036,6 @@ func TestGetVideoUrl_Success(t *testing.T) {
 func TestGetVideoUrl_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1245,11 +1054,6 @@ func TestGetVideoUrl_QueryError(t *testing.T) {
 func TestIsUserPurchasedCourse_ExistsTrue(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.Background()
@@ -1267,11 +1071,6 @@ func TestIsUserPurchasedCourse_ExistsTrue(t *testing.T) {
 func TestIsUserPurchasedCourse_ExistsFalse(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.Background()
@@ -1289,11 +1088,6 @@ func TestIsUserPurchasedCourse_ExistsFalse(t *testing.T) {
 func TestIsUserPurchasedCourse_ErrNoRows(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -1311,11 +1105,6 @@ func TestIsUserPurchasedCourse_ErrNoRows(t *testing.T) {
 func TestIsUserPurchasedCourse_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})

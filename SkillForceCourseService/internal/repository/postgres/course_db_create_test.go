@@ -13,20 +13,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupMockDB(t *testing.T) (*Database, sqlmock.Sqlmock, func()) {
+func setupMockDB(t *testing.T) (*Database, sqlmock.Sqlmock) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 
-	return &Database{conn: db}, mock, func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close mock database: %v", err)
-		}
-	}
+	return &Database{conn: db}, mock
+
 }
 
 func TestCreateCourse(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -52,8 +48,7 @@ func TestCreateCourse(t *testing.T) {
 }
 
 func TestCreatePart(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -74,8 +69,7 @@ func TestCreatePart(t *testing.T) {
 }
 
 func TestCreateBucket(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -96,8 +90,7 @@ func TestCreateBucket(t *testing.T) {
 }
 
 func TestCreateTextLesson(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -131,8 +124,7 @@ func TestCreateTextLesson(t *testing.T) {
 }
 
 func TestCreateVideoLesson(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
@@ -161,8 +153,7 @@ func TestCreateVideoLesson(t *testing.T) {
 }
 
 func TestSendSurveyQuestionAnswer(t *testing.T) {
-	db, mock, teardown := setupMockDB(t)
-	defer teardown()
+	db, mock := setupMockDB(t)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logs.LogsKey, &logs.CtxLog{
