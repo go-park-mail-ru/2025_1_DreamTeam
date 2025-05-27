@@ -36,6 +36,7 @@ jobs:
       
       - name: Run tests for ${{ matrix.service }}
         run: |
+          cd ${{ matrix.service }}
           go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
           grep -v "mock" cover.out.tmp > cover.out
           go tool cover -func=cover.out
