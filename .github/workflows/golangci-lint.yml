@@ -11,14 +11,12 @@ jobs:
     name: Lint All Services
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Build custom golangci-lint image with Go 1.23
-        run: |
-          docker build -f .github/docker/golangci-lint-go123.Dockerfile -t custom-golangci-lint .
+      - name: Build custom golangci-lint image
+        run: docker build -t custom-golangci-lint:1.23 .
 
       - name: Run linters
         run: |
@@ -32,13 +30,13 @@ jobs:
 
           for service in "${services[@]}"; do
             if [ -d "$service" ]; then
-              echo "🔍 Linting $service"
+              echo "Checking $service"
               docker run --rm \
-                -v "$(pwd)/$service:/app" \
+                -v "${{ github.workspace }}/$service:/app" \
                 -w /app \
-                custom-golangci-lint \
-                /bin/sh -c "go mod download && golangci-lint run ./..."
+                custom-golangci-lint:1.23 \
+                run ./...
             else
-              echo "⚠️ Warning: Directory $service not found"
+              echo "Warning: Directory $service not found"
             fi
           done
