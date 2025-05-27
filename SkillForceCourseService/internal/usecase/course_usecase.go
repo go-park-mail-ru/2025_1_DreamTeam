@@ -859,7 +859,11 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("can't generate certificate: %+v", err))
 		return "", err
 	}
-	defer os.Remove(tempFileName)
+	defer func() {
+		if err := os.Remove(tempFileName); err != nil {
+			logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("certificate for user (id: %v) and course (id: %v) was generated", userProfile.Id, course.Id))
 
@@ -869,7 +873,11 @@ func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermo
 		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to open certificate file: %+v", err))
 		return "", err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	// Получаем информацию о файле
 	fileInfo, err := file.Stat()

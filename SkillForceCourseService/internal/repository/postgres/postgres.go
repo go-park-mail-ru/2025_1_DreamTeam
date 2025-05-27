@@ -24,13 +24,19 @@ func NewDatabase(connStr string, SESSION_SECRET string) (*Database, error) {
 	db.SetConnMaxLifetime(30 * time.Minute)
 
 	if err := db.Ping(); err != nil {
-		db.Close()
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
 	_, err = db.Exec(`SET statement_timeout = '3s'; SET lock_timeout = '400ms';`)
 	if err != nil {
-		db.Close()
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
@@ -39,5 +45,8 @@ func NewDatabase(connStr string, SESSION_SECRET string) (*Database, error) {
 
 // Close - закрытие соединения с базой данных
 func (d *Database) Close() {
-	d.conn.Close()
+	err := d.conn.Close()
+	if err != nil {
+		return
+	}
 }

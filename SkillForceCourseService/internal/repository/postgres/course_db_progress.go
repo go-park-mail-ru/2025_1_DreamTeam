@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"skillForce/pkg/logs"
 )
@@ -51,7 +53,11 @@ func (d *Database) MarkCourseAsCompleted(ctx context.Context, userId int, course
 		logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprint("failed to begin transaction: %w", err))
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+			logs.PrintLog(ctx, "transaction rollback failed", fmt.Sprintf("error: %v", err))
+		}
+	}()
 
 	_, err = tx.ExecContext(ctx,
 		"DELETE FROM SIGNUPS WHERE User_ID = $1 AND Course_ID = $2",
