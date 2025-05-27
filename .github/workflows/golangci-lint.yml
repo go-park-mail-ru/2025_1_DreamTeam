@@ -1,4 +1,4 @@
-name: Run golangci-lint
+name: Run golangci-lint and tests
 
 on:
   push:
@@ -33,3 +33,9 @@ jobs:
       - name: Run golangci-lint on ${{ matrix.service }}
         run: |
           docker run --rm golangci-lint:1.23
+      
+      - name: Run tests for ${{ matrix.service }}
+        run: |
+          go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
+          grep -v "mock" cover.out.tmp > cover.out
+          go tool cover -func=cover.out
