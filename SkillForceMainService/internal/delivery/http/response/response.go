@@ -116,7 +116,10 @@ func SendErrorResponse(textError string, headerStatus int, w http.ResponseWriter
 // SendOKResponse - отправка пустого ответа со статусом 200 OK
 func SendOKResponse(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("200 OK")
+	err := json.NewEncoder(w).Encode("200 OK")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func SendBillingRedirect(w http.ResponseWriter, r *http.Request, continue_url string) {
@@ -128,7 +131,10 @@ func SendBillingRedirect(w http.ResponseWriter, r *http.Request, continue_url st
 
 func SendNoContentOKResponse(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode("204 OK")
+	err := json.NewEncoder(w).Encode("204 OK")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // SendBucketCoursesResponse - отправка списка курсов в JSON-формате
@@ -225,7 +231,10 @@ func SendVideoRange(start, end, total int64, reader io.Reader, w http.ResponseWr
 	for {
 		n, err := reader.Read(buf)
 		if n > 0 {
-			w.Write(buf[:n])
+			_, err := w.Write(buf[:n])
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 		if err != nil {
 			break

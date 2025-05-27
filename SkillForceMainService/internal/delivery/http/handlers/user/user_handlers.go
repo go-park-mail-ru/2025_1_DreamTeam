@@ -16,6 +16,7 @@ import (
 	"github.com/badoux/checkmail"
 	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -32,7 +33,7 @@ type Handler struct {
 }
 
 func NewHandler(cookieManager CookieManagerInterface) *Handler {
-	conn, err := grpc.Dial("user-service:8081", grpc.WithInsecure())
+	conn, err := grpc.NewClient("user-service:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to user service: %v", err)
 	}

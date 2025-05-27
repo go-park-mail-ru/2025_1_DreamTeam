@@ -14,6 +14,7 @@ import (
 
 	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type CookieManagerInterface interface {
@@ -26,9 +27,9 @@ type Handler struct {
 }
 
 func NewHandler(cookieManager CookieManagerInterface) *Handler {
-	conn, err := grpc.Dial("billing-service:8084", grpc.WithInsecure())
+	conn, err := grpc.NewClient("billing-service:8084", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("failed to connect to user service: %v", err)
+		log.Fatalf("failed to connect to billing service: %v", err)
 	}
 	billingClient := billingpb.NewBillingServiceClient(conn)
 	return &Handler{
