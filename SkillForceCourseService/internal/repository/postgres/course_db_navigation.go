@@ -57,7 +57,11 @@ func (d *Database) getLessonHeaderNewCourse(ctx context.Context, userId int, cou
 		logs.PrintLog(ctx, "getLessonHeaderNewCourse", fmt.Sprintf("%+v", err))
 		return nil, 0, "", false, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var points []coursemodels.LessonPoint
 	for rows.Next() {
@@ -117,7 +121,11 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 		logs.PrintLog(ctx, "GetLastLessonHeader", fmt.Sprintf("%+v", err))
 		return nil, 0, "", false, err
 	}
-	defer rows1.Close()
+	defer func() {
+		if err := rows1.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var lessonPoint coursemodels.LessonPoint
 	var visitedLessonPointsIds []int
@@ -186,7 +194,11 @@ func (d *Database) GetLastLessonHeader(ctx context.Context, userId int, courseId
 		logs.PrintLog(ctx, "GetLastLessonHeader", fmt.Sprintf("%+v", err))
 		return nil, 0, "", false, err
 	}
-	defer rows2.Close()
+	defer func() {
+		if err := rows2.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var points []coursemodels.LessonPoint
 	for rows2.Next() {
@@ -261,7 +273,11 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows1.Close()
+	defer func() {
+		if err := rows1.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	visitedLessonPointsIds := make(map[int]bool)
 	for rows1.Next() {
@@ -296,7 +312,11 @@ func (d *Database) GetLessonHeaderByLessonId(ctx context.Context, userId int, cu
 		logs.PrintLog(ctx, "GetLessonHeaderByLessonId", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows1.Close()
+	defer func() {
+		if err := rows1.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var points []*dto.LessonPointDTO
 	for rows2.Next() {
@@ -375,7 +395,11 @@ func (d *Database) GetLessonFooters(ctx context.Context, currentLessonId int) ([
 		logs.PrintLog(ctx, "GetLessonFooters", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var footer struct {

@@ -35,7 +35,11 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 			logs.PrintLog(ctx, "GetCoursesRaitings", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+			}
+		}()
 
 		var sumMetrics float32
 		var countMetrics float32
@@ -76,7 +80,11 @@ func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags 
 			logs.PrintLog(ctx, "GetCoursesTags", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+			}
+		}()
 
 		var tags []string
 
@@ -170,7 +178,11 @@ func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dt
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database: %v", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var rating []dto.RaitingItem
 

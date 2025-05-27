@@ -26,7 +26,11 @@ func (d *Database) SearchCoursesByTitle(ctx context.Context, keyword string) ([]
 		logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -51,7 +55,11 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -81,7 +89,11 @@ func (d *Database) GetPurchasedBucketCourses(ctx context.Context, userId int) ([
 		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -111,7 +123,11 @@ func (d *Database) GetCompletedBucketCourses(ctx context.Context, userId int) ([
 		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -157,7 +173,11 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows1.Close()
+	defer func() {
+		if err := rows1.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows1.Next() {
 		var completedLessonId int
@@ -179,7 +199,11 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows2.Close()
+	defer func() {
+		if err := rows2.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows2.Next() {
 		var lesson coursemodels.LessonPoint
@@ -223,7 +247,11 @@ func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]
 		logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var block string
@@ -274,7 +302,11 @@ func (d *Database) GetLessonTest(ctx context.Context, currentLessonId int, user_
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetLessonTest", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var q *dto.Test
 
@@ -446,7 +478,11 @@ func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*coursem
 		logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var coursePart coursemodels.CoursePart
@@ -472,7 +508,11 @@ func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*coursemod
 		logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var bucket coursemodels.LessonBucket
