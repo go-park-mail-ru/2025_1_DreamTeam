@@ -37,7 +37,7 @@ jobs:
                 -v "$(pwd)/$service:/app" \
                 -w /app \
                 custom-golangci-lint \
-                golangci-lint run ./...
+                /bin/sh -c "go mod download && golangci-lint run ./..."
             else
               echo "⚠️ Warning: Directory $service not found"
             fi
