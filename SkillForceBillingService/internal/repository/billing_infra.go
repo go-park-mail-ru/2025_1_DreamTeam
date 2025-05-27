@@ -31,7 +31,9 @@ func NewBillingInfrastructure(conf *config.Config) *BillingInfrastructure {
 }
 
 func (i *BillingInfrastructure) Close() {
-	i.Database.Close()
+	if err := i.Database.Close(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (i *BillingInfrastructure) AddNewBilling(ctx context.Context, userID int, courseID int, billing_id string) error {
