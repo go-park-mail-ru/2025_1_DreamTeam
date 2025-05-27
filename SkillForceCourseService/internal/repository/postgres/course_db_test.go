@@ -213,7 +213,6 @@ func TestMarkLessonAsNotCompleted(t *testing.T) {
 func TestGetLessonHeaderNewCourse_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer db.Close()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
