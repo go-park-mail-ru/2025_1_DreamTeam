@@ -8,36 +8,28 @@ on:
 
 jobs:
   lint-all:
-    name: Lint All Services
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          "SkillForceBillingService",
+          "SkillForceCourseService",
+          "SkillForceMailService",
+          "SkillForceMainService",
+          "SkillForceUserService"
+        ]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Build custom golangci-lint image
+      - name: Build golangci-lint docker image for ${{ matrix.service }}
         run: |
-          docker build -f .github/docker/golangci-lint-go123.Dockerfile -t custom-golangci-lint .
-
-      - name: Run linters
+          cd ${{ matrix.service }}
+          docker build -f ../Dockerfile.golangci-lint -t golangci-lint:1.23 .
+      
+      - name: Run golangci-lint on ${{ matrix.service }}
         run: |
-          services=(
-            "SkillForceBillingService"
-            "SkillForceCourseService"
-            "SkillForceMailService"
-            "SkillForceMainService"
-            "SkillForceUserService"
-          )
-
-          for service in "${services[@]}"; do
-            if [ -d "$service" ]; then
-              echo "Checking $service"
-              docker run --rm \
-                -v "${{ github.workspace }}/$service:/app" \
-                -w /app \
-                custom-golangci-lint:1.23 \
-                run ./...
-            else
-              echo "Warning: Directory $service not found"
-            fi
-          done
+          docker run --rm golangci-lint:1.23
