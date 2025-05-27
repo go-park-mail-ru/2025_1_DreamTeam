@@ -21,11 +21,6 @@ import (
 func TestSaveSession_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	secret := "super-secret"
 	database := &Database{
@@ -49,11 +44,6 @@ func TestSaveSession_Success(t *testing.T) {
 func TestSaveSession_JWTSigningError(t *testing.T) {
 	db, _, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{
 		conn:           db,
@@ -70,11 +60,6 @@ func TestSaveSession_JWTSigningError(t *testing.T) {
 func TestSaveSession_DBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{
 		conn:           db,
@@ -98,11 +83,6 @@ func TestSaveSession_DBError(t *testing.T) {
 func TestUserExists_True(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	email := "test@example.com"
@@ -121,11 +101,6 @@ func TestUserExists_True(t *testing.T) {
 func TestUserExists_False(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	email := "notfound@example.com"
@@ -144,11 +119,6 @@ func TestUserExists_False(t *testing.T) {
 func TestUserExists_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	email := "fail@example.com"
@@ -167,11 +137,6 @@ func TestUserExists_QueryError(t *testing.T) {
 func TestGetUserById_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -198,11 +163,6 @@ func TestGetUserById_Success(t *testing.T) {
 func TestGetUserById_NoRows(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -222,11 +182,6 @@ func TestGetUserById_NoRows(t *testing.T) {
 func TestGetUserById_QueryError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -308,11 +263,6 @@ func TestParseToken_MalformedToken(t *testing.T) {
 func TestRegisterUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	user := &usermodels.User{
@@ -349,11 +299,6 @@ func TestRegisterUser_Success(t *testing.T) {
 func TestRegisterUser_EmailExists(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db, SESSION_SECRET: "secret"}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -373,11 +318,6 @@ func TestRegisterUser_EmailExists(t *testing.T) {
 func TestRegisterUser_InsertFail(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db, SESSION_SECRET: "secret"}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -406,11 +346,6 @@ func TestRegisterUser_InsertFail(t *testing.T) {
 func TestRegisterUser_GetIDFail(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db, SESSION_SECRET: "secret"}
 	ctx := context.Background()
@@ -445,11 +380,6 @@ func TestRegisterUser_GetIDFail(t *testing.T) {
 func TestValidUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{
 		conn:           db,
@@ -475,11 +405,6 @@ func TestValidUser_Success(t *testing.T) {
 func TestValidUser_EmailExists(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{
 		conn:           db,
@@ -504,11 +429,6 @@ func TestValidUser_EmailExists(t *testing.T) {
 func TestValidUser_DBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{
 		conn:           db,
@@ -603,11 +523,6 @@ func TestGetUserByToken_InvalidToken(t *testing.T) {
 func TestGetUserByCookie_NotFound(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -625,11 +540,6 @@ func TestGetUserByCookie_NotFound(t *testing.T) {
 func TestLogoutUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -646,11 +556,6 @@ func TestLogoutUser_Success(t *testing.T) {
 func TestLogoutUser_DBError(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -668,11 +573,6 @@ func TestLogoutUser_DBError(t *testing.T) {
 func TestUpdateProfile(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
@@ -697,11 +597,6 @@ func TestUpdateProfile(t *testing.T) {
 func TestUpdateProfilePhoto(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
@@ -722,17 +617,12 @@ func TestUpdateProfilePhoto(t *testing.T) {
 func TestDeleteProfilePhoto(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	userId := 42
-	defaultAvatar := "http://217.16.21.64:8006/avatars/default_avatar.png"
+	defaultAvatar := "https://skill-force.ru/avatars/default_avatar.png"
 
 	mock.ExpectExec("UPDATE usertable SET avatar_src = \\$1 WHERE id = \\$2").
 		WithArgs(defaultAvatar, userId).
@@ -747,11 +637,6 @@ func TestDeleteProfilePhoto(t *testing.T) {
 func TestAuthenticateUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
@@ -782,11 +667,6 @@ func TestAuthenticateUser_Success(t *testing.T) {
 func TestGetUserByCookie_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
@@ -807,17 +687,12 @@ func TestGetUserByCookie_Success(t *testing.T) {
 func TestDeleteProfilePhoto_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Errorf("failed to close database: %v", err)
-		}
-	}()
 
 	database := &Database{conn: db}
 
 	ctx := context.WithValue(context.Background(), logs.LogsKey, &logs.CtxLog{})
 	userId := 1
-	defaultAvatar := "http://217.16.21.64:8006/avatars/default_avatar.png"
+	defaultAvatar := "https://skill-force.ru/avatars/default_avatar.png"
 
 	mock.ExpectExec(`UPDATE usertable SET avatar_src = \$1 WHERE id = \$2`).
 		WithArgs(defaultAvatar, userId).

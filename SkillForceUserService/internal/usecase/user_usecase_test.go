@@ -95,21 +95,29 @@ func TestRegisterUser(t *testing.T) {
 		Data: make([]*logs.LogString, 0),
 	})
 	token := "token123"
-	user := &usermodels.User{}
+	user := &usermodels.User{
+		Password: "plainpassword", // Тестовый пароль
+	}
 
+	// Настраиваем ожидания
 	mockRepo.EXPECT().
 		GetUserByToken(ctx, token).
 		Return(user, nil)
+
 	mockRepo.EXPECT().
-		SendWelcomeMail(ctx, user).
-		Return(nil)
-	mockRepo.EXPECT().
-		RegisterUser(ctx, user).
+		RegisterUser(ctx, gomock.Any()).
 		Return("jwtToken", nil)
 
+	// Вызываем тестируемый метод
 	result, err := uc.RegisterUser(ctx, token)
+
+	// Проверяем результаты
 	require.NoError(t, err)
 	require.Equal(t, "jwtToken", result)
+
+	// Проверяем, что пароль был захэширован
+	require.NotEqual(t, "plainpassword", user.Password)
+	require.NotEmpty(t, user.Salt)
 }
 
 func TestAuthenticateUser(t *testing.T) {
