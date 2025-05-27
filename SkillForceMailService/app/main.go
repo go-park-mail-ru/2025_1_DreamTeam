@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -25,7 +26,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create consumer: %s", err)
 	}
-	defer consumer.Close()
+	defer func() {
+		if err := consumer.Close(); err != nil {
+			log.Printf("Failed to close Kafka consumer: %v", err)
+		}
+	}()
 
 	metrics.Init()
 	go func() {
@@ -54,22 +59,28 @@ func main() {
 	}
 }
 
-func handleMessage(mailCLient *mail.Mail, msg *kafka.Message) {
+func handleMessage(mailClient *mail.Mail, msg *kafka.Message) {
 	var message mail.KafkaMessage
-	err := json.Unmarshal(msg.Value, &message)
-	if err != nil {
+	if err := json.Unmarshal(msg.Value, &message); err != nil {
 		log.Printf("Failed to unmarshal JSON: %v\n", err)
 		return
 	}
 
 	log.Printf("Received message: %+v\n", message)
 
+	ctx := context.Background()
+	var sendErr error
+
 	switch message.Method {
 	case "send_confirm_mail":
-		mailCLient.SendRegMail(nil, message)
+		sendErr = mailClient.SendRegMail(ctx, message)
 	case "send_welcome_course_mail":
-		mailCLient.SendWelcomeCourseMail(nil, message)
+		sendErr = mailClient.SendWelcomeCourseMail(ctx, message)
 	case "send_middle_course_mail":
-		// TODO: send_middle_course_mail
+		// TODO: implement send_middle_course_mail
+	}
+
+	if sendErr != nil {
+		log.Printf("Failed to send %s mail: %v", message.Method, sendErr)
 	}
 }
