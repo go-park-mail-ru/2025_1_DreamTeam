@@ -32,11 +32,13 @@ func logContext(ctx context.Context, path string, start time.Time) {
 	duration := time.Since(start)
 
 	buf := bytes.NewBufferString(path)
-	buf.WriteString("\n")
-	buf.WriteString(fmt.Sprintf("Request duration: %v\n", duration))
+	buf.WriteByte('\n')
+	fmt.Fprintf(buf, "Request duration: %v\n", duration)
+
 	for _, log := range logs.Data {
-		buf.WriteString(fmt.Sprintf("\t%s", log.Message))
+		fmt.Fprintf(buf, "\t%s", log.Message)
 	}
+
 	fmt.Println(buf.String())
 }
 

@@ -55,7 +55,11 @@ func (s *BillingServer) CreatePayment(returnUrl string, title string, userID int
 	if err != nil {
 		return "", nil, fmt.Errorf("error in request to yookassa: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("failed to close response body: %v", err)
+		}
+	}()
 
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
