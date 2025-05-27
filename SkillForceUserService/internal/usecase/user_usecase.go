@@ -26,7 +26,11 @@ func (uc *UserUsecase) ValidUser(ctx context.Context, user *usermodels.User) err
 		return err
 	}
 
-	go uc.repo.SendRegMail(ctx, user, token)
+	go func() {
+		if err := uc.repo.SendRegMail(ctx, user, token); err != nil {
+			logs.PrintLog(ctx, "SendRegMail failed", fmt.Sprintf("user: %s, error: %v", user.Email, err))
+		}
+	}()
 	return nil
 }
 
