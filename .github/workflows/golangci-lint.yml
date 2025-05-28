@@ -57,19 +57,17 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo bash
             cd deploy/2025_1_DreamTeam/
 
-            echo "Updating code..."
-            git pull origin microservices
+            sudo git pull origin microservices
 
             echo "Writing .env files..."
-            echo "${{ secrets.ENV_MAIN }}" > SkillForceMainService/config/.env
-            echo "${{ secrets.ENV_USER }}" > SkillForceUserService/config/.env
-            echo "${{ secrets.ENV_COURSE }}" > SkillForceCourseService/config/.env
-            echo "${{ secrets.ENV_BILLING }}" > SkillForceBillingService/config/.env
-            echo "${{ secrets.ENV_MAIL }}" > SkillForceMailService/config/.env
+            echo "${{ secrets.ENV_MAIN }}" | sudo tee SkillForceMainService/config/.env > /dev/null
+            echo "${{ secrets.ENV_USER }}" | sudo tee SkillForceUserService/config/.env > /dev/null
+            echo "${{ secrets.ENV_COURSE }}" | sudo tee SkillForceCourseService/config/.env > /dev/null
+            echo "${{ secrets.ENV_BILLING }}" | sudo tee SkillForceBillingService/config/.env > /dev/null
+            echo "${{ secrets.ENV_MAIL }}" | sudo tee SkillForceMailService/config/.env > /dev/null
 
             echo "Rebuilding and restarting services..."
-            docker compose build main-service user-service course-service billing-service mail-service
-            docker compose up -d main-service user-service course-service billing-service mail-service
+            sudo docker compose build main-service user-service course-service billing-service mail-service
+            sudo docker compose up -d main-service user-service course-service billing-service mail-service
