@@ -70,4 +70,4 @@ jobs:
 
             echo "Rebuilding and restarting services..."
             sudo docker compose build main-service user-service course-service billing-service mail-service
-            sudo docker compose up -d main-service user-service course-service billing-service mail-service
+            docker compose up -d --no-deps main-service user-service course-service billing-service mail-service
