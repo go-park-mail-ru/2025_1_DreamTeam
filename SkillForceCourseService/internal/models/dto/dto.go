@@ -27,6 +27,7 @@ type CourseDTO struct {
 	Description     string           `json:"description"`
 	ScrImage        string           `json:"src_image"`
 	IsPurchased     bool             `json:"is_purchased"`
+	IsCompleted     bool             `json:"is_completed"`
 	Parts           []*CoursePartDTO `json:"parts"`
 	IsFavorite      bool             `json:"is_favorite"`
 }
@@ -169,4 +170,27 @@ type QuestionTest struct {
 	QuestionID int64              `json:"question_id"`
 	Question   string             `json:"question"`
 	UserAnswer UserQuestionAnswer `json:"user_answer"`
+}
+
+type RaitingItem struct {
+	User   UserProfileDTO `json:"user"`
+	Rating int            `json:"rating"`
+}
+
+type Raiting struct {
+	Rating []RaitingItem `json:"rating"`
+}
+
+type UserStats struct {
+	Percentage            int `json:"percentage"`
+	CompletedTextLessons  int `json:"completed_lessons"`
+	AmountTextLessons     int `json:"amount_lessons"`
+	CompletedVideoLessons int `json:"completed_videos"`
+	AmountVideoLessons    int `json:"amount_videos"`
+	RecievedPoints        int `json:"received_points"`
+	AmountPoints          int `json:"amount_points"`
+	CompletedTests        int `json:"completed_tests"`
+	AmountTests           int `json:"amount_tests"`
+	CompletedQuestions    int `json:"completed_questions"`
+	AmountQuestions       int `json:"amount_questions"`
 }

@@ -1,0 +1,18 @@
+# Dockerfile.golangci-lint
+FROM golang:1.23
+
+WORKDIR /app
+
+# Копируем go.mod и go.sum для кеша зависимостей
+COPY go.mod go.sum ./
+
+# Загружаем модули (кешируем)
+RUN go mod download
+
+# Копируем все файлы сервиса
+COPY . .
+
+# Устанавливаем golangci-lint
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v2.1.6
+
+ENTRYPOINT ["golangci-lint", "run"]

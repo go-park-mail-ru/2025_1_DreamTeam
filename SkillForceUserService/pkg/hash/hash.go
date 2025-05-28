@@ -18,6 +18,10 @@ func hashPassword(password string, salt []byte) string {
 	return hashedPassword
 }
 
+func HashPassword(password string, salt []byte) string {
+	return hashPassword(password, salt)
+}
+
 // Хэширование пароля с солью
 func HashPasswordAndCreateSalt(user *models.User) error {
 	salt := make([]byte, 8)

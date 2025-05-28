@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,7 +15,9 @@ import (
 
 	"strings"
 
+	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type CookieManagerInterface interface {
@@ -36,7 +37,7 @@ type Handler struct {
 }
 
 func NewHandler(cookieManager CookieManagerInterface, videoManager VideoManagerInterface) *Handler {
-	conn, err := grpc.Dial("course-service:8082", grpc.WithInsecure())
+	conn, err := grpc.NewClient("course-service:8082", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to user service: %v", err)
 	}
@@ -112,6 +113,143 @@ func (h *Handler) GetCourses(w http.ResponseWriter, r *http.Request) {
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
+func (h *Handler) GetPurchasedCourses(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	grpcUserProfile := &coursepb.UserProfile{
+		Id:        int32(userProfile.Id),
+		Email:     userProfile.Email,
+		Bio:       userProfile.Bio,
+		Name:      userProfile.Name,
+		AvatarSrc: userProfile.AvatarSrc,
+		HideEmail: userProfile.HideEmail,
+		IsAdmin:   userProfile.IsAdmin,
+	}
+
+	grpcGetBucketcourses := coursepb.GetBucketCoursesRequest{
+		UserProfile: grpcUserProfile,
+	}
+
+	grpcBucketCoursesResponse, err := h.courseClient.GetPurchasedBucketCourses(r.Context(), &grpcGetBucketcourses)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCourses", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	if len(grpcBucketCoursesResponse.Courses) == 0 {
+		logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+		response.SendNoContentOKResponse(w, r)
+		return
+	}
+
+	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
+	for i, grpcBucketCourse := range grpcBucketCoursesResponse.Courses {
+		bucketCourses[i] = &dto.CourseDTO{
+			Id:              int(grpcBucketCourse.Id),
+			Title:           grpcBucketCourse.Title,
+			ScrImage:        grpcBucketCourse.ScrImage,
+			Tags:            grpcBucketCourse.Tags,
+			Rating:          float32(grpcBucketCourse.Rating),
+			TimeToPass:      int(grpcBucketCourse.TimeToPass),
+			PurchasesAmount: int(grpcBucketCourse.PurchasesAmount),
+			IsPurchased:     grpcBucketCourse.IsPurchased,
+			IsFavorite:      grpcBucketCourse.IsFavorite,
+			CreatorId:       int(grpcBucketCourse.CreatorId),
+			Description:     grpcBucketCourse.Description,
+			Price:           int(grpcBucketCourse.Price),
+		}
+	}
+
+	logs.PrintLog(r.Context(), "GetPurchasedCourses", "send purchased bucket courses")
+	response.SendBucketCoursesResponse(bucketCourses, w, r)
+}
+
+func (h *Handler) GetCompletedCourses(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	grpcUserProfile := &coursepb.UserProfile{
+		Id:        int32(userProfile.Id),
+		Email:     userProfile.Email,
+		Bio:       userProfile.Bio,
+		Name:      userProfile.Name,
+		AvatarSrc: userProfile.AvatarSrc,
+		HideEmail: userProfile.HideEmail,
+		IsAdmin:   userProfile.IsAdmin,
+	}
+
+	grpcGetBucketcourses := coursepb.GetBucketCoursesRequest{
+		UserProfile: grpcUserProfile,
+	}
+
+	grpcBucketCoursesResponse, err := h.courseClient.GetCompletedBucketCourses(r.Context(), &grpcGetBucketcourses)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetCompletedCourses", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	if len(grpcBucketCoursesResponse.Courses) == 0 {
+		logs.PrintLog(r.Context(), "GetCompletedCourses", "send NoContentOKResponse")
+		response.SendNoContentOKResponse(w, r)
+		return
+	}
+
+	bucketCourses := make([]*dto.CourseDTO, len(grpcBucketCoursesResponse.Courses))
+	for i, grpcBucketCourse := range grpcBucketCoursesResponse.Courses {
+		bucketCourses[i] = &dto.CourseDTO{
+			Id:              int(grpcBucketCourse.Id),
+			Title:           grpcBucketCourse.Title,
+			ScrImage:        grpcBucketCourse.ScrImage,
+			Tags:            grpcBucketCourse.Tags,
+			Rating:          float32(grpcBucketCourse.Rating),
+			TimeToPass:      int(grpcBucketCourse.TimeToPass),
+			PurchasesAmount: int(grpcBucketCourse.PurchasesAmount),
+			IsPurchased:     grpcBucketCourse.IsPurchased,
+			IsFavorite:      grpcBucketCourse.IsFavorite,
+			CreatorId:       int(grpcBucketCourse.CreatorId),
+			Description:     grpcBucketCourse.Description,
+			Price:           int(grpcBucketCourse.Price),
+		}
+	}
+
+	logs.PrintLog(r.Context(), "GetCompletedCourses", "send completed bucket courses")
+	response.SendBucketCoursesResponse(bucketCourses, w, r)
+}
+
+// SearchCourses godoc
+// @Summary Search courses by title
+// @Description Retrieves a list of available courses by title
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param keywords query string true "Keywords to search courses"
+// @Success 200 {object} response.BucketCoursesResponse "List of courses"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "server error"
+// @Router /api/searchCourses [get]
 func (h *Handler) SearchCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetCourses", "method not allowed")
@@ -231,6 +369,7 @@ func (h *Handler) GetCourse(w http.ResponseWriter, r *http.Request) {
 		TimeToPass:      int(grpcGetCourseResponse.Course.TimeToPass),
 		PurchasesAmount: int(grpcGetCourseResponse.Course.PurchasesAmount),
 		IsPurchased:     grpcGetCourseResponse.Course.IsPurchased,
+		IsCompleted:     grpcGetCourseResponse.Course.IsCompleted,
 		IsFavorite:      grpcGetCourseResponse.Course.IsFavorite,
 		CreatorId:       int(grpcGetCourseResponse.Course.CreatorId),
 		Description:     grpcGetCourseResponse.Course.Description,
@@ -472,7 +611,7 @@ func (h *Handler) GetNextLesson(w http.ResponseWriter, r *http.Request) {
 // @Success      200 {object} string "OK"
 // @Failure      400 {object} response.ErrorResponse "ivalid lesson ID"
 // @Failure      401 {object} response.ErrorResponse "unauthorized"
-// @Failure      405 {object} response.ErrorResponse "uethod not allowed"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
 // @Failure      500 {object} response.ErrorResponse "internal server error"
 // @Router       /api/markLessonAsNotCompleted [post]
 func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Request) {
@@ -492,8 +631,7 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 	logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
 
 	lessonId := dto.LessonIDRequest{}
-	err := json.NewDecoder(r.Body).Decode(&lessonId)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &lessonId); err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -503,9 +641,111 @@ func (h *Handler) MarkLessonAsNotCompleted(w http.ResponseWriter, r *http.Reques
 		UserId:   int32(userProfile.Id),
 		LessonId: int32(lessonId.Id),
 	}
-	_, err = h.courseClient.MarkLessonAsNotCompleted(r.Context(), grpcMarkLessonAsNotCompletedRequest)
+	_, err := h.courseClient.MarkLessonAsNotCompleted(r.Context(), grpcMarkLessonAsNotCompletedRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "MarkLessonAsNotCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+// MarkLessonAsCompleted godoc
+// @Summary      Mark a lesson as not completed
+// @Description  Marks the specified lesson as not completed for the authenticated user
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        lessonId body dto.LessonIDRequest true "Lesson ID"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "ivalid lesson ID"
+// @Failure      401 {object} response.ErrorResponse "unauthorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/markLessonAsCompleted [post]
+func (h *Handler) MarkLessonAsCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	lessonId := dto.LessonIDRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &lessonId); err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcMarkLessonAsCompletedRequest := &coursepb.MarkLessonAsCompletedRequest{
+		UserId:   int32(userProfile.Id),
+		LessonId: int32(lessonId.Id),
+	}
+	_, err := h.courseClient.MarkLessonAsCompleted(r.Context(), grpcMarkLessonAsCompletedRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkLessonAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
+
+// MarkCourseAsCompleted godoc
+// @Summary Mark a course as completed
+// @Description Marks the specified course as completed for the authenticated user
+// @Tags courses
+// @Accept json
+// @Produce json
+// @Param courseId body dto.LessonIDRequest true "Course ID"
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} response.ErrorResponse "invalid course ID"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 405 {object} response.ErrorResponse "method not allowed"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /api/markCourseAsCompleted [post]
+func (h *Handler) MarkCourseAsCompleted(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseId := dto.CourseIDRequest{}
+	if err := easyjson.UnmarshalFromReader(r.Body, &courseId); err != nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("user %+v wants to mark course %+v as completed", userProfile, courseId))
+
+	grpcMarkCourseAsCompletedRequest := &coursepb.MarkCourseAsCompletedRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(courseId.Id),
+	}
+	_, err := h.courseClient.MarkCourseAsCompleted(r.Context(), grpcMarkCourseAsCompletedRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "MarkCourseAsCompleted", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
@@ -543,7 +783,7 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	courseIdStr := r.URL.Query().Get("courseId")
 	courseId, err := strconv.Atoi(courseIdStr)
 	if err != nil {
-		logs.PrintLog(r.Context(), "GetNextLesson", fmt.Sprintf("%+v", err))
+		logs.PrintLog(r.Context(), "GetCourseRoadmap", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
@@ -592,6 +832,225 @@ func (h *Handler) GetCourseRoadmap(w http.ResponseWriter, r *http.Request) {
 	logs.PrintLog(r.Context(), "GetCourseRoadmap", "send course roadmap to user")
 	response.SendCourseRoadmap(&courseRoadmap, w, r)
 
+}
+
+func (h *Handler) GetRating(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetRating", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetRating", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetRating", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetRating", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetRatingsRequest := &coursepb.GetRatingRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(courseId),
+	}
+
+	grpcGetRatingsResponse, err := h.courseClient.GetRating(r.Context(), grpcGetRatingsRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetRaiting", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	ratingItems := make([]dto.RaitingItem, 0, len(grpcGetRatingsResponse.GetRating()))
+	for _, item := range grpcGetRatingsResponse.GetRating() {
+		user := item.GetUser()
+		if user == nil {
+			continue
+		}
+
+		ratingItems = append(ratingItems, dto.RaitingItem{
+			User: dto.UserProfileDTO{
+				Name:      user.GetName(),
+				Email:     user.GetEmail(),
+				Bio:       user.GetBio(),
+				AvatarSrc: user.GetAvatarSrc(),
+				HideEmail: user.GetHideEmail(),
+				IsAdmin:   user.GetIsAdmin(),
+			},
+			Rating: int(item.GetRating()),
+		})
+	}
+
+	rating := dto.Raiting{Rating: ratingItems}
+	logs.PrintLog(r.Context(), "GetRaiting", "get rating from grpc")
+	response.SendRatingResponse(&rating, w, r)
+}
+
+func (h *Handler) GetSertificate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSertificate", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetSertificate", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
+	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
+		User:     grpcUserProfile,
+		CourseId: int32(courseId),
+	}
+
+	grpcGetSertificateResponse, err := h.courseClient.GetSertificate(r.Context(), grpcGetSertificateRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
+	response.SendSertificateUrl(sertificateUrl, w, r)
+}
+
+func (h *Handler) GetGeneratedSertificate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetSertificate", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetSertificate", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	var grpcUserProfile *coursepb.UserProfile
+	if userProfile != nil {
+		grpcUserProfile = &coursepb.UserProfile{
+			Id:        int32(userProfile.Id),
+			Email:     userProfile.Email,
+			Bio:       userProfile.Bio,
+			Name:      userProfile.Name,
+			AvatarSrc: userProfile.AvatarSrc,
+			HideEmail: userProfile.HideEmail,
+			IsAdmin:   userProfile.IsAdmin,
+		}
+	}
+
+	grpcGetSertificateRequest := &coursepb.GetSertificateRequest{
+		User:     grpcUserProfile,
+		CourseId: int32(courseId),
+	}
+
+	grpcGetSertificateResponse, err := h.courseClient.GetGeneratedSertificate(r.Context(), grpcGetSertificateRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	sertificateUrl := grpcGetSertificateResponse.SertificateUrl
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("get sertificate url: %s from grpc", sertificateUrl))
+	response.SendSertificateUrl(sertificateUrl, w, r)
+}
+
+func (h *Handler) GetStatistic(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logs.PrintLog(r.Context(), "GetStatistic", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "GetStatistic", "user not logged in")
+		userProfile = &models.UserProfile{Id: -1}
+	}
+
+	logs.PrintLog(r.Context(), "GetSertificate", fmt.Sprintf("user %+v is authorized", userProfile))
+
+	courseIdStr := r.URL.Query().Get("courseId")
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcGetStatisticRequest := &coursepb.GetStatisticRequest{
+		CourseId: int32(courseId),
+		UserId:   int32(userProfile.Id),
+	}
+
+	grpcGetStatisticResponse, err := h.courseClient.GetStatistic(r.Context(), grpcGetStatisticRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "GetStatistic", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	statistic := &dto.UserStats{
+		Percentage:            int(grpcGetStatisticResponse.Percentage),
+		CompletedTextLessons:  int(grpcGetStatisticResponse.CompletedTextLessons),
+		AmountTextLessons:     int(grpcGetStatisticResponse.AmountTextLessons),
+		CompletedVideoLessons: int(grpcGetStatisticResponse.CompletedVideoLessons),
+		AmountVideoLessons:    int(grpcGetStatisticResponse.AmountVideoLessons),
+		RecievedPoints:        int(grpcGetStatisticResponse.ReceivedPoints),
+		AmountPoints:          int(grpcGetStatisticResponse.AmountPoints),
+		CompletedTests:        int(grpcGetStatisticResponse.CompletedTests),
+		AmountTests:           int(grpcGetStatisticResponse.AmountTests),
+		CompletedQuestions:    int(grpcGetStatisticResponse.CompletedQuestions),
+		AmountQuestions:       int(grpcGetStatisticResponse.AmountQuestions),
+	}
+
+	logs.PrintLog(r.Context(), "GetStatistic", "get statistic from grpc")
+	response.SendStatistic(statistic, w, r)
 }
 
 // ServeVideo godoc
@@ -646,7 +1105,11 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 			response.SendErrorResponse("video getting error"+err.Error(), http.StatusInternalServerError, w, r)
 			return
 		}
-		defer reader.Close()
+		defer func() {
+			if err := reader.Close(); err != nil {
+				logs.PrintLog(ctx, "ServeVideo", "failed to close reader")
+			}
+		}()
 
 		response.SendVideoRange(0, meta.Size-1, meta.Size, reader, w, r)
 		return
@@ -669,7 +1132,11 @@ func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse("reading frame error"+err.Error(), http.StatusInternalServerError, w, r)
 		return
 	}
-	defer reader.Close()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			logs.PrintLog(ctx, "ServeVideo", "failed to close reader")
+		}
+	}()
 
 	response.SendVideoRange(start, end, meta.Size, reader, w, r)
 }
@@ -689,8 +1156,7 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -751,7 +1217,7 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, err = h.courseClient.CreateCourse(r.Context(), grpcCreateCourseRequest)
+	_, err := h.courseClient.CreateCourse(r.Context(), grpcCreateCourseRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -761,6 +1227,19 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
+// AddCourseToFavourites godoc
+// @Summary      Add course to user's favorites
+// @Description  Adds a course to the authenticated user's favorites list
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        course body dto.CourseDTO true "Course data to add to favorites"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "invalid request body"
+// @Failure      401 {object} response.ErrorResponse "user not authorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/addCourseToFavourites [post]
 func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", "method not allowed")
@@ -776,8 +1255,7 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -838,7 +1316,7 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
-	_, err = h.courseClient.AddCourseToFavourites(r.Context(), grpcAddCourseToFavourites)
+	_, err := h.courseClient.AddCourseToFavourites(r.Context(), grpcAddCourseToFavourites)
 	if err != nil {
 		logs.PrintLog(r.Context(), "AddCourseToFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -848,6 +1326,19 @@ func (h *Handler) AddCourseToFavourites(w http.ResponseWriter, r *http.Request) 
 	response.SendOKResponse(w, r)
 }
 
+// DeleteCourseFromFavourites godoc
+// @Summary      Remove course from favorites
+// @Description  Removes a course from the authenticated user's favorites list
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        course body dto.CourseDTO true "Course data to remove from favorites"
+// @Success      200 {object} string "OK"
+// @Failure      400 {object} response.ErrorResponse "invalid request body"
+// @Failure      401 {object} response.ErrorResponse "user not authorized"
+// @Failure      405 {object} response.ErrorResponse "method not allowed"
+// @Failure      500 {object} response.ErrorResponse "internal server error"
+// @Router       /api/deleteCourseFromFavourites [post]
 func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", "method not allowed")
@@ -863,8 +1354,7 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 	}
 
 	var CourseInput dto.CourseDTO
-	err := json.NewDecoder(r.Body).Decode(&CourseInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -925,7 +1415,7 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 		},
 	}
 
-	_, err = h.courseClient.DeleteCourseFromFavourites(r.Context(), grpcDeleteCourseFromFavourites)
+	_, err := h.courseClient.DeleteCourseFromFavourites(r.Context(), grpcDeleteCourseFromFavourites)
 	if err != nil {
 		logs.PrintLog(r.Context(), "DeleteCourseFromFavourites", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
@@ -935,6 +1425,16 @@ func (h *Handler) DeleteCourseFromFavourites(w http.ResponseWriter, r *http.Requ
 	response.SendOKResponse(w, r)
 }
 
+// GetFavouriteCourses godoc
+// @Summary Get user's favorite courses
+// @Description Retrieves all courses marked as favorite by the authenticated user
+// @Tags courses
+// @Produce json
+// @Success      200 {object} string "OK"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/getFavouriteCourses [get]
 func (h *Handler) GetFavouriteCourses(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetFavouriteCourses", "method not allowed")
@@ -989,6 +1489,19 @@ func (h *Handler) GetFavouriteCourses(w http.ResponseWriter, r *http.Request) {
 	response.SendBucketCoursesResponse(bucketCourses, w, r)
 }
 
+// GetTestLesson godoc
+// @Summary Get test lesson details
+// @Description Retrieves test lesson information including questions and answers
+// @Tags lessons
+// @Produce json
+// @Param lessonId query int true "Lesson ID to retrieve test for"
+// @Success 200 {object} dto.Test "Test lesson details including question and answers"
+// @Failure 400 {object} response.ErrorResponse "Invalid lesson ID format"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 404 {object} response.ErrorResponse "Lesson not found"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/GetTestLesson [get]
 func (h *Handler) GetTestLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetTestLesson", "method not allowed")
@@ -1047,6 +1560,19 @@ func (h *Handler) GetTestLesson(w http.ResponseWriter, r *http.Request) {
 	response.SendTestLessonResponse(test, w, r)
 }
 
+// AnswerQuiz godoc
+// @Summary Submit quiz answer
+// @Description Processes user's answer to a quiz question and returns the result
+// @Tags lessons
+// @Accept json
+// @Produce json
+// @Param answer body dto.Answer true "User's quiz answer"
+// @Success 200 {object} bool "Result of the quiz answer (true/false)"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/AnswerQuiz [post]
 func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AnswerQuiz", "method not allowed")
@@ -1062,11 +1588,9 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var AnswerInput dto.Answer
-	err := json.NewDecoder(r.Body).Decode(&AnswerInput)
-
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &AnswerInput); err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuiz", fmt.Sprintf("%+v", err))
-		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -1089,6 +1613,19 @@ func (h *Handler) AnswerQuiz(w http.ResponseWriter, r *http.Request) {
 	response.SendQuizResult(result, w, r)
 }
 
+// GetQuestionTestLesson godoc
+// @Summary Get test question for lesson
+// @Description Retrieves a test question and user's previous answer (if exists) for a specific lesson
+// @Tags lessons
+// @Produce json
+// @Param lessonId query int true "Lesson ID to retrieve test question for"
+// @Success 200 {object} dto.QuestionTest "Test question details including user's previous answer status"
+// @Failure 400 {object} response.ErrorResponse "Invalid lesson ID format"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 404 {object} response.ErrorResponse "Lesson not found"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/GetQuestionTestLesson [get]
 func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		logs.PrintLog(r.Context(), "GetQuestionTestLesson", "method not allowed")
@@ -1136,6 +1673,19 @@ func (h *Handler) GetQuestionTestLesson(w http.ResponseWriter, r *http.Request) 
 	response.SendQuestionTestLessonResponse(question, w, r)
 }
 
+// AnswerQuestion godoc
+// @Summary Submit answer to a question
+// @Description Processes and stores a user's answer to a specific test question
+// @Tags lessons
+// @Accept json
+// @Produce json
+// @Param answer body dto.AnswerQuestion true "User's answer to the question"
+// @Success      200 {object} string "OK"
+// @Failure 400 {object} response.ErrorResponse "Invalid request body"
+// @Failure 401 {object} response.ErrorResponse "User not authorized"
+// @Failure 405 {object} response.ErrorResponse "Method not allowed"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Router /api/AnswerQuestion [post]
 func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		logs.PrintLog(r.Context(), "AnswerQuestion", "method not allowed")
@@ -1151,11 +1701,9 @@ func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var AnswerInput dto.AnswerQuestion
-	err := json.NewDecoder(r.Body).Decode(&AnswerInput)
-
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &AnswerInput); err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
-		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
@@ -1165,7 +1713,7 @@ func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 		Answer:     AnswerInput.Answer,
 	}
 
-	_, err = h.courseClient.AnswerQuestion(r.Context(), grpcAnswerQuestion)
+	_, err := h.courseClient.AnswerQuestion(r.Context(), grpcAnswerQuestion)
 	if err != nil {
 		logs.PrintLog(r.Context(), "AnswerQuestion", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)

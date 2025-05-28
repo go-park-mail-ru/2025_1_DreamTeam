@@ -22,6 +22,7 @@ func mapToCourseDTO(dto *dto.CourseDTO) *coursepb.CourseDTO {
 		Description:     dto.Description,
 		ScrImage:        dto.ScrImage,
 		IsPurchased:     dto.IsPurchased,
+		IsCompleted:     dto.IsCompleted,
 		IsFavorite:      dto.IsFavorite,
 		Parts:           mapCourseParts(dto.Parts),
 	}
@@ -287,5 +288,46 @@ func mapToGetQuestionTestLessonResponse(test *dto.QuestionTest) *coursepb.GetQue
 func mapToAnswerQuizResponse(test *dto.QuizResult) *coursepb.AnswerQuizResponse {
 	return &coursepb.AnswerQuizResponse{
 		IsRight: test.Result,
+	}
+}
+
+func mapToRatingResponse(r *dto.Raiting) *coursepb.GetRatingResponse {
+	if r == nil {
+		return &coursepb.GetRatingResponse{Rating: []*coursepb.RatingItem{}}
+	}
+
+	ratingItems := make([]*coursepb.RatingItem, 0, len(r.Rating))
+	for _, item := range r.Rating {
+		ratingItems = append(ratingItems, &coursepb.RatingItem{
+			User: &coursepb.UserProfile{
+				Name:      item.User.Name,
+				Email:     item.User.Email,
+				Bio:       item.User.Bio,
+				AvatarSrc: item.User.AvatarSrc,
+				HideEmail: item.User.HideEmail,
+				IsAdmin:   item.User.IsAdmin,
+			},
+			Rating: int32(item.Rating),
+		})
+	}
+
+	return &coursepb.GetRatingResponse{
+		Rating: ratingItems,
+	}
+}
+
+func mapToStatisticResponse(userStats *dto.UserStats) *coursepb.GetStatisticResponse {
+	return &coursepb.GetStatisticResponse{
+		Percentage:            int32(userStats.Percentage),
+		CompletedTextLessons:  int32(userStats.CompletedTextLessons),
+		AmountTextLessons:     int32(userStats.AmountTextLessons),
+		CompletedVideoLessons: int32(userStats.CompletedVideoLessons),
+		AmountVideoLessons:    int32(userStats.AmountVideoLessons),
+		ReceivedPoints:        int32(userStats.RecievedPoints),
+		AmountPoints:          int32(userStats.AmountPoints),
+		CompletedTests:        int32(userStats.CompletedTests),
+		AmountTests:           int32(userStats.AmountTests),
+		CompletedQuestions:    int32(userStats.CompletedQuestions),
+		AmountQuestions:       int32(userStats.AmountQuestions),
 	}
 }

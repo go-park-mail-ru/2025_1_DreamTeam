@@ -76,6 +76,16 @@ message MarkLessonAsNotCompletedRequest {
   int32 lesson_id = 2;
 }
 
+message MarkLessonAsCompletedRequest {
+  int32 user_id = 1;
+  int32 lesson_id = 2;
+}
+
+message MarkCourseAsCompletedRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
 message GetCourseRoadmapRequest {
   int32 user_id = 1;
   int32 course_id = 2;
@@ -131,8 +141,9 @@ message CourseDTO {
   string description = 9;
   string scr_image = 10;
   bool is_purchased = 11;
-  repeated CoursePartDTO parts = 12;
-  bool is_favorite = 13;
+  bool is_completed = 12;
+  repeated CoursePartDTO parts = 13;
+  bool is_favorite = 14;
 }
 
 message CourseRoadmapDTO {
@@ -306,15 +317,65 @@ message SearchCoursesByTitleRequest {
   string keywords = 2;
 }
 
+message GetRatingRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
+message GetRatingResponse {
+  repeated RatingItem rating = 1;
+}
+
+message RatingItem {
+  UserProfile user = 1;
+  int32 rating = 2;
+}
+
+message GetSertificateRequest {
+  UserProfile user = 1;
+  int32 course_id = 2;
+}
+
+message GetSertificateResponse {
+  string sertificate_url = 1;
+}
+
+message GetStatisticRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+}
+
+message GetStatisticResponse {
+  int32 percentage = 1;
+  int32 completed_text_lessons = 2;
+  int32 amount_text_lessons = 3;
+  int32 completed_video_lessons = 4;
+  int32 amount_video_lessons = 5;
+  int32 received_points = 6;
+  int32 amount_points = 7;
+  int32 completed_tests = 8;
+  int32 amount_tests = 9;
+  int32 completed_questions = 10;
+  int32 amount_questions = 11;
+}
+
 
 // Service Definition
 service CourseService {
   rpc GetBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
+  rpc GetPurchasedBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
+  rpc GetCompletedBucketCourses(GetBucketCoursesRequest) returns (GetBucketCoursesResponse);
   rpc GetCourseLesson(GetCourseLessonRequest) returns (GetCourseLessonResponse);
   rpc GetNextLesson(GetNextLessonRequest) returns (GetNextLessonResponse);
   rpc MarkLessonAsNotCompleted(MarkLessonAsNotCompletedRequest) returns (google.protobuf.Empty);
+  rpc MarkLessonAsCompleted(MarkLessonAsCompletedRequest) returns (google.protobuf.Empty);
+  rpc MarkCourseAsCompleted(MarkCourseAsCompletedRequest) returns (google.protobuf.Empty);
   rpc GetCourseRoadmap(GetCourseRoadmapRequest) returns (GetCourseRoadmapResponse);
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
+  rpc GetRating (GetRatingRequest) returns (GetRatingResponse);
+  rpc GetStatistic (GetStatisticRequest) returns (GetStatisticResponse);
+  rpc GetSertificate (GetSertificateRequest) returns (GetSertificateResponse);
+  rpc GetGeneratedSertificate (GetSertificateRequest) returns (GetSertificateResponse);
   rpc CreateCourse(CreateCourseRequest) returns (google.protobuf.Empty);
   rpc AddCourseToFavourites(AddToFavouritesRequest) returns (google.protobuf.Empty);
   rpc DeleteCourseFromFavourites(DeleteCourseFromFavouritesRequest) returns (google.protobuf.Empty);

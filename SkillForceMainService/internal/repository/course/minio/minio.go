@@ -50,7 +50,10 @@ func (mn *Minio) UploadFileToMinIO(ctx context.Context, file multipart.File, fil
 
 func (mn *Minio) GetVideoRange(ctx context.Context, name string, start, end int64) (io.ReadCloser, error) {
 	opts := minio.GetObjectOptions{}
-	opts.SetRange(start, end)
+	err := opts.SetRange(start, end)
+	if err != nil {
+		return nil, err
+	}
 	return mn.MinioClient.GetObject(mn.VideoBucket, name, opts)
 }
 

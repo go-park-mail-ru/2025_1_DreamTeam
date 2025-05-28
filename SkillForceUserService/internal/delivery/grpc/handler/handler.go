@@ -3,11 +3,13 @@ package handler
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/textproto"
 	userpb "skillForce/internal/delivery/grpc/proto"
 	models "skillForce/internal/models/user"
+	"skillForce/pkg/logs"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -133,7 +135,10 @@ func ConvertToMultipart(fileData []byte, fileName, contentType string) (multipar
 	if _, err := io.Copy(part, bytes.NewReader(fileData)); err != nil {
 		return nil, nil, err
 	}
-	writer.Close()
+	err = writer.Close()
+	if err != nil {
+		logs.PrintLog(context.Background(), "ConvertToMultipart", fmt.Sprintf("%+v", err))
+	}
 
 	// Парсим то, что получилось, как multipart/form-data
 	r := multipart.NewReader(body, writer.Boundary())

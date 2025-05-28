@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +14,9 @@ import (
 	"skillForce/pkg/logs"
 
 	"github.com/badoux/checkmail"
+	"github.com/mailru/easyjson"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -32,7 +33,7 @@ type Handler struct {
 }
 
 func NewHandler(cookieManager CookieManagerInterface) *Handler {
-	conn, err := grpc.Dial("user-service:8081", grpc.WithInsecure())
+	conn, err := grpc.NewClient("user-service:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to user service: %v", err)
 	}
@@ -80,7 +81,7 @@ func isValidLoginFields(user *dto.UserDTO) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.User true "User information"
+// @Param user body usermodels.User true "User information"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request | missing required fields | password too short | invalid email"
 // @Failure 404 {object} response.ErrorResponse "email exists"
@@ -95,14 +96,13 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userInput dto.UserDTO
-	err := json.NewDecoder(r.Body).Decode(&userInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &userInput); err != nil {
 		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidRegistrationFields(&userInput)
+	err := isValidRegistrationFields(&userInput)
 	if err != nil {
 		logs.PrintLog(r.Context(), "RegisterUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
@@ -204,14 +204,13 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userInput dto.UserDTO
-	err := json.NewDecoder(r.Body).Decode(&userInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &userInput); err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
 	}
 
-	err = isValidLoginFields(&userInput)
+	err := isValidLoginFields(&userInput)
 	if err != nil {
 		logs.PrintLog(r.Context(), "LoginUser", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse(err.Error(), http.StatusBadRequest, w, r)
@@ -306,7 +305,7 @@ func (h *Handler) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
@@ -325,8 +324,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var UserProfileInput dto.UserProfileDTO
-	err := json.NewDecoder(r.Body).Decode(&UserProfileInput)
-	if err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &UserProfileInput); err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
 		return
@@ -345,7 +343,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		Profile: grpcNewUserProfile,
 	}
 
-	_, err = h.userClient.UpdateProfile(r.Context(), grpcUpdateProfileRequest)
+	_, err := h.userClient.UpdateProfile(r.Context(), grpcUpdateProfileRequest)
 	if err != nil {
 		logs.PrintLog(r.Context(), "UpdateProfile", fmt.Sprintf("%+v", err))
 		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
@@ -372,7 +370,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"
@@ -403,7 +401,11 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logs.PrintLog(r.Context(), "ServeVideo", "failed to close reader")
+		}
+	}()
 
 	fileData, err := io.ReadAll(file)
 	if err != nil {
@@ -446,7 +448,7 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfile true "Updated user profile"
+// @Param profile body usermodels.UserProfile true "Updated user profile"
 // @Success 200 {string} string "200 OK"
 // @Failure 400 {object} response.ErrorResponse "invalid request"
 // @Failure 401 {object} response.ErrorResponse "not authorized"

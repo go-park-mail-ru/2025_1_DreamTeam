@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	cookie "skillForce/internal/delivery/http/cookie"
+	billingHandler "skillForce/internal/delivery/http/handlers/billing"
 	courseHandler "skillForce/internal/delivery/http/handlers/course"
 	userHandler "skillForce/internal/delivery/http/handlers/user"
 
@@ -38,6 +39,7 @@ func main() {
 	defer courseInfrastructure.Close()
 	courseUsecase := courseUsecase.NewCourseUsecase(courseInfrastructure)
 	courseHandler := courseHandler.NewHandler(cookieManager, courseUsecase)
+	billingHandler := billingHandler.NewHandler(cookieManager)
 
 	userHandler := userHandler.NewHandler(cookieManager)
 
@@ -51,12 +53,19 @@ func main() {
 	siteMux.HandleFunc("/api/validEmail", userHandler.ConfirmUserEmail)
 
 	siteMux.HandleFunc("/api/getCourses", courseHandler.GetCourses)
+	siteMux.HandleFunc("/api/getPurchasedCourses", courseHandler.GetPurchasedCourses)
+	siteMux.HandleFunc("/api/getCompletedCourses", courseHandler.GetCompletedCourses)
 	siteMux.HandleFunc("/api/searchCourses", courseHandler.SearchCourses)
 	siteMux.HandleFunc("/api/getCourse", courseHandler.GetCourse)
+	siteMux.HandleFunc("/api/generateSertificate", courseHandler.GetSertificate)
+	siteMux.HandleFunc("/api/getSertificate", courseHandler.GetGeneratedSertificate)
 	siteMux.HandleFunc("/api/getCourseLesson", courseHandler.GetCourseLesson)
 	siteMux.HandleFunc("/api/getNextLesson", courseHandler.GetNextLesson)
 	siteMux.HandleFunc("/api/markLessonAsNotCompleted", courseHandler.MarkLessonAsNotCompleted)
+	siteMux.HandleFunc("/api/markLessonAsCompleted", courseHandler.MarkLessonAsCompleted)
+	siteMux.HandleFunc("/api/markCourseAsCompleted", courseHandler.MarkCourseAsCompleted)
 	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
+	siteMux.HandleFunc("/api/getRating", courseHandler.GetRating)
 	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
 	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
 	siteMux.HandleFunc("/api/addCourseToFavourites", courseHandler.AddCourseToFavourites)
@@ -66,6 +75,10 @@ func main() {
 	siteMux.HandleFunc("/api/AnswerQuiz", courseHandler.AnswerQuiz)
 	siteMux.HandleFunc("/api/GetQuestionTestLesson", courseHandler.GetQuestionTestLesson)
 	siteMux.HandleFunc("/api/AnswerQuestion", courseHandler.AnswerQuestion)
+	siteMux.HandleFunc("/api/getStatistic", courseHandler.GetStatistic)
+
+	siteMux.HandleFunc("/api/createPaymentHandler", billingHandler.CreatePaymentHandler)
+	siteMux.HandleFunc("/api/webhookHandler", billingHandler.WebhookHandler)
 
 	siteMux.HandleFunc("/api/docs/", httpSwagger.WrapHandler)
 
@@ -77,5 +90,6 @@ func main() {
 	siteHandler = middleware.CorsOptionsMiddleware(siteHandler)
 
 	log.Println("Server started on :8080")
+
 	log.Fatal(http.ListenAndServe(":8080", siteHandler))
 }

@@ -4,11 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mime/multipart"
+	"net/textproto"
+	"os"
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 	"skillForce/pkg/sanitize"
+	"skillForce/pkg/sertificate"
+	"time"
 )
 
 type CourseUsecase struct {
@@ -94,6 +99,152 @@ func (uc *CourseUsecase) GetBucketCourses(ctx context.Context, userProfile *user
 	return resultBucketCourses, nil
 }
 
+func (uc *CourseUsecase) GetPurchasedBucketCourses(ctx context.Context, userProfile *usermodels.UserProfile) ([]*dto.CourseDTO, error) {
+	bucketCourses, err := uc.repo.GetPurchasedBucketCourses(ctx, userProfile.Id)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseFavourites := make(map[int]bool, 0)
+	if userProfile != nil {
+		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+			IsFavorite:      courseFavourites[course.Id],
+		})
+	}
+
+	logs.PrintLog(ctx, "GetPurchasedBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses, nil
+}
+
+func (uc *CourseUsecase) GetCompletedBucketCourses(ctx context.Context, userProfile *usermodels.UserProfile) ([]*dto.CourseDTO, error) {
+	bucketCourses, err := uc.repo.GetCompletedBucketCourses(ctx, userProfile.Id)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursesRatings, err := uc.repo.GetCoursesRaitings(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseTags, err := uc.repo.GetCoursesTags(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	coursePurchases, err := uc.repo.GetCoursesPurchases(ctx, bucketCourses)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+
+	courseFavourites := make(map[int]bool, 0)
+	if userProfile != nil {
+		courseFavourites, err = uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+	}
+
+	resultBucketCourses := make([]*dto.CourseDTO, 0, len(bucketCourses))
+	for _, course := range bucketCourses {
+		rating, ok := coursesRatings[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no rating for course %d", course.Id))
+			rating = 0
+		}
+
+		tags, ok := courseTags[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no tags for course %d", course.Id))
+			tags = []string{}
+		}
+
+		purchases, ok := coursePurchases[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("no purchases for course %d", course.Id))
+			purchases = 0
+		}
+		resultBucketCourses = append(resultBucketCourses, &dto.CourseDTO{
+			Id:              course.Id,
+			CreatorId:       course.CreatorId,
+			Title:           course.Title,
+			Description:     sanitize.Sanitize(course.Description),
+			ScrImage:        course.ScrImage,
+			Price:           course.Price,
+			TimeToPass:      course.TimeToPass,
+			Rating:          rating,
+			Tags:            tags,
+			PurchasesAmount: purchases,
+			IsFavorite:      courseFavourites[course.Id],
+		})
+	}
+
+	logs.PrintLog(ctx, "GetCompletedBucketCourses", "get bucket courses with ratings and tags from db, mapping to dto")
+
+	return resultBucketCourses, nil
+}
+
 func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfile *usermodels.UserProfile) (*dto.CourseDTO, error) {
 	course, err := uc.repo.GetCourseById(ctx, courseId)
 	if err != nil {
@@ -161,6 +312,12 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user purchased course: %+v", err))
 			return nil, err
 		}
+
+		resultBucketCourses[0].IsCompleted, err = uc.repo.IsUserCompletedCourse(ctx, userProfile.Id, course.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user completed course: %+v", err))
+			return nil, err
+		}
 	}
 
 	logs.PrintLog(ctx, "GetCourse", "get course with ratings and tags from db, mapping to dto")
@@ -222,6 +379,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 		lessonDto.LessonBody = LessonBody
 
 		/*
+			first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
 			if first {
 				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
 				user, err := uc.repo.GetUserById(ctx, userId)
@@ -229,9 +387,13 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
 					return nil, err
 				}
-
+				course, err := uc.repo.GetCourseById(ctx, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
+					return nil, err
+				}
 				if !user.HideEmail {
-					go uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
+					go uc.repo.SendWelcomeCourseMail(ctx, user, course)
 				}
 			}
 		*/
@@ -275,6 +437,7 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 		lessonDto.LessonBody = LessonBody
 
 		/*
+			first, err := uc.repo.IsWelcomeCourseMailSended(ctx, userId, courseId)
 			if first {
 				logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("first lesson of the course of the user %+v", userId))
 				user, err := uc.repo.GetUserById(ctx, userId)
@@ -282,9 +445,13 @@ func (uc *CourseUsecase) GetCourseLesson(ctx context.Context, userId int, course
 					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get user by id: %+v", err))
 					return nil, err
 				}
-
+				course, err := uc.repo.GetCourseById(ctx, courseId)
+				if err != nil {
+					logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("can't get course by id: %+v", err))
+					return nil, err
+				}
 				if !user.HideEmail {
-					go uc.repo.SendWelcomeCourseMail(ctx, user, courseId)
+					go uc.repo.SendWelcomeCourseMail(ctx, user, course)
 				}
 			}
 		*/
@@ -392,12 +559,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
 
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
-
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
 			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
@@ -453,12 +614,6 @@ func (uc *CourseUsecase) GetNextLesson(ctx context.Context, userId int, courseId
 		LessonBody.Footer.NextLessonId = footers[2]
 		LessonBody.Footer.CurrentLessonId = footers[1]
 		LessonBody.Footer.PreviousLessonId = footers[0]
-
-		err = uc.repo.MarkLessonCompleted(ctx, userId, courseId, lessonId)
-		if err != nil {
-			logs.PrintLog(ctx, "GetCourseLesson", fmt.Sprintf("%+v", err))
-			return nil, err
-		}
 
 		lessonHeader, err := uc.repo.GetLessonHeaderByLessonId(ctx, userId, lessonId)
 		if err != nil {
@@ -596,6 +751,14 @@ func (uc *CourseUsecase) MarkLessonAsNotCompleted(ctx context.Context, userId in
 	return uc.repo.MarkLessonAsNotCompleted(ctx, userId, lessonId)
 }
 
+func (uc *CourseUsecase) MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error {
+	return uc.repo.MarkCourseAsCompleted(ctx, userId, courseId)
+}
+
+func (uc *CourseUsecase) MarkLessonAsCompleted(ctx context.Context, userId int, lessonId int) error {
+	return uc.repo.MarkLessonCompleted(ctx, userId, lessonId)
+}
+
 func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, courseId int) (*dto.CourseRoadmapDTO, error) {
 	var roadmap dto.CourseRoadmapDTO
 
@@ -652,6 +815,104 @@ func (uc *CourseUsecase) GetCourseRoadmap(ctx context.Context, userId int, cours
 	return &roadmap, nil
 }
 
+func (uc *CourseUsecase) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
+	return uc.repo.GetRating(ctx, userId, courseId)
+}
+
+func (uc *CourseUsecase) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return uc.repo.GetStatistic(ctx, userId, courseId)
+}
+
+func (uc *CourseUsecase) GetSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	exists, err := uc.repo.IsSertificateExists(ctx, userProfile.Id, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
+	if exists {
+		return "", errors.New("certificate already exists")
+	}
+
+	course, err := uc.repo.GetCourseById(ctx, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	date := time.Now().Format("02.01.2006")
+
+	stats, err := uc.repo.GetStatistic(ctx, userProfile.Id, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+
+	tempFileName := fmt.Sprintf("certificate_%v_%v.pdf", userProfile.Name, course.Id)
+
+	if (stats.RecievedPoints)*100/stats.AmountPoints >= 85 {
+		err = sertificate.GenerateGoodCertificate(userProfile.Name, course.Title, date, tempFileName)
+	} else {
+		err = sertificate.GenerateNormalCertificate(userProfile.Name, course.Title, date, tempFileName)
+	}
+
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("can't generate certificate: %+v", err))
+		return "", err
+	}
+	defer func() {
+		if err := os.Remove(tempFileName); err != nil {
+			logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		}
+	}()
+
+	logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("certificate for user (id: %v) and course (id: %v) was generated", userProfile.Id, course.Id))
+
+	// Открываем файл для чтения
+	file, err := os.Open(tempFileName)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to open certificate file: %+v", err))
+		return "", err
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("%+v", err))
+		}
+	}()
+
+	// Получаем информацию о файле
+	fileInfo, err := file.Stat()
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to get file info: %+v", err))
+		return "", err
+	}
+
+	fileHeader := &multipart.FileHeader{
+		Filename: tempFileName,
+		Size:     fileInfo.Size(),
+		Header:   make(textproto.MIMEHeader),
+	}
+	fileHeader.Header.Set("Content-Type", "application/pdf")
+
+	// Загружаем файл в MinIO
+	url, err := uc.repo.UploadFileToMinIO(ctx, file, fileHeader)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to upload certificate: %+v", err))
+		return "", err
+	}
+
+	err = uc.repo.SaveSertificate(ctx, userProfile.Id, course.Id, url)
+	if err != nil {
+		logs.PrintLog(ctx, "GetSertificate", fmt.Sprintf("failed to save sertificate: %+v", err))
+		return "", err
+	}
+
+	return url, nil
+}
+
+func (uc *CourseUsecase) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return uc.repo.GetGeneratedSertificate(ctx, userProfile, courseId)
+}
+
 func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.CourseDTO, userProfile *usermodels.UserProfile) error {
 	course := coursemodels.Course{
 		CreatorId:   userProfile.Id,
@@ -705,14 +966,14 @@ func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.Course
 				lesson.Order = lessonOrder + 1
 				lesson.BucketId = bucketId
 
-				if lesson.Type == "video" {
+				switch lesson.Type {
+				case "video":
 					err = uc.repo.CreateVideoLesson(ctx, lesson, bucketId)
 					if err != nil {
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 						return err
 					}
-
-				} else if lesson.Type == "text" {
+				case "text":
 					err = uc.repo.CreateTextLesson(ctx, lesson, bucketId)
 					if err != nil {
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))

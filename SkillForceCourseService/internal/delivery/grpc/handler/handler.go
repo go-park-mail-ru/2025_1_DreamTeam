@@ -2,8 +2,10 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	coursepb "skillForce/internal/delivery/grpc/proto"
 	"skillForce/internal/usecase"
+	"skillForce/pkg/logs"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -21,6 +23,22 @@ func NewCourseHandler(uc *usecase.CourseUsecase) *CourseHandler {
 
 func (h *CourseHandler) GetBucketCourses(ctx context.Context, req *coursepb.GetBucketCoursesRequest) (*coursepb.GetBucketCoursesResponse, error) {
 	courses, err := h.usecase.GetBucketCourses(ctx, mapToGetUserProfile(req.UserProfile))
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetBucketCoursesResponse(courses), nil
+}
+
+func (h *CourseHandler) GetPurchasedBucketCourses(ctx context.Context, req *coursepb.GetBucketCoursesRequest) (*coursepb.GetBucketCoursesResponse, error) {
+	courses, err := h.usecase.GetPurchasedBucketCourses(ctx, mapToGetUserProfile(req.UserProfile))
+	if err != nil {
+		return nil, err
+	}
+	return mapToGetBucketCoursesResponse(courses), nil
+}
+
+func (h *CourseHandler) GetCompletedBucketCourses(ctx context.Context, req *coursepb.GetBucketCoursesRequest) (*coursepb.GetBucketCoursesResponse, error) {
+	courses, err := h.usecase.GetCompletedBucketCourses(ctx, mapToGetUserProfile(req.UserProfile))
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +69,61 @@ func (h *CourseHandler) MarkLessonAsNotCompleted(ctx context.Context, req *cours
 	return &emptypb.Empty{}, nil
 }
 
+func (h *CourseHandler) MarkLessonAsCompleted(ctx context.Context, req *coursepb.MarkLessonAsCompletedRequest) (*emptypb.Empty, error) {
+	err := h.usecase.MarkLessonAsCompleted(ctx, int(req.UserId), int(req.LessonId))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (h *CourseHandler) MarkCourseAsCompleted(ctx context.Context, req *coursepb.MarkCourseAsCompletedRequest) (*emptypb.Empty, error) {
+	err := h.usecase.MarkCourseAsCompleted(ctx, int(req.UserId), int(req.CourseId))
+	logs.PrintLog(ctx, "MarkCourseAsCompleted", fmt.Sprintf("course id: %v, user id: %v", int(req.CourseId), int(req.UserId)))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (h *CourseHandler) GetCourseRoadmap(ctx context.Context, req *coursepb.GetCourseRoadmapRequest) (*coursepb.GetCourseRoadmapResponse, error) {
 	roadmap, err := h.usecase.GetCourseRoadmap(ctx, int(req.UserId), int(req.CourseId))
 	if err != nil {
 		return nil, err
 	}
 	return mapToCourseRoadmapResponse(roadmap), nil
+}
+
+func (h *CourseHandler) GetRating(ctx context.Context, req *coursepb.GetRatingRequest) (*coursepb.GetRatingResponse, error) {
+	rating, err := h.usecase.GetRating(ctx, int(req.UserId), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return mapToRatingResponse(rating), nil
+}
+
+func (h *CourseHandler) GetSertificate(ctx context.Context, req *coursepb.GetSertificateRequest) (*coursepb.GetSertificateResponse, error) {
+	sertificateUrl, err := h.usecase.GetSertificate(ctx, mapToGetUserProfile(req.User), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return &coursepb.GetSertificateResponse{SertificateUrl: sertificateUrl}, nil
+}
+
+func (h *CourseHandler) GetGeneratedSertificate(ctx context.Context, req *coursepb.GetSertificateRequest) (*coursepb.GetSertificateResponse, error) {
+	sertificateUrl, err := h.usecase.GetGeneratedSertificate(ctx, mapToGetUserProfile(req.User), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return &coursepb.GetSertificateResponse{SertificateUrl: sertificateUrl}, nil
+}
+
+func (h *CourseHandler) GetStatistic(ctx context.Context, req *coursepb.GetStatisticRequest) (*coursepb.GetStatisticResponse, error) {
+	stats, err := h.usecase.GetStatistic(ctx, int(req.UserId), int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return mapToStatisticResponse(stats), nil
 }
 
 func (h *CourseHandler) GetCourse(ctx context.Context, req *coursepb.GetCourseRequest) (*coursepb.GetCourseResponse, error) {

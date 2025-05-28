@@ -5,6 +5,5 @@ database:
 
 minio:
   endpoint: "217.16.21.64:8006"
-  bucket_name: "avatars"
-  video_bucket_name: "videos"
+  bucket_name: "sertificates"
   use_ssl: false

@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"skillForce/config"
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
 	usermodels "skillForce/internal/models/user"
+	"skillForce/internal/repository/kafka"
+	"skillForce/internal/repository/minio"
 	"skillForce/internal/repository/postgres"
 )
 
 type CourseInfrastructure struct {
-	Database *postgres.Database
+	Database      *postgres.Database
+	Minio         *minio.Minio
+	KafkaProducer *kafka.Producer
 }
 
 func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
@@ -22,8 +27,16 @@ func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName)
+	if err != nil {
+		log.Fatalf("Failed to connect to MinIO: %v", err)
+	}
+
+	kafkaProducer := kafka.NewKafkaProducer()
 	return &CourseInfrastructure{
-		Database: database,
+		Database:      database,
+		Minio:         mn,
+		KafkaProducer: kafkaProducer,
 	}
 }
 
@@ -35,8 +48,20 @@ func (i *CourseInfrastructure) GetBucketCourses(ctx context.Context) ([]*coursem
 	return i.Database.GetBucketCourses(ctx)
 }
 
+func (i *CourseInfrastructure) GetPurchasedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	return i.Database.GetPurchasedBucketCourses(ctx, userId)
+}
+
+func (i *CourseInfrastructure) GetCompletedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	return i.Database.GetCompletedBucketCourses(ctx, userId)
+}
+
 func (i *CourseInfrastructure) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutRating []*coursemodels.Course) (map[int]float32, error) {
 	return i.Database.GetCoursesRaitings(ctx, bucketCoursesWithoutRating)
+}
+
+func (i *CourseInfrastructure) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
+	return i.Database.GetRating(ctx, userId, courseId)
 }
 
 func (i *CourseInfrastructure) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags []*coursemodels.Course) (map[int][]string, error) {
@@ -59,8 +84,12 @@ func (i *CourseInfrastructure) GetLessonFooters(ctx context.Context, currentLess
 	return i.Database.GetLessonFooters(ctx, currentLessonId)
 }
 
-func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, courseId int, lessonId int) error {
-	return i.Database.MarkLessonCompleted(ctx, userId, courseId, lessonId)
+func (i *CourseInfrastructure) MarkLessonCompleted(ctx context.Context, userId int, lessonId int) error {
+	return i.Database.MarkLessonCompleted(ctx, userId, lessonId)
+}
+
+func (i *CourseInfrastructure) MarkCourseAsCompleted(ctx context.Context, userId int, courseId int) error {
+	return i.Database.MarkCourseAsCompleted(ctx, userId, courseId)
 }
 
 func (i *CourseInfrastructure) MarkLessonAsNotCompleted(ctx context.Context, userId int, lessonId int) error {
@@ -103,6 +132,10 @@ func (i *CourseInfrastructure) IsUserPurchasedCourse(ctx context.Context, userId
 	return i.Database.IsUserPurchasedCourse(ctx, userId, courseId)
 }
 
+func (i *CourseInfrastructure) IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsUserCompletedCourse(ctx, userId, courseId)
+}
+
 func (i *CourseInfrastructure) GetLessonVideo(ctx context.Context, lessonId int) ([]string, error) {
 	return i.Database.GetLessonVideo(ctx, lessonId)
 }
@@ -135,19 +168,8 @@ func (i *CourseInfrastructure) CreateVideoLesson(ctx context.Context, lesson *co
 	return i.Database.CreateVideoLesson(ctx, lesson, bucketId)
 }
 
-func (i *CourseInfrastructure) CreateSurvey(ctx context.Context, survey *coursemodels.Survey, userProfile *usermodels.UserProfile) error {
-	return i.Database.CreateSurvey(ctx, survey, userProfile)
-}
-
 func (i *CourseInfrastructure) SendSurveyQuestionAnswer(ctx context.Context, surveyAnswerDto *coursemodels.SurveyAnswer, userProfile *usermodels.UserProfile) error {
 	return i.Database.SendSurveyQuestionAnswer(ctx, surveyAnswerDto, userProfile)
-}
-func (i *CourseInfrastructure) GetSurvey(ctx context.Context) (*coursemodels.Survey, error) {
-	return i.Database.GetSurvey(ctx)
-}
-
-func (i *CourseInfrastructure) GetMetrics(ctx context.Context, metric string) (*coursemodels.SurveyMetric, error) {
-	return i.Database.GetMetrics(ctx, metric)
 }
 
 func (i *CourseInfrastructure) AddCourseToFavourites(ctx context.Context, courseId int, userId int) error {
@@ -184,4 +206,32 @@ func (i *CourseInfrastructure) AnswerQuestion(ctx context.Context, question_id i
 
 func (i *CourseInfrastructure) SearchCoursesByTitle(ctx context.Context, keyword string) ([]*coursemodels.Course, error) {
 	return i.Database.SearchCoursesByTitle(ctx, keyword)
+}
+
+func (i *CourseInfrastructure) UploadFileToMinIO(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return i.Minio.UploadFileToMinIO(ctx, file, fileHeader)
+}
+
+func (i *CourseInfrastructure) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	return i.Database.GetGeneratedSertificate(ctx, userProfile, courseId)
+}
+
+func (i *CourseInfrastructure) SaveSertificate(ctx context.Context, userId int, courseId int, sertificate string) error {
+	return i.Database.SaveSertificate(ctx, userId, courseId, sertificate)
+}
+
+func (i *CourseInfrastructure) IsSertificateExists(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsSertificateExists(ctx, userId, courseId)
+}
+
+func (i *CourseInfrastructure) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	return i.Database.GetStatistic(ctx, userId, courseId)
+}
+
+func (i *CourseInfrastructure) SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error {
+	return i.KafkaProducer.SendWelcomeCourseMail(ctx, user, course)
+}
+
+func (i *CourseInfrastructure) IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error) {
+	return i.Database.IsWelcomeCourseMailSended(ctx, userId, courseId)
 }

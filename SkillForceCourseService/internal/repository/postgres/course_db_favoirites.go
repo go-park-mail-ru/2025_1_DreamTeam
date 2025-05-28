@@ -49,7 +49,11 @@ func (d *Database) GetFavouriteCourses(ctx context.Context, userId int) ([]*cour
 		logs.PrintLog(ctx, "GetFavouriteCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -79,7 +83,11 @@ func (d *Database) GetCoursesFavouriteStatus(ctx context.Context, bucketCourses 
 		logs.PrintLog(ctx, "GetCoursesFavouriteStatus", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var courseId int

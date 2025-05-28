@@ -7,6 +7,7 @@ import (
 
 	coursemodels "skillForce/internal/models/course"
 	"skillForce/internal/models/dto"
+	usermodels "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
 )
 
@@ -25,7 +26,11 @@ func (d *Database) SearchCoursesByTitle(ctx context.Context, keyword string) ([]
 		logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -50,7 +55,11 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var course coursemodels.Course
@@ -63,6 +72,74 @@ func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course
 	}
 
 	logs.PrintLog(ctx, "GetBucketCourses", "get bucket ourses from db")
+
+	return bucketCourses, nil
+}
+
+func (d *Database) GetPurchasedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	var bucketCourses []*coursemodels.Course
+	query := `
+	SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
+	FROM COURSE c
+	JOIN SIGNUPS s ON s.course_id = c.id
+	WHERE s.user_id = $1
+	`
+	rows, err := d.conn.Query(query, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "GetPurchasedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("get course %+v from db", course))
+		bucketCourses = append(bucketCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "GetPurchasedBucketCourses", "get purchased bucket ourses from db")
+
+	return bucketCourses, nil
+}
+
+func (d *Database) GetCompletedBucketCourses(ctx context.Context, userId int) ([]*coursemodels.Course, error) {
+	var bucketCourses []*coursemodels.Course
+	query := `
+	SELECT c.id, c.creator_user_id, c.title, c.description, c.avatar_src, c.price, c.time_to_pass 
+	FROM COURSE c
+	JOIN COMPLETED_COURSES s ON s.course_id = c.id
+	WHERE s.user_id = $1
+	`
+	rows, err := d.conn.Query(query, userId)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+		}
+	}()
+
+	for rows.Next() {
+		var course coursemodels.Course
+		if err := rows.Scan(&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass); err != nil {
+			logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		logs.PrintLog(ctx, "GetCompletedBucketCourses", fmt.Sprintf("get course %+v from db", course))
+		bucketCourses = append(bucketCourses, &course)
+	}
+
+	logs.PrintLog(ctx, "GetCompletedBucketCourses", "get purchased bucket ourses from db")
 
 	return bucketCourses, nil
 }
@@ -96,7 +173,11 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows1.Close()
+	defer func() {
+		if err := rows1.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows1.Next() {
 		var completedLessonId int
@@ -118,7 +199,11 @@ func (d *Database) GetBucketLessons(ctx context.Context, userId int, courseId in
 		logs.PrintLog(ctx, "GetBucketLessons", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows2.Close()
+	defer func() {
+		if err := rows2.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows2.Next() {
 		var lesson coursemodels.LessonPoint
@@ -162,7 +247,11 @@ func (d *Database) GetLessonBlocks(ctx context.Context, currentLessonId int) ([]
 		logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetLessonBlocks", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var block string
@@ -213,7 +302,11 @@ func (d *Database) GetLessonTest(ctx context.Context, currentLessonId int, user_
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetLessonTest", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	var q *dto.Test
 
@@ -340,7 +433,10 @@ func (d *Database) AnswerQuiz(ctx context.Context, question_id int, answer_id in
 		Result: isTrue,
 	}
 
-	d.MarkLessonCompleted(ctx, user_id, course_id, question_id)
+	err = d.MarkLessonCompleted(ctx, user_id, question_id)
+	if err != nil {
+		logs.PrintLog(ctx, "AnswerQuiz", fmt.Sprintf("can't mark lesson completed: %+v", err))
+	}
 
 	return res, nil
 
@@ -385,7 +481,11 @@ func (d *Database) GetCourseParts(ctx context.Context, courseId int) ([]*coursem
 		logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetCourseParts", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var coursePart coursemodels.CoursePart
@@ -411,7 +511,11 @@ func (d *Database) GetPartBuckets(ctx context.Context, partId int) ([]*coursemod
 		logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "GetPartBuckets", fmt.Sprintf("%+v", err))
+		}
+	}()
 
 	for rows.Next() {
 		var bucket coursemodels.LessonBucket
@@ -433,4 +537,14 @@ func (d *Database) GetVideoUrl(ctx context.Context, lessonId int) (string, error
 		return "", err
 	}
 	return videoUrl, nil
+}
+
+func (d *Database) GetGeneratedSertificate(ctx context.Context, userProfile *usermodels.UserProfile, courseId int) (string, error) {
+	var sertificateURL string
+	err := d.conn.QueryRow("SELECT sertificate_src FROM SERTIFICATES WHERE user_id = $1 AND course_id = $2", userProfile.Id, courseId).Scan(&sertificateURL)
+	if err != nil {
+		logs.PrintLog(ctx, "GetGeneratedSertificate", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	return sertificateURL, nil
 }

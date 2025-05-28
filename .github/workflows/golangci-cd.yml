@@ -1,0 +1,72 @@
+name: Run golangci-lint, tests and deploy
+
+on:
+  push:
+    branches: [ "main", "master", "microservices" ]
+  pull_request:
+    branches: [ "main", "master", "microservices" ]
+
+jobs:
+  lint-and-test-all:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          "SkillForceBillingService",
+          "SkillForceCourseService",
+          "SkillForceMailService",
+          "SkillForceMainService",
+          "SkillForceUserService"
+        ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build golangci-lint docker image for ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          docker build -f ../Dockerfile.golangci-lint -t golangci-lint:1.23 .
+      
+      - name: Run golangci-lint on ${{ matrix.service }}
+        run: |
+          docker run --rm golangci-lint:1.23
+      
+      - name: Run tests for ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          go test -coverpkg=./... -coverprofile=cover.out.tmp ./...
+          grep -v "mock" cover.out.tmp > cover.out
+          go tool cover -func=cover.out
+  
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: lint-and-test-all
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd deploy/2025_1_DreamTeam/
+            sudo git pull origin main
+
+            echo "Writing .env files..."
+            echo "${{ secrets.ENV_MAIN }}" | sudo tee SkillForceMainService/config/.env > /dev/null
+            echo "${{ secrets.ENV_USER }}" | sudo tee SkillForceUserService/config/.env > /dev/null
+            echo "${{ secrets.ENV_COURSE }}" | sudo tee SkillForceCourseService/config/.env > /dev/null
+            echo "${{ secrets.ENV_BILLING }}" | sudo tee SkillForceBillingService/config/.env > /dev/null
+            echo "${{ secrets.ENV_MAIL }}" | sudo tee SkillForceMailService/config/.env > /dev/null
+
+            echo "Rebuilding and restarting services..."
+            sudo docker compose up -d --build
+ 

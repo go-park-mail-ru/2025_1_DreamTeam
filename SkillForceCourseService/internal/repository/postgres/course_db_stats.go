@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	coursemodels "skillForce/internal/models/course"
+	"skillForce/internal/models/dto"
 	"skillForce/pkg/logs"
 )
 
@@ -34,7 +35,11 @@ func (d *Database) GetCoursesRaitings(ctx context.Context, bucketCoursesWithoutR
 			logs.PrintLog(ctx, "GetCoursesRaitings", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+			}
+		}()
 
 		var sumMetrics float32
 		var countMetrics float32
@@ -75,7 +80,11 @@ func (d *Database) GetCoursesTags(ctx context.Context, bucketCoursesWithoutTags 
 			logs.PrintLog(ctx, "GetCoursesTags", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+			}
+		}()
 
 		var tags []string
 
@@ -114,4 +123,154 @@ func (d *Database) IsUserPurchasedCourse(ctx context.Context, userId int, course
 		return false, err
 	}
 	return exists, nil
+}
+
+func (d *Database) IsUserCompletedCourse(ctx context.Context, userId int, courseId int) (bool, error) {
+	var exists bool
+	err := d.conn.QueryRow("SELECT EXISTS (SELECT 1 FROM COMPLETED_COURSES WHERE user_id = $1 AND course_id = $2)",
+		userId, courseId).Scan(&exists)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		logs.PrintLog(ctx, "IsUserCompletedCourse", fmt.Sprintf("%+v", err))
+		return false, nil
+	}
+
+	if err != nil {
+		logs.PrintLog(ctx, "IsUserCompletedCourse", fmt.Sprintf("%+v", err))
+		return false, err
+	}
+	return exists, nil
+}
+
+func (d *Database) GetRating(ctx context.Context, userId int, courseId int) (*dto.Raiting, error) {
+	query := `
+		SELECT *
+		FROM (
+			SELECT 
+				u.name, 
+				u.avatar_src, 
+				u.id,
+				-- Итоговый балл (пройденные уроки + правильные тесты × 5)
+				(
+					-- Пройденные уроки
+					(SELECT COUNT(*) FROM lesson_checkpoint lc 
+					JOIN lesson l ON lc.lesson_id = l.id 
+					JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id 
+					JOIN part p ON lb.part_id = p.id 
+					WHERE lc.user_id = u.id AND p.course_id = $1 AND l.type IN ('text', 'video')) +
+					-- Правильные ответы на тесты (×5)
+					(SELECT COUNT(ua.id) * 5
+					FROM user_answers ua
+					JOIN lesson l ON ua.question_lesson_id = l.id
+					JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+					JOIN part p ON lb.part_id = p.id
+					WHERE ua.user_id = u.id AND p.course_id = $1 AND ua.is_right = true)
+				) AS user_score
+			FROM 
+				usertable u
+		) t
+		WHERE user_score > 0
+		ORDER BY user_score DESC
+		LIMIT 15;
+    `
+
+	rows, err := d.conn.Query(query, courseId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query database: %v", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logs.PrintLog(ctx, "SearchCoursesByTitle", fmt.Sprintf("%+v", err))
+		}
+	}()
+
+	var rating []dto.RaitingItem
+
+	for rows.Next() {
+		var item dto.RaitingItem
+		var userScore int
+		var newUserId int
+		err := rows.Scan(&item.User.Name, &item.User.AvatarSrc, &newUserId, &userScore)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+		item.Rating = userScore
+		rating = append(rating, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		logs.PrintLog(ctx, "GetRating", fmt.Sprintf("%+v", err))
+		return nil, fmt.Errorf("error during rows iteration: %v", err)
+	}
+
+	resultRatingList := dto.Raiting{Rating: rating}
+	return &resultRatingList, nil
+}
+
+func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (*dto.UserStats, error) {
+	stats := &dto.UserStats{}
+
+	err := d.conn.QueryRowContext(ctx, `
+		SELECT 
+            COUNT(CASE WHEN l.type = 'text' THEN 1 END) as text_lessons,
+            COUNT(CASE WHEN l.type = 'video' THEN 1 END) as video_lessons
+        FROM lesson l
+        JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+        JOIN part p ON lb.part_id = p.id
+        WHERE p.course_id = $1`, courseId).Scan(&stats.AmountTextLessons, &stats.AmountVideoLessons)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total lessons count: %w", err)
+	}
+
+	err = d.conn.QueryRowContext(ctx, `
+		SELECT 
+			COUNT(CASE WHEN l.type = 'text' THEN 1 END) as completed_text,
+			COUNT(CASE WHEN l.type = 'video' THEN 1 END) as completed_video
+		FROM lesson_checkpoint lc
+		JOIN lesson l ON lc.lesson_id = l.id
+		WHERE lc.user_id = $1 AND lc.course_id = $2`, userId, courseId).Scan(&stats.CompletedTextLessons, &stats.CompletedVideoLessons)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed lessons count: %w", err)
+	}
+
+	err = d.conn.QueryRowContext(ctx, `
+		SELECT COUNT(qt.id) AS total_quiz_tasks
+		FROM quiz_task qt
+		JOIN test_lesson tl ON qt.lesson_test_id = tl.id
+		JOIN lesson l ON tl.lesson_id = l.id
+		JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+		JOIN part p ON lb.part_id = p.id
+		WHERE p.course_id = $1;
+		`, courseId).Scan(&stats.AmountTests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total tests count: %w", err)
+	}
+
+	err = d.conn.QueryRow(`
+        SELECT COUNT(ua.id)
+		FROM user_answers ua
+		JOIN lesson l ON ua.question_lesson_id = l.id
+		JOIN lesson_bucket lb ON l.lesson_bucket_id = lb.id
+		JOIN part p ON lb.part_id = p.id
+		WHERE ua.user_id = $1
+		AND p.course_id = $2
+		AND ua.is_right = true;`,
+		userId, courseId).Scan(&stats.CompletedTests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completed tests count: %w", err)
+	}
+
+	totalLessons := stats.AmountTextLessons + stats.AmountVideoLessons
+	completedLessons := stats.CompletedTextLessons + stats.CompletedVideoLessons
+
+	if totalLessons > 0 {
+		stats.Percentage = (completedLessons * 100) / totalLessons
+	}
+
+	stats.AmountPoints = stats.AmountTextLessons + stats.AmountVideoLessons + (stats.AmountTests * 5)
+	stats.RecievedPoints = stats.CompletedTextLessons + stats.CompletedVideoLessons + (stats.CompletedTests * 5)
+
+	logs.PrintLog(ctx, "GetStatistic", fmt.Sprintf("stats: %+v", stats))
+
+	return stats, nil
 }
