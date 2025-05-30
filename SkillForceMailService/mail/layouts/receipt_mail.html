@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подтверждение оплаты курса</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      color: #333333;
+    }
+    .container {
+      background-color: #ffffff;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2a7ae2;
+      margin-top: 0;
+    }
+    .highlight-box {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin: 25px 0;
+      border-left: 4px solid #2a7ae2;
+    }
+    .button {
+      display: inline-block;
+      background-color: #2a7ae2;
+      color: white !important;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888888;
+      border-top: 1px solid #eeeeee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>{{ .UserName }}, оплата получена!</h1>
+    
+    <p>Благодарим вас за оплату курса <strong>{{ .CourseName }}</strong>.</p>
+    
+    <div class="highlight-box">
+      <p>Ваш доступ к курсу активирован. Для просмотра чека об оплате нажмите на кнопку ниже:</p>
+      <a href="{{ .ReceiptUrl }}" class="button">Открыть чек об оплате</a>
+    </div>
+    
+    <p>Если у вас возникли вопросы или нужна помощь, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+    
+    <div class="footer">
+      <p>С уважением,<br>Команда SkillForce</p>
+      <p><small>Это автоматическое письмо, пожалуйста, не отвечайте на него.</small></p>
+    </div>
+  </div>
+</body>
+</html>

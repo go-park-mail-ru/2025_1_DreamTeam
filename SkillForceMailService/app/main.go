@@ -76,8 +76,8 @@ func handleMessage(mailClient *mail.Mail, msg *kafka.Message) {
 		sendErr = mailClient.SendRegMail(ctx, message)
 	case "send_welcome_course_mail":
 		sendErr = mailClient.SendWelcomeCourseMail(ctx, message)
-	case "send_middle_course_mail":
-		// TODO: implement send_middle_course_mail
+	case "send_receipt_mail":
+		sendErr = mailClient.SendReceiptMail(ctx, message)
 	}
 
 	if sendErr != nil {

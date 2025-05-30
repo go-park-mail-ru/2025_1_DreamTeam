@@ -51,6 +51,11 @@ func (uc *BillingUsecase) UpdateBilling(ctx context.Context, req *billingpb.YooK
 			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
+
+		err = uc.SendReceipt()
+		if err != nil {
+			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("problem with sending receipt: %+v", err))
+		}
 		return &emptypb.Empty{}, nil
 	}
 	return &emptypb.Empty{}, nil
