@@ -1155,6 +1155,12 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !userProfile.IsAdmin {
+		logs.PrintLog(r.Context(), "CreateCourse", "user is not admin")
+		response.SendErrorResponse("user is not admin", http.StatusUnauthorized, w, r)
+		return
+	}
+
 	var CourseInput dto.CourseDTO
 	if err := easyjson.UnmarshalFromReader(r.Body, &CourseInput); err != nil {
 		logs.PrintLog(r.Context(), "CreateCourse", fmt.Sprintf("%+v", err))
