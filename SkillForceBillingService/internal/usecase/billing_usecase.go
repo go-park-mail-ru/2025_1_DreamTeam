@@ -64,12 +64,15 @@ func (uc *BillingUsecase) UpdateBilling(ctx context.Context, req *billingpb.YooK
 			return nil, err
 		}
 
-		go func() {
-			err = uc.repo.SendReceipt(ctx, user, req.PaymentId, course)
-			if err != nil {
-				logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("problem with sending receipt: %+v", err))
-			}
-		}()
+		if !user.HideEmail {
+			go func() {
+				err = uc.repo.SendReceipt(ctx, user, req.PaymentId, course)
+				if err != nil {
+					logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("problem with sending receipt: %+v", err))
+				}
+			}()
+		}
+
 		return &emptypb.Empty{}, nil
 	}
 	return &emptypb.Empty{}, nil
