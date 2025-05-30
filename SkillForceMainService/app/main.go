@@ -76,7 +76,6 @@ func main() {
 	siteMux.HandleFunc("/api/GetQuestionTestLesson", courseHandler.GetQuestionTestLesson)
 	siteMux.HandleFunc("/api/AnswerQuestion", courseHandler.AnswerQuestion)
 	siteMux.HandleFunc("/api/getStatistic", courseHandler.GetStatistic)
-
 	siteMux.HandleFunc("/api/addRating", courseHandler.AddRating)
 
 	siteMux.HandleFunc("/api/createPaymentHandler", billingHandler.CreatePaymentHandler)
