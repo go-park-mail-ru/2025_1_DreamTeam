@@ -12,6 +12,7 @@ import (
 	"skillForce/internal/models/dto"
 	models "skillForce/internal/models/user"
 	"skillForce/pkg/logs"
+	"strings"
 
 	"github.com/badoux/checkmail"
 	"github.com/mailru/easyjson"
@@ -118,7 +119,7 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	_, err = h.userClient.ValidUser(r.Context(), grpcUser)
 
 	if err != nil {
-		if errors.Is(err, errors.New("email exists")) {
+		if strings.Contains(err.Error(), "email exists") {
 			logs.PrintLog(r.Context(), "RegisterUser", "email exists")
 			response.SendErrorResponse("email exists", http.StatusNotFound, w, r)
 			return
@@ -164,12 +165,12 @@ func (h *Handler) ConfirmUserEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	registerResp, err := h.userClient.RegisterUser(r.Context(), grpcToken)
 	if err != nil {
-		if errors.Is(err, errors.New("invalid token")) {
+		if strings.Contains(err.Error(), "invalid token") {
 			logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
 			response.SendErrorResponse("invalid token", http.StatusBadRequest, w, r)
 			return
 		}
-		if errors.Is(err, errors.New("email exists")) {
+		if strings.Contains(err.Error(), "email exists") {
 			logs.PrintLog(r.Context(), "ConfirmUserEmail", fmt.Sprintf("%+v", err))
 			response.SendErrorResponse("email exists", http.StatusNotFound, w, r)
 			return
