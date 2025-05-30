@@ -318,6 +318,18 @@ func (uc *CourseUsecase) GetCourse(ctx context.Context, courseId int, userProfil
 			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("can't check if user completed course: %+v", err))
 			return nil, err
 		}
+
+		courseFavourits, err := uc.repo.GetCoursesFavouriteStatus(ctx, bucketCourses, userProfile.Id)
+		if err != nil {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+		isFavourite, ok := courseFavourits[course.Id]
+		if !ok {
+			logs.PrintLog(ctx, "GetCourse", fmt.Sprintf("no favourite status for course %d", course.Id))
+			isFavourite = false
+		}
+		resultBucketCourses[0].IsFavorite = isFavourite
 	}
 
 	logs.PrintLog(ctx, "GetCourse", "get course with ratings and tags from db, mapping to dto")
