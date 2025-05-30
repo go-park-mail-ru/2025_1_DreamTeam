@@ -34,7 +34,7 @@ func GenerateGoodCertificate(name, course, dateStr string, outputFile string) er
 	pdf.SetTextColor(34, 63, 151)
 	pdf.SetFont("DejaVu", "", 28)
 	pdf.SetXY(40, 20)
-	pdf.LinkString(40, 20, 60, 10, "http://217.16.21.64/")
+	pdf.LinkString(40, 20, 60, 10, "https://skill-force.ru/")
 	pdf.CellFormat(0, 10, "SkillForce", "", 1, "L", false, 0, "")
 
 	pdf.SetFont("DejaVu", "", 14)
