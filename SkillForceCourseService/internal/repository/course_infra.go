@@ -27,7 +27,7 @@ func NewCourseInfrastructure(conf *config.Config) *CourseInfrastructure {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName)
+	mn, err := minio.NewMinio(conf.Minio.Endpoint, conf.Minio.AccessKey, conf.Minio.SecretAccessKey, conf.Minio.UseSSL, conf.Minio.BucketName, conf.Minio.CoursesBucketName)
 	if err != nil {
 		log.Fatalf("Failed to connect to MinIO: %v", err)
 	}
@@ -238,4 +238,12 @@ func (i *CourseInfrastructure) IsWelcomeCourseMailSended(ctx context.Context, us
 
 func (i *CourseInfrastructure) AddRaiting(ctx context.Context, userId int, courseId int, rating int) error {
 	return i.Database.AddRaiting(ctx, userId, courseId, rating)
+}
+
+func (i *CourseInfrastructure) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return i.Minio.UploadCourseAvatarToMinIO(ctx, file, fileHeader)
+}
+
+func (i *CourseInfrastructure) SaveCourseImage(ctx context.Context, photo_url string, courseId int) (string, error) {
+	return i.Database.SaveCourseImage(ctx, photo_url, courseId)
 }

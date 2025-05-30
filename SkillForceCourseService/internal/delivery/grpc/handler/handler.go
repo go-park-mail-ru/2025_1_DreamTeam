@@ -1,8 +1,12 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/textproto"
 	coursepb "skillForce/internal/delivery/grpc/proto"
 	"skillForce/internal/usecase"
 	"skillForce/pkg/logs"
@@ -212,4 +216,66 @@ func (h *CourseHandler) AddRaiting(ctx context.Context, req *coursepb.AddRaiting
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (h *CourseHandler) UploadFile(ctx context.Context, req *coursepb.UploadFileRequest) (*coursepb.UploadFileResponse, error) {
+	file, fileHeader, err := ConvertToMultipart(req.FileData, req.FileName, req.ContentType)
+	if err != nil {
+		return nil, err
+	}
+	url, err := h.usecase.UploadFile(ctx, file, fileHeader)
+	if err != nil {
+		return nil, err
+	}
+	return &coursepb.UploadFileResponse{Url: url}, nil
+}
+
+func (h *CourseHandler) SaveCourseImage(ctx context.Context, req *coursepb.SaveCourseImageRequest) (*coursepb.SaveCourseImageResponse, error) {
+	newURL, err := h.usecase.SaveCourseImage(ctx, req.Url, int(req.CourseId))
+	if err != nil {
+		return nil, err
+	}
+	return &coursepb.SaveCourseImageResponse{NewPhtotoUrl: newURL}, nil
+}
+
+func ConvertToMultipart(fileData []byte, fileName, contentType string) (multipart.File, *multipart.FileHeader, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Создаем заголовки для файла
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="file"; filename="`+fileName+`"`)
+	h.Set("Content-Type", contentType)
+
+	// Пишем файл в multipart.Writer
+	part, err := writer.CreatePart(h)
+	if err != nil {
+		return nil, nil, err
+	}
+	if _, err := io.Copy(part, bytes.NewReader(fileData)); err != nil {
+		return nil, nil, err
+	}
+	err = writer.Close()
+	if err != nil {
+		logs.PrintLog(context.Background(), "ConvertToMultipart", fmt.Sprintf("%+v", err))
+	}
+
+	// Парсим то, что получилось, как multipart/form-data
+	r := multipart.NewReader(body, writer.Boundary())
+	form, err := r.ReadForm(int64(len(fileData)) + 1024) // выделяем буфер
+	if err != nil {
+		return nil, nil, err
+	}
+
+	files := form.File["file"]
+	if len(files) == 0 {
+		return nil, nil, io.EOF
+	}
+	fh := files[0]
+	f, err := fh.Open()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return f, fh, nil
 }

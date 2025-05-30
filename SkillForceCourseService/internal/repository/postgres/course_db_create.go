@@ -206,3 +206,17 @@ func (d *Database) SendSurveyQuestionAnswer(ctx context.Context, surveyQuestionA
 
 	return nil
 }
+
+func (d *Database) SaveCourseImage(ctx context.Context, url string, courseId int) (string, error) {
+	query := `
+		UPDATE course
+		SET avatars_src = $1
+		WHERE id = $2
+	`
+	_, err := d.conn.Exec(query, url, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "SaveCourseImage", fmt.Sprintf("%+v", err))
+		return "", err
+	}
+	return url, nil
+}

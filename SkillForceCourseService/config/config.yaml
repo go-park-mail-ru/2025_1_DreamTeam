@@ -6,4 +6,5 @@ database:
 minio:
   endpoint: "217.16.21.64:8006"
   bucket_name: "sertificates"
+  courses_bucket_name: "courses-avatars"
   use_ssl: false

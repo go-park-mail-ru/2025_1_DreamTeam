@@ -18,11 +18,12 @@ type Config struct {
 	}
 
 	Minio struct {
-		Endpoint        string
-		AccessKey       string
-		SecretAccessKey string
-		BucketName      string
-		UseSSL          bool
+		Endpoint          string
+		AccessKey         string
+		SecretAccessKey   string
+		BucketName        string
+		CoursesBucketName string
+		UseSSL            bool
 	}
 
 	Secrets struct {
@@ -45,9 +46,10 @@ type yamlConfig struct {
 	} `yaml:"database"`
 
 	Minio struct {
-		Endpoint   string `yaml:"endpoint"`
-		BucketName string `yaml:"bucket_name"`
-		UseSSL     bool   `yaml:"use_ssl"`
+		Endpoint          string `yaml:"endpoint"`
+		BucketName        string `yaml:"bucket_name"`
+		CoursesBucketName string `yaml:"courses_bucket_name"`
+		UseSSL            bool   `yaml:"use_ssl"`
 	} `yaml:"minio"`
 }
 
@@ -83,17 +85,19 @@ func LoadConfig() *Config {
 			Name:     ycfg.Database.Name,
 		},
 		Minio: struct {
-			Endpoint        string
-			AccessKey       string
-			SecretAccessKey string
-			BucketName      string
-			UseSSL          bool
+			Endpoint          string
+			AccessKey         string
+			SecretAccessKey   string
+			BucketName        string
+			CoursesBucketName string
+			UseSSL            bool
 		}{
-			Endpoint:        ycfg.Minio.Endpoint,
-			AccessKey:       os.Getenv("MINIO_ACCESS_KEY"),
-			SecretAccessKey: os.Getenv("MINIO_SECRET_KEY"),
-			BucketName:      ycfg.Minio.BucketName,
-			UseSSL:          ycfg.Minio.UseSSL,
+			Endpoint:          ycfg.Minio.Endpoint,
+			AccessKey:         os.Getenv("MINIO_ACCESS_KEY"),
+			SecretAccessKey:   os.Getenv("MINIO_SECRET_KEY"),
+			BucketName:        ycfg.Minio.BucketName,
+			CoursesBucketName: ycfg.Minio.CoursesBucketName,
+			UseSSL:            ycfg.Minio.UseSSL,
 		},
 		Secrets: struct{ JwtSessionSecret string }{
 			JwtSessionSecret: os.Getenv("JWT_SESSION_SECRET"),

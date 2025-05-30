@@ -1209,3 +1209,11 @@ func (uc *CourseUsecase) AddRating(ctx context.Context, course_id int, user_id i
 
 	return nil
 }
+
+func (uc *CourseUsecase) UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+	return uc.repo.UploadFile(ctx, file, fileHeader)
+}
+
+func (uc *CourseUsecase) SaveCourseImage(ctx context.Context, url string, courseId int) (string, error) {
+	return uc.repo.SaveCourseImage(ctx, url, courseId)
+}

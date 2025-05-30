@@ -66,4 +66,7 @@ type CourseRepository interface {
 
 	SendWelcomeCourseMail(ctx context.Context, user *usermodels.User, course *coursemodels.Course) error
 	IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error)
+
+	UploadFile(ctx context.Context, file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+	SaveCourseImage(ctx context.Context, url string, courseId int) (string, error)
 }

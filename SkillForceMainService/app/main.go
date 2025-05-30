@@ -67,7 +67,6 @@ func main() {
 	siteMux.HandleFunc("/api/getCourseRoadmap", courseHandler.GetCourseRoadmap)
 	siteMux.HandleFunc("/api/getRating", courseHandler.GetRating)
 	siteMux.HandleFunc("/api/video", courseHandler.ServeVideo)
-	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
 	siteMux.HandleFunc("/api/addCourseToFavourites", courseHandler.AddCourseToFavourites)
 	siteMux.HandleFunc("/api/deleteCourseFromFavourites", courseHandler.DeleteCourseFromFavourites)
 	siteMux.HandleFunc("/api/getFavouriteCourses", courseHandler.GetFavouriteCourses)
@@ -77,6 +76,9 @@ func main() {
 	siteMux.HandleFunc("/api/AnswerQuestion", courseHandler.AnswerQuestion)
 	siteMux.HandleFunc("/api/getStatistic", courseHandler.GetStatistic)
 	siteMux.HandleFunc("/api/addRating", courseHandler.AddRating)
+
+	siteMux.Handle("/api/updateCoursePhoto", middleware.CSRFMiddleware(http.HandlerFunc(courseHandler.AddImageToCourse)))
+	siteMux.HandleFunc("/api/createCourse", courseHandler.CreateCourse)
 
 	siteMux.HandleFunc("/api/createPaymentHandler", billingHandler.CreatePaymentHandler)
 	siteMux.HandleFunc("/api/webhookHandler", billingHandler.WebhookHandler)
