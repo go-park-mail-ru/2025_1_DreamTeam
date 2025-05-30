@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd deploy/2025_1_DreamTeam/
-            sudo git pull origin main
+            sudo git pull origin microservices
 
             echo "Writing .env files..."
             echo "${{ secrets.ENV_MAIN }}" | sudo tee SkillForceMainService/config/.env > /dev/null

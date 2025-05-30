@@ -253,3 +253,9 @@ type WebhookHandlerData struct {
 		Status string `json:"status"`
 	} `json:"object"`
 }
+
+//easyjson:json
+type AddRating struct {
+	CourseID int32 `json:"course_id"`
+	Rating   int32 `json:"rating"`
+}

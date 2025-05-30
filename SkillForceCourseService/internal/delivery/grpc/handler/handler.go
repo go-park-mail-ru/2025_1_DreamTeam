@@ -205,3 +205,11 @@ func (h *CourseHandler) SearchCoursesByTitle(ctx context.Context, req *coursepb.
 	}
 	return mapToGetBucketCoursesResponse(courses), nil
 }
+
+func (h *CourseHandler) AddRaiting(ctx context.Context, req *coursepb.AddRaitingRequest) (*emptypb.Empty, error) {
+	err := h.usecase.AddRating(ctx, int(req.CourseId), int(req.UserId), int(req.Raiting))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

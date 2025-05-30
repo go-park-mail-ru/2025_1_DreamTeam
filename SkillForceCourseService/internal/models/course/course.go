@@ -84,3 +84,9 @@ type Test struct {
 	RightAnswerID int64
 	Answers       []QuizAnswer
 }
+
+type Raiting struct {
+	UserID   int32
+	CourseID int32
+	Raiting  int
+}

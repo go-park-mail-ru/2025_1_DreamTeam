@@ -235,3 +235,7 @@ func (i *CourseInfrastructure) SendWelcomeCourseMail(ctx context.Context, user *
 func (i *CourseInfrastructure) IsWelcomeCourseMailSended(ctx context.Context, userId int, courseId int) (bool, error) {
 	return i.Database.IsWelcomeCourseMailSended(ctx, userId, courseId)
 }
+
+func (i *CourseInfrastructure) AddRaiting(ctx context.Context, userId int, courseId int, rating int) error {
+	return i.Database.AddRaiting(ctx, userId, courseId, rating)
+}

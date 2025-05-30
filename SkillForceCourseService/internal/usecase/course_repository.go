@@ -49,6 +49,8 @@ type CourseRepository interface {
 
 	GetUserById(ctx context.Context, userId int) (*usermodels.User, error)
 
+	AddRaiting(ctx context.Context, userId int, courseId int, raiting int) error
+
 	CreateCourse(ctx context.Context, course *coursemodels.Course, userProfile *usermodels.UserProfile) (int, error)
 	CreatePart(ctx context.Context, part *coursemodels.CoursePart, courseId int) (int, error)
 	CreateBucket(ctx context.Context, bucket *coursemodels.LessonBucket, partId int) (int, error)

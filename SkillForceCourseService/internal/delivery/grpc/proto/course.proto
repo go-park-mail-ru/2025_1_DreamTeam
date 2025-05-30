@@ -359,6 +359,12 @@ message GetStatisticResponse {
   int32 amount_questions = 11;
 }
 
+message AddRaitingRequest {
+  int32 user_id = 1;
+  int32 course_id = 2;
+  int32 raiting = 3;
+}
+
 
 // Service Definition
 service CourseService {
@@ -385,4 +391,5 @@ service CourseService {
   rpc GetQuestionTestLesson(GetQuestionTestLessonRequest) returns (GetQuestionTestLessonResponse);
   rpc AnswerQuestion(AnswerQuestionRequest) returns (google.protobuf.Empty);
   rpc SearchCoursesByTitle(SearchCoursesByTitleRequest) returns (GetBucketCoursesResponse);
+  rpc AddRaiting(AddRaitingRequest) returns (google.protobuf.Empty);
 }
