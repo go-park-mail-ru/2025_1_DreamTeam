@@ -365,6 +365,25 @@ message AddRaitingRequest {
   int32 raiting = 3;
 }
 
+message UploadFileRequest {
+  bytes file_data = 1;          // Содержимое файла
+  string file_name = 2;         // Имя файла
+  string content_type = 3;      // MIME-тип (например, image/png)
+}
+
+message UploadFileResponse {
+  string url = 1;
+}
+
+message SaveCourseImageRequest {
+  string url = 1;
+  int32 courseId = 2;
+}
+
+message SaveCourseImageResponse {
+  string newPhtotoUrl = 1;
+}
+
 
 // Service Definition
 service CourseService {
@@ -392,4 +411,6 @@ service CourseService {
   rpc AnswerQuestion(AnswerQuestionRequest) returns (google.protobuf.Empty);
   rpc SearchCoursesByTitle(SearchCoursesByTitleRequest) returns (GetBucketCoursesResponse);
   rpc AddRaiting(AddRaitingRequest) returns (google.protobuf.Empty);
+  rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
+  rpc SaveCourseImage(SaveCourseImageRequest) returns (SaveCourseImageResponse);
 }

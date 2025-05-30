@@ -43,6 +43,8 @@ type CourseServiceClient interface {
 	AnswerQuestion(ctx context.Context, in *AnswerQuestionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SearchCoursesByTitle(ctx context.Context, in *SearchCoursesByTitleRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error)
 	AddRaiting(ctx context.Context, in *AddRaitingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
+	SaveCourseImage(ctx context.Context, in *SaveCourseImageRequest, opts ...grpc.CallOption) (*SaveCourseImageResponse, error)
 }
 
 type courseServiceClient struct {
@@ -269,6 +271,24 @@ func (c *courseServiceClient) AddRaiting(ctx context.Context, in *AddRaitingRequ
 	return out, nil
 }
 
+func (c *courseServiceClient) UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error) {
+	out := new(UploadFileResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/UploadFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *courseServiceClient) SaveCourseImage(ctx context.Context, in *SaveCourseImageRequest, opts ...grpc.CallOption) (*SaveCourseImageResponse, error) {
+	out := new(SaveCourseImageResponse)
+	err := c.cc.Invoke(ctx, "/course.CourseService/SaveCourseImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CourseServiceServer is the server API for CourseService service.
 // All implementations must embed UnimplementedCourseServiceServer
 // for forward compatibility
@@ -297,6 +317,8 @@ type CourseServiceServer interface {
 	AnswerQuestion(context.Context, *AnswerQuestionRequest) (*emptypb.Empty, error)
 	SearchCoursesByTitle(context.Context, *SearchCoursesByTitleRequest) (*GetBucketCoursesResponse, error)
 	AddRaiting(context.Context, *AddRaitingRequest) (*emptypb.Empty, error)
+	UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
+	SaveCourseImage(context.Context, *SaveCourseImageRequest) (*SaveCourseImageResponse, error)
 	mustEmbedUnimplementedCourseServiceServer()
 }
 
@@ -375,6 +397,12 @@ func (UnimplementedCourseServiceServer) SearchCoursesByTitle(context.Context, *S
 }
 func (UnimplementedCourseServiceServer) AddRaiting(context.Context, *AddRaitingRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRaiting not implemented")
+}
+func (UnimplementedCourseServiceServer) UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
+}
+func (UnimplementedCourseServiceServer) SaveCourseImage(context.Context, *SaveCourseImageRequest) (*SaveCourseImageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveCourseImage not implemented")
 }
 func (UnimplementedCourseServiceServer) mustEmbedUnimplementedCourseServiceServer() {}
 
@@ -821,6 +849,42 @@ func _CourseService_AddRaiting_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CourseService_UploadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).UploadFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/UploadFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).UploadFile(ctx, req.(*UploadFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CourseService_SaveCourseImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SaveCourseImageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).SaveCourseImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/SaveCourseImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).SaveCourseImage(ctx, req.(*SaveCourseImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CourseService_ServiceDesc is the grpc.ServiceDesc for CourseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -923,6 +987,14 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddRaiting",
 			Handler:    _CourseService_AddRaiting_Handler,
+		},
+		{
+			MethodName: "UploadFile",
+			Handler:    _CourseService_UploadFile_Handler,
+		},
+		{
+			MethodName: "SaveCourseImage",
+			Handler:    _CourseService_SaveCourseImage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

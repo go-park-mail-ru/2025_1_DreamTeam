@@ -1233,6 +1233,88 @@ func (h *Handler) CreateCourse(w http.ResponseWriter, r *http.Request) {
 	response.SendOKResponse(w, r)
 }
 
+func (h *Handler) AddImageToCourse(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		logs.PrintLog(r.Context(), "AddImageToCourse", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	if !userProfile.IsAdmin {
+		logs.PrintLog(r.Context(), "AddImageToCourse", "user is not admin")
+		response.SendErrorResponse("user is not admin", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("photo is too big", http.StatusBadRequest, w, r)
+		return
+	}
+
+	courseIdStr := r.FormValue("course_id")
+	courseID, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", "course_id is required")
+		response.SendErrorResponse("course_id is required", http.StatusBadRequest, w, r)
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("avatar")
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
+		return
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			logs.PrintLog(r.Context(), "AddImageToCourse", "failed to close reader")
+		}
+	}()
+
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("can`t reach photo", http.StatusBadRequest, w, r)
+		return
+	}
+	grpcUploadFileRequest := &coursepb.UploadFileRequest{
+		FileName:    fileHeader.Filename,
+		ContentType: fileHeader.Header.Get("Content-Type"),
+		FileData:    fileData,
+	}
+
+	grpcUploadFileResp, err := h.courseClient.UploadFile(r.Context(), grpcUploadFileRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		return
+	}
+
+	grpcSaveCourseImageRequest := &coursepb.SaveCourseImageRequest{
+		CourseId: int32(courseID),
+		Url:      grpcUploadFileResp.Url,
+	}
+
+	ggrpcSaveCourseImageResp, err := h.courseClient.SaveCourseImage(r.Context(), grpcSaveCourseImageRequest)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("server error", http.StatusInternalServerError, w, r)
+		return
+	}
+
+	logs.PrintLog(r.Context(), "AddImageToCourse", fmt.Sprintf("Файл загружен: %s", ggrpcSaveCourseImageResp.NewPhtotoUrl))
+	response.SendPhotoUrl(ggrpcSaveCourseImageResp.NewPhtotoUrl, w, r)
+}
+
 // AddCourseToFavourites godoc
 // @Summary      Add course to user's favorites
 // @Description  Adds a course to the authenticated user's favorites list

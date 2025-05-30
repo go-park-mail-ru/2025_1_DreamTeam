@@ -404,7 +404,7 @@ func (h *Handler) UpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			logs.PrintLog(r.Context(), "ServeVideo", "failed to close reader")
+			logs.PrintLog(r.Context(), "UpdateProfilePhoto", "failed to close reader")
 		}
 	}()
 
