@@ -207,7 +207,7 @@ func (h *CourseHandler) SearchCoursesByTitle(ctx context.Context, req *coursepb.
 }
 
 func (h *CourseHandler) AddRaiting(ctx context.Context, req *coursepb.AddRaitingRequest) (*emptypb.Empty, error) {
-	err := h.usecase.AddRating(ctx, int(req.UserId), int(req.CourseId), int(req.Raiting))
+	err := h.usecase.AddRating(ctx, int(req.CourseId), int(req.UserId), int(req.Raiting))
 	if err != nil {
 		return nil, err
 	}
