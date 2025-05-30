@@ -3418,3 +3418,76 @@ func (v *Answer) UnmarshalJSON(data []byte) error {
 func (v *Answer) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson56de76c1DecodeSkillForceInternalModelsDto31(l, v)
 }
+func easyjson56de76c1DecodeSkillForceInternalModelsDto32(in *jlexer.Lexer, out *AddRating) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "course_id":
+			out.CourseID = int32(in.Int32())
+		case "rating":
+			out.Rating = int32(in.Int32())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson56de76c1EncodeSkillForceInternalModelsDto32(out *jwriter.Writer, in AddRating) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"course_id\":"
+		out.RawString(prefix[1:])
+		out.Int32(int32(in.CourseID))
+	}
+	{
+		const prefix string = ",\"rating\":"
+		out.RawString(prefix)
+		out.Int32(int32(in.Rating))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v AddRating) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson56de76c1EncodeSkillForceInternalModelsDto32(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v AddRating) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson56de76c1EncodeSkillForceInternalModelsDto32(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *AddRating) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson56de76c1DecodeSkillForceInternalModelsDto32(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *AddRating) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson56de76c1DecodeSkillForceInternalModelsDto32(l, v)
+}

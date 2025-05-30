@@ -274,3 +274,15 @@ func (d *Database) GetStatistic(ctx context.Context, userId int, courseId int) (
 
 	return stats, nil
 }
+
+func (d *Database) AddRaiting(ctx context.Context, userId int, courseId int, rating int) error {
+	query := `
+		INSERT INTO COURSE_METRIK (Course_ID, User_ID, Rating)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (Course_ID, User_ID) DO UPDATE
+		SET Rating = EXCLUDED.Rating, Updated_at = CURRENT_TIMESTAMP;
+	`
+
+	_, err := d.conn.Exec(query, courseId, userId, rating)
+	return err
+}

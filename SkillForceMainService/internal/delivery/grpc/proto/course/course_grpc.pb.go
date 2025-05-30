@@ -42,6 +42,7 @@ type CourseServiceClient interface {
 	GetQuestionTestLesson(ctx context.Context, in *GetQuestionTestLessonRequest, opts ...grpc.CallOption) (*GetQuestionTestLessonResponse, error)
 	AnswerQuestion(ctx context.Context, in *AnswerQuestionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SearchCoursesByTitle(ctx context.Context, in *SearchCoursesByTitleRequest, opts ...grpc.CallOption) (*GetBucketCoursesResponse, error)
+	AddRaiting(ctx context.Context, in *AddRaitingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type courseServiceClient struct {
@@ -259,6 +260,15 @@ func (c *courseServiceClient) SearchCoursesByTitle(ctx context.Context, in *Sear
 	return out, nil
 }
 
+func (c *courseServiceClient) AddRaiting(ctx context.Context, in *AddRaitingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/course.CourseService/AddRaiting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CourseServiceServer is the server API for CourseService service.
 // All implementations must embed UnimplementedCourseServiceServer
 // for forward compatibility
@@ -286,6 +296,7 @@ type CourseServiceServer interface {
 	GetQuestionTestLesson(context.Context, *GetQuestionTestLessonRequest) (*GetQuestionTestLessonResponse, error)
 	AnswerQuestion(context.Context, *AnswerQuestionRequest) (*emptypb.Empty, error)
 	SearchCoursesByTitle(context.Context, *SearchCoursesByTitleRequest) (*GetBucketCoursesResponse, error)
+	AddRaiting(context.Context, *AddRaitingRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCourseServiceServer()
 }
 
@@ -361,6 +372,9 @@ func (UnimplementedCourseServiceServer) AnswerQuestion(context.Context, *AnswerQ
 }
 func (UnimplementedCourseServiceServer) SearchCoursesByTitle(context.Context, *SearchCoursesByTitleRequest) (*GetBucketCoursesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchCoursesByTitle not implemented")
+}
+func (UnimplementedCourseServiceServer) AddRaiting(context.Context, *AddRaitingRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddRaiting not implemented")
 }
 func (UnimplementedCourseServiceServer) mustEmbedUnimplementedCourseServiceServer() {}
 
@@ -789,6 +803,24 @@ func _CourseService_SearchCoursesByTitle_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CourseService_AddRaiting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRaitingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CourseServiceServer).AddRaiting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/course.CourseService/AddRaiting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CourseServiceServer).AddRaiting(ctx, req.(*AddRaitingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CourseService_ServiceDesc is the grpc.ServiceDesc for CourseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -887,6 +919,10 @@ var CourseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchCoursesByTitle",
 			Handler:    _CourseService_SearchCoursesByTitle_Handler,
+		},
+		{
+			MethodName: "AddRaiting",
+			Handler:    _CourseService_AddRaiting_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

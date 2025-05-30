@@ -1722,3 +1722,40 @@ func (h *Handler) AnswerQuestion(w http.ResponseWriter, r *http.Request) {
 
 	response.SendOKResponse(w, r)
 }
+
+func (h *Handler) AddRating(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logs.PrintLog(r.Context(), "AddRating", "method not allowed")
+		response.SendErrorResponse("method not allowed", http.StatusMethodNotAllowed, w, r)
+		return
+	}
+
+	userProfile := h.cookieManager.CheckCookie(r)
+	if userProfile == nil {
+		logs.PrintLog(r.Context(), "AddRating", "user not logged in")
+		response.SendErrorResponse("not authorized", http.StatusUnauthorized, w, r)
+		return
+	}
+
+	var AddRating dto.AddRating
+	if err := easyjson.UnmarshalFromReader(r.Body, &AddRating); err != nil {
+		logs.PrintLog(r.Context(), "AddRating", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse("invalid request", http.StatusBadRequest, w, r)
+		return
+	}
+
+	grpcAddRating := &coursepb.AddRaitingRequest{
+		UserId:   int32(userProfile.Id),
+		CourseId: int32(AddRating.CourseID),
+		Raiting:  AddRating.Rating,
+	}
+
+	_, err := h.courseClient.AddRaiting(r.Context(), grpcAddRating)
+	if err != nil {
+		logs.PrintLog(r.Context(), "AddRating", fmt.Sprintf("%+v", err))
+		response.SendErrorResponse(err.Error(), http.StatusInternalServerError, w, r)
+		return
+	}
+
+	response.SendOKResponse(w, r)
+}
