@@ -46,16 +46,30 @@ func (uc *BillingUsecase) UpdateBilling(ctx context.Context, req *billingpb.YooK
 	}
 
 	if is_successed {
-		err := uc.repo.UpdateBilling(ctx, req.PaymentId)
+		userID, courseID, err := uc.repo.UpdateBilling(ctx, req.PaymentId)
 		if err != nil {
 			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("%+v", err))
 			return nil, err
 		}
 
-		err = uc.SendReceipt()
+		user, err := uc.repo.GetUserById(ctx, userID)
 		if err != nil {
-			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("problem with sending receipt: %+v", err))
+			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("%+v", err))
+			return nil, err
 		}
+
+		course, err := uc.repo.GetCourseById(ctx, courseID)
+		if err != nil {
+			logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("%+v", err))
+			return nil, err
+		}
+
+		go func() {
+			err = uc.repo.SendReceipt(ctx, user, req.PaymentId, course)
+			if err != nil {
+				logs.PrintLog(ctx, "UpdateBilling", fmt.Sprintf("problem with sending receipt: %+v", err))
+			}
+		}()
 		return &emptypb.Empty{}, nil
 	}
 	return &emptypb.Empty{}, nil

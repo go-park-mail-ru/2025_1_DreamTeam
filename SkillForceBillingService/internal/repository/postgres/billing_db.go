@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	coursemodels "skillForce/internal/models/course"
+	usermodels "skillForce/internal/models/user"
+	"skillForce/pkg/logs"
 )
 
 func (d *Database) AddNewBilling(ctx context.Context, userID int, courseID int, billing_id string) error {
@@ -22,7 +25,7 @@ func (d *Database) AddNewBilling(ctx context.Context, userID int, courseID int, 
 	return nil
 }
 
-func (d *Database) UpdateBilling(ctx context.Context, billing_id string) error {
+func (d *Database) UpdateBilling(ctx context.Context, billing_id string) (int, int, error) {
 	query := `
 	UPDATE PURCHACES
 	SET Status = $1,
@@ -32,7 +35,7 @@ func (d *Database) UpdateBilling(ctx context.Context, billing_id string) error {
 
 	_, err := d.conn.Exec(query, "success", billing_id)
 	if err != nil {
-		return fmt.Errorf("error executing update: %w", err)
+		return 0, 0, fmt.Errorf("error executing update: %w", err)
 	}
 
 	var userID, courseID int64
@@ -41,9 +44,9 @@ func (d *Database) UpdateBilling(ctx context.Context, billing_id string) error {
 	err = d.conn.QueryRow(query, billing_id).Scan(&userID, &courseID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fmt.Errorf("no successful purchase found with Billing_ID: %s", billing_id)
+			return 0, 0, fmt.Errorf("no successful purchase found with Billing_ID: %s", billing_id)
 		}
-		return err
+		return 0, 0, err
 	}
 
 	insertQuery := `
@@ -53,10 +56,10 @@ func (d *Database) UpdateBilling(ctx context.Context, billing_id string) error {
 	`
 	_, err = d.conn.Exec(insertQuery, userID, courseID)
 	if err != nil {
-		return fmt.Errorf("failed to insert into SIGNUPS: %w", err)
+		return 0, 0, fmt.Errorf("failed to insert into SIGNUPS: %w", err)
 	}
 
-	return nil
+	return int(userID), int(courseID), nil
 
 }
 
@@ -70,4 +73,26 @@ func (d *Database) GetBillingInfo(ctx context.Context, courseID int) (string, in
 		return "", 0, fmt.Errorf("error executing select: %w", err)
 	}
 	return title, price, nil
+}
+
+func (d *Database) GetUserById(ctx context.Context, userId int) (*usermodels.User, error) {
+	var user usermodels.User
+	err := d.conn.QueryRow("SELECT email, name, hide_email FROM usertable WHERE id = $1", userId).Scan(&user.Email, &user.Name, &user.HideEmail)
+	if err != nil {
+		logs.PrintLog(ctx, "GetUserById", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (d *Database) GetCourseById(ctx context.Context, courseId int) (*coursemodels.Course, error) {
+	var course coursemodels.Course
+	err := d.conn.QueryRow("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course WHERE id = $1", courseId).Scan(
+		&course.Id, &course.CreatorId, &course.Title, &course.Description, &course.ScrImage, &course.Price, &course.TimeToPass)
+	if err != nil {
+		logs.PrintLog(ctx, "GetCourseById", fmt.Sprintf("%+v", err))
+		return nil, err
+	}
+	logs.PrintLog(ctx, "GetCourseById", fmt.Sprintf("get course %+v from db", course))
+	return &course, nil
 }

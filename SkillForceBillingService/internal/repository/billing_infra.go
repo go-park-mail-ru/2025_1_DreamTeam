@@ -6,13 +6,17 @@ import (
 	"log"
 	"skillForce/config"
 	billingpb "skillForce/internal/delivery/grpc/proto"
+	coursemodels "skillForce/internal/models/course"
+	usermodels "skillForce/internal/models/user"
+	"skillForce/internal/repository/kafka"
 	"skillForce/internal/repository/postgres"
 	"skillForce/internal/repository/yookassa"
 )
 
 type BillingInfrastructure struct {
-	Database *postgres.Database
-	Billing  *yookassa.BillingServer
+	Database      *postgres.Database
+	Billing       *yookassa.BillingServer
+	KafkaProducer *kafka.Producer
 }
 
 func NewBillingInfrastructure(conf *config.Config) *BillingInfrastructure {
@@ -24,9 +28,11 @@ func NewBillingInfrastructure(conf *config.Config) *BillingInfrastructure {
 
 	billingServer := yookassa.NewBillingServer(conf.Yookassa.ShopID, conf.Yookassa.SecretKey)
 
+	kafkaProducer := kafka.NewKafkaProducer()
 	return &BillingInfrastructure{
-		Database: database,
-		Billing:  billingServer,
+		Database:      database,
+		Billing:       billingServer,
+		KafkaProducer: kafkaProducer,
 	}
 }
 
@@ -44,7 +50,7 @@ func (i *BillingInfrastructure) CreatePayment(returnUrl string, title string, us
 	return i.Billing.CreatePayment(returnUrl, title, userID, courseID, amount)
 }
 
-func (i *BillingInfrastructure) UpdateBilling(ctx context.Context, billing_id string) error {
+func (i *BillingInfrastructure) UpdateBilling(ctx context.Context, billing_id string) (int, int, error) {
 	return i.Database.UpdateBilling(ctx, billing_id)
 }
 
@@ -54,4 +60,16 @@ func (i *BillingInfrastructure) HandleWebhook(ctx context.Context, req *billingp
 
 func (i *BillingInfrastructure) GetBillingInfo(ctx context.Context, courseID int) (string, int, error) {
 	return i.Database.GetBillingInfo(ctx, courseID)
+}
+
+func (i *BillingInfrastructure) SendReceipt(ctx context.Context, user *usermodels.User, token string, course *coursemodels.Course) error {
+	return i.KafkaProducer.SendReceipt(ctx, user, token, course)
+}
+
+func (i *BillingInfrastructure) GetUserById(ctx context.Context, userId int) (*usermodels.User, error) {
+	return i.Database.GetUserById(ctx, userId)
+}
+
+func (i *BillingInfrastructure) GetCourseById(ctx context.Context, courseID int) (*coursemodels.Course, error) {
+	return i.Database.GetCourseById(ctx, courseID)
 }
