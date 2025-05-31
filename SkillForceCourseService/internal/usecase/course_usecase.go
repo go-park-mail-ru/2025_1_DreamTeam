@@ -1202,7 +1202,7 @@ func (uc *CourseUsecase) SearchCoursesByTitle(ctx context.Context, userProfile *
 }
 
 func (uc *CourseUsecase) AddRating(ctx context.Context, course_id int, user_id int, rating int) error {
-	logs.PrintLog(ctx, "AddRating", fmt.Sprintf("set rating for course (%v) by user (%v)", course_id, user_id))
+	logs.PrintLog(ctx, "AddRating", fmt.Sprintf("set rating (%v) for course (%v) by user (%v)", rating, course_id, user_id))
 
 	err := uc.repo.AddRaiting(ctx, user_id, course_id, rating)
 
