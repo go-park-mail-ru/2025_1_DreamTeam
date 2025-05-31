@@ -963,6 +963,7 @@ func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.Course
 		part.Order = partOrder + 1
 		partId, err := uc.repo.CreatePart(ctx, part, course.Id)
 		if err != nil {
+			uc.repo.DeleteCourse(ctx, course.Id)
 			logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 			return err
 		}
@@ -971,6 +972,7 @@ func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.Course
 			bucket.PartId = partId
 			bucketId, err := uc.repo.CreateBucket(ctx, bucket, partId)
 			if err != nil {
+				uc.repo.DeleteCourse(ctx, course.Id)
 				logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 				return err
 			}
@@ -982,12 +984,14 @@ func (uc *CourseUsecase) CreateCourse(ctx context.Context, courseDto *dto.Course
 				case "video":
 					err = uc.repo.CreateVideoLesson(ctx, lesson, bucketId)
 					if err != nil {
+						uc.repo.DeleteCourse(ctx, course.Id)
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 						return err
 					}
 				case "text":
 					err = uc.repo.CreateTextLesson(ctx, lesson, bucketId)
 					if err != nil {
+						uc.repo.DeleteCourse(ctx, course.Id)
 						logs.PrintLog(ctx, "CreateCourse", fmt.Sprintf("%+v", err))
 						return err
 					}

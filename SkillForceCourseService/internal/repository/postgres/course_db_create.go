@@ -220,3 +220,16 @@ func (d *Database) SaveCourseImage(ctx context.Context, url string, courseId int
 	}
 	return url, nil
 }
+
+func (d *Database) DeleteCourse(ctx context.Context, courseId int) error {
+	query := `
+		DELETE FROM course
+		WHERE id = $1
+	`
+	_, err := d.conn.Exec(query, courseId)
+	if err != nil {
+		logs.PrintLog(ctx, "DeleteCourse", fmt.Sprintf("%+v", err))
+		return err
+	}
+	return nil
+}

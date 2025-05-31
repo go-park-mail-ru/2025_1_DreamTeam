@@ -247,3 +247,7 @@ func (i *CourseInfrastructure) UploadFile(ctx context.Context, file multipart.Fi
 func (i *CourseInfrastructure) SaveCourseImage(ctx context.Context, photo_url string, courseId int) (string, error) {
 	return i.Database.SaveCourseImage(ctx, photo_url, courseId)
 }
+
+func (i *CourseInfrastructure) DeleteCourse(ctx context.Context, courseId int) error {
+	return i.Database.DeleteCourse(ctx, courseId)
+}
