@@ -50,7 +50,13 @@ func (d *Database) SearchCoursesByTitle(ctx context.Context, keyword string) ([]
 func (d *Database) GetBucketCourses(ctx context.Context) ([]*coursemodels.Course, error) {
 	//TODO: можно заморочиться и сделать самописную пагинацию через LIMIT OFFSET
 	var bucketCourses []*coursemodels.Course
-	rows, err := d.conn.Query("SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass FROM course LIMIT 16")
+	query := `
+	SELECT id, creator_user_id, title, description, avatar_src, price, time_to_pass
+	FROM course
+	ORDER BY created_at ASC
+	LIMIT 24
+	`
+	rows, err := d.conn.Query(query)
 	if err != nil {
 		logs.PrintLog(ctx, "GetBucketCourses", fmt.Sprintf("%+v", err))
 		return nil, err
